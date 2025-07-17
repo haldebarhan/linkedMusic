@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+   title: 'LINKEDMUSIC API'
+   version: '1.0.0'
+   description: 'API documentation for LinkedMusic Management'
+
+servers:
+   - url: 'https://'
+
+components:
+   securitySchemes:
+      bearerAuth:
+         type: http
+         scheme: bearer
+         bearerFormat: JWT
+
+paths: {}
