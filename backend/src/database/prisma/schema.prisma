@@ -12,3 +12,33 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  USER
+  ADMIN
+  PROVIDER
+}
+
+enum Status {
+  ACTIVATED
+  DESACTIVATED
+  SUSPENDED
+  REMOVED
+  CLOSED
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  uid          String  @unique
+  email        String  @unique
+  phone        String  @unique
+  firstName    String  @map("first_name")
+  lastName     String  @map("last_name")
+  role         Role    @default(USER)
+  status       Status  @default(ACTIVATED)
+  profileImage String  @map("profile_image")
+  comments     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}

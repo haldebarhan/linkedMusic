@@ -1,17 +1,137 @@
 openapi: 3.0.0
 info:
-   title: 'LINKEDMUSIC API'
-   version: '1.0.0'
-   description: 'API documentation for LinkedMusic Management'
+  title: "LINKEDMUSIC API"
+  version: "1.0.0"
+  description: "API documentation for LinkedMusic Management"
 
 servers:
-   - url: 'https://'
+  - url: "https://"
 
 components:
-   securitySchemes:
-      bearerAuth:
-         type: http
-         scheme: bearer
-         bearerFormat: JWT
+  schemas:
+    Users:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        uid:
+          type: string
+          example: "uuuuuuid"
+        email:
+          type: string
+          example: "johndoe@gmail.com"
+        phone:
+          type: string
+          example: "0707070707"
+        lastName:
+          type: string
+          example: "doe"
+        firstName:
+          type: string
+          example: "john"
+        role:
+          type: string
+          example: "USER"
+        status:
+          type: string
+          example: "ACTIVATED"
+        profileImage:
+          type: string
+          example: "https://example.com/profile.jpg"
+        comments:
+          type: string
+          example: "this is a comments"
+        createdAt:
+          type: string
+          example: "2022-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          example: "2022-01-01T12:00:00Z"
+
+    Metadata:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 10
+        page:
+          type: integer
+          example: 1
+        totalPage:
+          type: integer
+          example: 10
+
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      description: Page number for pagination (optional, default is `1`)
+      schema:
+        type: integer
+        default: 1
+
+    limitParam:
+      in: query
+      name: limit
+      description: Number of items per page (optional, default is `10`)
+      schema:
+        type: integer
+        default: 1
+
+    orderParam:
+      in: query
+      name: order
+      description: Order by creation date (optional, default is `desc`)
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+
+    statusParam:
+      in: query
+      name: status
+      description: filter by user `status`
+      required: false
+      schema:
+        type: string
+        enum: ["ACTIVATED", "DESACTIVATED", "SUSPENDED", "REMOVED", "CLOSED"]
+        example: ACTIVATED
+
+    idParam:
+      in: path
+      name: id
+      description: ressource ID
+      required: true
+      schema:
+        type: integer
+        example: 1
+
+    roleParam:
+      in: query
+      name: role
+      description: filter by user `role`
+      required: false
+      schema:
+        type: string
+        enum: ["USER", "ADMIN", "PROVIDER"]
+        example: USER
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  reponses:
+    badRequestResponse:
+      description: Bad Request (Invalid or missing required parameters)
+    unauthorizedResponse:
+      description: unauthorized access
+    notFoundResponse:
+      description: ressource not found
+    internalServerErrorResponse:
+      description: "Internal server error"
 
 paths: {}
