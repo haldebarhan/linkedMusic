@@ -1,0 +1,473 @@
+paths:
+  /api/auth/activate:
+    post:
+      summary: activate user access after registration
+      description: This endpoint activates the user's account after clicking on the activation link sent by e-mail
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "johndoe@gmail.com"
+                token:
+                  type: string
+                  example: "activation_token_secret"
+      responses:
+        200:
+          description: user created and authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    $ref: "#/components/schemas/Users"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/login:
+    post:
+      summary: login user
+      description: This endpoint enables users to authenticate themselves on the platform
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "johndoe@gmail.com"
+                password:
+                  type: string
+                  example: "superpassword"
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        example: "access_token_123"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        404:
+          $ref: "#/components/reponses/notFoundResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/register:
+    post:
+      summary: register new  user
+      description: This endpoint enables users to register on the
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "johndoe@gmail.com"
+                phone:
+                  type: string
+                  example: "0700000000"
+                lastName:
+                  type: string
+                  example: "doe"
+                firstName:
+                  type: string
+                  example: "john"
+                role:
+                  type: string
+                  enum: ["USER", "ADMIN", "PROVIDER"]
+                  example: USER
+                password:
+                  type: string
+                  example: "superpassword"
+                profileImage:
+                  type: string
+                  format: binary
+                  description: profile image file
+                  example: "picture.jpg"
+              required:
+                - email
+                - phone
+                - lastName
+                - firstName
+                - role
+                - password
+                - profileImage
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "A confirmation link has been sent to the address you provided"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        404:
+          $ref: "#/components/reponses/notFoundResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/forgot-password:
+    post:
+      summary: request password reset
+      description: This endpoint enables users to request a password reset link
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "johndoe@gmail.com"
+      responses:
+        200:
+          description: email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Password reset link sent to your email"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/reset-password:
+    post:
+      summary: reset user password
+      description: This endpoint enables users to reset their password using a token sent to their email
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: "reset_token"
+                password:
+                  type: string
+                  example: "newpassword123"
+
+      responses:
+        200:
+          description: password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Password reset successfully"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/me:
+    get:
+      summary: Get current authenticated user information
+      description: This endpoint current authenticated user information
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Auth
+      responses:
+        200:
+          description: ressource fount successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Users"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/refresh-token:
+    post:
+      summary: refresh user access token
+      description: This endpoint enables users to refresh their access token
+      tags:
+        - Auth
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      responses:
+        200:
+          description: token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        example: "new_access_token_123"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/me/update-profile:
+    put:
+      summary: update current authenticated user profile
+      description: This endpoint updates the profile of the currently authenticated user
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: "John"
+                lastName:
+                  type: string
+                  example: "Doe"
+                profileImage:
+                  type: string
+                  format: binary
+                  description: profile image file
+                  example: "new_picture.jpg"
+      responses:
+        200:
+          description: profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    $ref: "#/components/schemas/Users"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/change-password:
+    put:
+      summary: change user password
+      description: This endpoint enables users to change their password
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Auth
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  example: "newpassword123"
+      responses:
+        200:
+          description: password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Password changed successfully"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/logout:
+    post:
+      summary: logout user
+      description: This endpoint enables users to log out of their account
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Auth
+      responses:
+        200:
+          description: user logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Logged out successfully"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/auth/me/close-account:
+    put:
+      summary: close user account
+      description: This endpoint enables users to close their account
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Auth
+      responses:
+        200:
+          description: user account closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Account closed successfully"
+        401:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"

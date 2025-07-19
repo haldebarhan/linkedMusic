@@ -1,0 +1,164 @@
+paths:
+  /api/admin/users:
+    get:
+      summary: Get all users | Authorized roles [ADMIN]
+      description: This operation returns all users
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      parameters:
+        - $ref: "#/components/parameters/pageParam"
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/orderParam"
+        - $ref: "#/components/parameters/statusParam"
+        - $ref: "#/components/parameters/roleParam"
+      tags:
+        - Users
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  items:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Users"
+
+                      metadata:
+                        $ref: "#/components/schemas/Metadata"
+        403:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/admin/users/{id}:
+    get:
+      summary: Get user by ID | Authorized roles [ADMIN]
+      description: This operation returns a user by ID
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      tags:
+        - Users
+      responses:
+        200:
+          description: A user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    $ref: "#/components/schemas/Users"
+        403:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        404:
+          $ref: "#/components/reponses/notFoundResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/admin/users/{id}/close-account:
+    put:
+      summary: Close user account | Authorized roles [ADMIN]
+      description: This operation closes a user account by ID
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      tags:
+        - Users
+      responses:
+        200:
+          description: User account closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  message:
+                    type: string
+                    example: "User account closed successfully"
+        403:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        404:
+          $ref: "#/components/reponses/notFoundResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"
+
+  /api/admin/users/{id}/update-profile:
+    put:
+      summary: update current authenticated user profile | Authorized roles [ADMIN]
+      description: This endpoint updates the profile of the currently authenticated user
+      security:
+        - ref: "#/components/securitySchemes/bearerAuth"
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/idParam"
+      requestBody:
+        description: user data payload
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: "John"
+                lastName:
+                  type: string
+                  example: "Doe"
+                profileImage:
+                  type: string
+                  format: binary
+                  description: profile image file
+                  example: "new_picture.jpg"
+      responses:
+        200:
+          description: profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    example: "2022-01-01T12:00:00Z"
+                  data:
+                    $ref: "#/components/schemas/Users"
+        400:
+          $ref: "#/components/reponses/badRequestResponse"
+        403:
+          $ref: "#/components/reponses/unauthorizedResponse"
+        404:
+          $ref: "#/components/reponses/notFoundResponse"
+        500:
+          $ref: "#/components/reponses/internalServerErrorResponse"

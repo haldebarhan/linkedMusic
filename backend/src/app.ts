@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import compression from "compression";
 import express, { Application, NextFunction, Request, Response } from "express";
 import helmet from "helmet";
@@ -7,6 +8,10 @@ import { rateLimit } from "express-rate-limit";
 import logger, { logMiddleware } from "./config/logger";
 import { swaggerOptions } from "./swagger-config";
 import swaggerUi from "swagger-ui-express";
+
+// ROUTES
+import authRoutes from "./api/auth/route";
+import adminRoutes from "./api/admin/route";
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -48,7 +53,7 @@ class Server {
     this.app = express();
     this.config();
     this.routes();
-    this.setupErrorHandling()
+    this.setupErrorHandling();
   }
 
   config() {
@@ -111,6 +116,9 @@ class Server {
       swaggerUi.serve,
       swaggerUi.setup(swaggerOptions, { explorer: true })
     );
+
+    this.app.use("/api/auth", authLimiter, authRoutes);
+    this.app.use("/api/admin", adminLimiter, adminRoutes);
 
     this.app.use((req, res) => {
       res.status(404).json({ error: "Route non trouvée" });
@@ -200,7 +208,6 @@ class Server {
     return origins;
   }
 }
-
 
 const server = new Server();
 server.start();
