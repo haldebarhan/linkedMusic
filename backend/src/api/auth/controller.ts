@@ -2,10 +2,14 @@ import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { UserController } from "@/microservices/users/user.controller";
+import { ProfileController } from "@/microservices/profiles/profile.controller";
 
 @injectable()
 export class AuthController {
-  constructor(private readonly userController: UserController) {}
+  constructor(
+    private readonly userController: UserController,
+    private readonly profileController: ProfileController
+  ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
     return this.userController.getMe(req, res);
@@ -49,5 +53,9 @@ export class AuthController {
 
   async closeAccount(req: AuthenticatedRequest, res: Response) {
     return await this.userController.closeAccount(req, res);
+  }
+
+  async approvalRequest(req: AuthenticatedRequest, res: Response) {
+    return await this.profileController.approvalRequest(req, res);
   }
 }

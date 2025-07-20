@@ -9,7 +9,7 @@ import { NextFunction } from "express";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const firebaseService = FirebaseService.getInstance();
 
-const adminMiddleware = async (
+const UserAndProviderMiddleware = async (
   req: AuthenticatedRequest,
   res: any,
   next: NextFunction
@@ -59,7 +59,7 @@ const adminMiddleware = async (
 
     const user = await prisma.user.findFirst({
       where: { uid: decodedToken.uid },
-      include: {Profile: true}
+      include: { Profile: true },
     });
 
     if (!user) {
@@ -76,7 +76,7 @@ const adminMiddleware = async (
       return res.status(401).json(response);
     }
 
-    if (user.role !== Role.ADMIN) {
+    if (user.role !== Role.USER && user.role !== Role.PROVIDER) {
       response = formatResponse(403, {
         message: `Unauthorized access: Admin role required`,
       });
@@ -117,4 +117,4 @@ const adminMiddleware = async (
   }
 };
 
-export default adminMiddleware;
+export default UserAndProviderMiddleware;

@@ -138,6 +138,15 @@ paths:
                   format: binary
                   description: profile image file
                   example: "new_picture.jpg"
+                displayName:
+                  type: string
+                  example: "John Doe"
+                bio:
+                  type: string
+                  example: "Stage director and pianist"
+                location:
+                  type: string
+                  example: "New York, USA"
       responses:
         200:
           description: profile updated successfully
