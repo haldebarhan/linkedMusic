@@ -22,6 +22,8 @@ import { Role } from "@/utils/enums/role.enum";
 import { Order } from "@/utils/enums/order.enum";
 import { MinioService } from "@/utils/services/minio.service";
 import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { ProfileRepository } from "../profiles/profile.repository";
+import { UpdateProfileDTO } from "../profiles/profile.dto";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: MinioService = MinioService.getInstance();
@@ -31,7 +33,8 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly tokenService: TokenService,
-    private readonly mailService: BrevoMailService
+    private readonly mailService: BrevoMailService,
+    private readonly profileRepository: ProfileRepository
   ) {}
 
   async createUser(data: CreateUserDTO, profileImage: string) {
@@ -68,7 +71,7 @@ export class UserService {
       `${firstName} ${lastName}`
     );
     try {
-      const createData: Omit<CreateUserDTO, "password"> & {
+      const createData: Omit<CreateUserDTO, "password" | "displayName"> & {
         uid: string;
         status: Status;
         profileImage: string;
@@ -87,9 +90,14 @@ export class UserService {
         ENV.MINIO_BUCKET_NAME,
         user.profileImage
       );
+      const profile = await this.profileRepository.create({
+        userId: user.id,
+        displayName: `${user.firstName} ${user.lastName}`,
+      });
       const access_token = await firebaseService.loginWithUid(user.uid);
       await invalideCache("GET:/users*");
-      return { user, access_token };
+      const userData = { ...user, profile };
+      return { user: userData, access_token };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -152,11 +160,25 @@ export class UserService {
     const deleteOldImagePromise = profileImage
       ? minioService.deleteFile(ENV.MINIO_BUCKET_NAME, user.profileImage)
       : Promise.resolve();
-    if (profileImage)
-      await minioService.deleteFile(ENV.MINIO_BUCKET_NAME, user.profileImage);
+
+    const { displayName, location, bio, ...userData } = data;
+
+    const updateUserPromise = this.userRepository.update(user.id, userData);
+    let updateProfilePromise: Promise<any> = Promise.resolve();
+    if (displayName || location || bio) {
+      updateProfilePromise = this.profileRepository.updateByUserId(
+        user.id,
+        {
+          ...displayName && {displayName},
+          ...location && {location},
+          ...bio && {bio},
+        }
+      );
+    }
     const [updatedUser] = await Promise.all([
-      this.userRepository.update(user.id, { ...data, profileImage }),
+      updateUserPromise,
       deleteOldImagePromise,
+      updateProfilePromise,
       invalideCache("GET:/users*"),
     ]);
     return this.attachProfileImageUrl(updatedUser);

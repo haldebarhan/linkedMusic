@@ -9,6 +9,8 @@ import { Order } from "@/utils/enums/order.enum";
 import { paginatedResponse } from "@/utils/helpers/paginated-response";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import createError from "http-errors";
+import { saveFileToBucket } from "@/utils/functions/save-file";
+import { UpdateUserDTO } from "./user.dto";
 
 const minioService: MinioService = MinioService.getInstance();
 
@@ -19,7 +21,7 @@ export class UserController {
   async create(req: Request, res: Response) {
     try {
       const file = req.file as Express.Multer.File;
-      const result = await this.saveFileToBucket(file);
+      const result = await saveFileToBucket("profiles", file);
       const link = await this.userService.createUser(
         req.body,
         result.objectName
@@ -80,15 +82,18 @@ export class UserController {
   async udpate(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const user = req.user;
+    const data = <UpdateUserDTO>req.body
     const userId = id ? +id : user.id;
     const file: Express.Multer.File | undefined = req.file as
       | Express.Multer.File
       | undefined;
     try {
-      const result = file ? await this.saveFileToBucket(file) : undefined;
+      const result = file
+        ? await saveFileToBucket("profiles", file)
+        : undefined;
       const updated = await this.userService.updateUser(
         userId,
-        req.body,
+        data,
         result?.objectName
       );
       const response = formatResponse(200, updated);
@@ -212,16 +217,5 @@ export class UserController {
     } catch (error) {
       handleError(res, error);
     }
-  }
-
-  private async saveFileToBucket(file: Express.Multer.File) {
-    const bucketName = ENV.MINIO_BUCKET_NAME;
-    const objectName = `zikdev/profiles/${Date.now() + file.originalname}`;
-    const metaData = {
-      "Content-Type": file.mimetype,
-    };
-    const fileBuffer = file.buffer;
-    await minioService.uploadFile(bucketName, objectName, fileBuffer, metaData);
-    return { name: file.originalname, objectName };
   }
 }

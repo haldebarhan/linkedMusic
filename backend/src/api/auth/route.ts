@@ -16,6 +16,7 @@ import {
 import authMiddleware from "@/middlewares/auth.middleware";
 import refreshTokenMiddleware from "@/middlewares/refresh-token";
 import uploads from "@/multer-config";
+import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
@@ -34,6 +35,14 @@ router.post(
 
 router.post("/logout", async (req: AuthenticatedRequest, res: Response) =>
   authController.logout(req, res)
+);
+
+router.post(
+  "/me/approval-request",
+  UserAndProviderMiddleware,
+  uploads.array("files", 5),
+  async (req: AuthenticatedRequest, res: Response) =>
+    authController.approvalRequest(req, res)
 );
 
 router.put(

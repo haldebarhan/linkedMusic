@@ -1,0 +1,6 @@
+export enum ProfileStatus {
+  VERIFIED = "VERIFIED",
+  UNVERIFIED = "UNVERIFIED",
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  CLOSED = "CLOSED",
+}

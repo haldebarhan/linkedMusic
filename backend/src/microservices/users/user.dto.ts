@@ -1,4 +1,5 @@
 import { Role } from "@/utils/enums/role.enum";
+import { Type } from "class-transformer";
 import {
   IsEmail,
   IsEnum,
@@ -6,7 +7,9 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  ValidateNested,
 } from "class-validator";
+import { UpdateProfileDTO } from "../profiles/profile.dto";
 
 export class CreateUserDTO {
   @IsEmail()
@@ -40,6 +43,15 @@ export class UpdateUserDTO {
   @IsOptional()
   @IsString({ message: "firstName is required" })
   firstName?: string;
+
+  @IsOptional()
+  displayName?: string;
+
+  @IsOptional()
+  bio?: string;
+
+  @IsOptional()
+  location?: string;
 }
 
 export class VerifyToken {
@@ -78,4 +90,11 @@ export class ChangePasswordDTO {
   @IsNotEmpty({ message: "password is required" })
   @IsString({ message: "password must be valid string" })
   password: string;
+}
+
+export class UpdateUserWithProfileDTO extends UpdateUserDTO {
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateProfileDTO)
+  profile?: UpdateProfileDTO;
 }

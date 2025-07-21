@@ -27,6 +27,18 @@ enum Status {
   CLOSED
 }
 
+enum ProfileStatus {
+  VERIFIED
+  UNVERIFIED
+  PENDING_APPROVAL
+  CLOSED
+}
+
+enum ProfileType {
+  STANDARD
+  PREMIUM
+}
+
 model User {
   id           Int     @id @default(autoincrement())
   uid          String  @unique
@@ -41,4 +53,35 @@ model User {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  Profile   Profile?
+
+  @@map("users")
+}
+
+model Profile {
+  id          Int           @id @default(autoincrement())
+  displayName String?       @map("display_name")
+  bio         String?
+  location    String?
+  userId      Int           @unique @map("user_id")
+  status      ProfileStatus @default(UNVERIFIED)
+  type        ProfileType   @default(STANDARD)
+  user        User          @relation(fields: [userId], references: [id])
+  File        File[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model File {
+  id         Int      @id @default(autoincrement()) @map("id")
+  name       String   @map("name")
+  fileUrl    String   @map("file_url")
+  profileId  Int      @map("profile_id")
+  profile    Profile  @relation(fields: [profileId], references: [id])
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  @@map("files")
 }
