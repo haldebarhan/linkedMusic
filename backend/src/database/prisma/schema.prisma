@@ -39,6 +39,14 @@ enum ProfileType {
   PREMIUM
 }
 
+enum FieldType {
+  text
+  number
+  textarea
+  select
+  checkbox
+}
+
 model User {
   id           Int     @id @default(autoincrement())
   uid          String  @unique
@@ -84,4 +92,67 @@ model File {
   uploadedAt DateTime @default(now()) @map("uploaded_at")
 
   @@map("files")
+}
+
+model Category {
+  id        Int           @id @default(autoincrement()) @map("id")
+  name      String        @unique
+  icon      String?
+  services  ServiceType[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("categories")
+}
+
+model ServiceType {
+  id          Int        @id @default(autoincrement()) @map("id")
+  name        String
+  slug        String     @unique
+  description String?
+  categoryId  Int        @map("category_id")
+  groupId     Int?       @map("group_id")
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  fields      Field[]
+  group       RoleGroup? @relation("ServiceGroup", fields: [groupId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("service_types")
+}
+
+model Field {
+  id              Int           @id @default(autoincrement()) @map("id")
+  name            String        @unique
+  label           String
+  type            FieldType
+  required        Boolean       @default(false)
+  order           Int           @default(0)
+  serviceId       Int           @map("service_id")
+  visibleInSearch Boolean       @default(false) @map("visible_in_search")
+  service         ServiceType   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  options         FieldOption[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("fields")
+}
+
+model FieldOption {
+  id        Int      @id @default(autoincrement()) @map("id")
+  value     String
+  fieldId   Int      @map("field_id")
+  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("field_options")
+}
+
+model RoleGroup {
+  id        Int           @id @default(autoincrement()) @map("id")
+  name      String        @unique
+  services  ServiceType[] @relation("ServiceGroup")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }

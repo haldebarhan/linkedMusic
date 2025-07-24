@@ -59,7 +59,7 @@ const adminMiddleware = async (
 
     const user = await prisma.user.findFirst({
       where: { uid: decodedToken.uid },
-      include: {Profile: true}
+      include: { Profile: true },
     });
 
     if (!user) {
