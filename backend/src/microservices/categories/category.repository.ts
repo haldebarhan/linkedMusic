@@ -20,9 +20,7 @@ export class CategoryRepository extends BaseRepository<
     return await prisma.category.findUnique({
       where: { id },
       include: {
-        services: {
-          include: { fields: { include: { options: true } }, group: true },
-        },
+        services: true,
       },
     });
   }
@@ -34,7 +32,6 @@ export class CategoryRepository extends BaseRepository<
     return prisma.category.update({
       where: { id },
       data,
-      include: { services: true },
     });
   }
 }
