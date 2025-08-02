@@ -9,7 +9,7 @@ const prisma: PrismaClient = DatabaseService.getPrismaClient();
 @injectable()
 export class FieldRepository extends BaseRepository<
   Field,
-  Omit<CreateFieldDTO, "fields"> & { serviceId: number },
+  Omit<CreateFieldDTO, "fields">,
   UpdateFieldDTO
 > {
   constructor() {

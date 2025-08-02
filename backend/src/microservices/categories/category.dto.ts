@@ -36,9 +36,12 @@ export class CreateFieldDTO {
   visibleInSearch: boolean;
 
   @IsOptional()
-  @ValidateIf((o) => o.type === FieldType.SELECT, {
-    message: "field type is 'select' so enter otpion values",
-  })
+  @ValidateIf(
+    (o) => o.type === FieldType.SELECT || o.type === FieldType.CHECKBOX,
+    {
+      message: "field type is 'select' so enter otpion values",
+    }
+  )
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateFieldOptionDTO)
@@ -73,12 +76,6 @@ export class CreateCategoryDTO {
   @IsOptional()
   @IsString()
   icon?: string;
-
-  @IsOptional()
-  @IsArray()
-  @Type(() => CreateServiceTypeDTO)
-  @ValidateNested({ each: true })
-  services?: CreateServiceTypeDTO[];
 }
 
 export class CreateRoleGroupDTO {
@@ -166,10 +163,4 @@ export class UpdateCategoryDTO {
   @IsOptional()
   @IsString()
   icon?: string;
-
-  @IsOptional()
-  @IsArray()
-  @Type(() => CreateServiceTypeDTO)
-  @ValidateNested({ each: true })
-  services?: CreateServiceTypeDTO[];
 }

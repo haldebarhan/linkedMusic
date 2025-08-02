@@ -78,7 +78,7 @@ const UserAndProviderMiddleware = async (
 
     if (user.role !== Role.USER && user.role !== Role.PROVIDER) {
       response = formatResponse(403, {
-        message: `Unauthorized access: Admin role required`,
+        message: `Unauthorized access: USER or PROVIDER role required`,
       });
       return res.status(403).json(response);
     }

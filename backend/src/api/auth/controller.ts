@@ -3,12 +3,14 @@ import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { UserController } from "@/microservices/users/user.controller";
 import { ProfileController } from "@/microservices/profiles/profile.controller";
+import { AnnoncementController } from "@/microservices/announcements/annoncement.controller";
 
 @injectable()
 export class AuthController {
   constructor(
     private readonly userController: UserController,
-    private readonly profileController: ProfileController
+    private readonly profileController: ProfileController,
+    private readonly adController: AnnoncementController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -57,5 +59,9 @@ export class AuthController {
 
   async approvalRequest(req: AuthenticatedRequest, res: Response) {
     return await this.profileController.approvalRequest(req, res);
+  }
+
+  async searchAd(req: Request, res: Response) {
+    return this.adController.search(req, res);
   }
 }

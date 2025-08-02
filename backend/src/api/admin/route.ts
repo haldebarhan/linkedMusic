@@ -10,6 +10,10 @@ import {
   CreateRoleGroupDTO,
   UpdateCategoryDTO,
 } from "@/microservices/categories/category.dto";
+import {
+  CreateServiceDTO,
+  UpdateServiceDTO,
+} from "@/microservices/service-types/service.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -88,6 +92,44 @@ router.put(
 
 router.delete("/role-groups/:id", async (req: Request, res: Response) =>
   adminController.removeRoleGroup(req, res)
+);
+
+// Services type
+
+router.post(
+  "/service-types",
+  ValidateDtoMiddleware(CreateServiceDTO),
+  async (req: Request, res: Response) =>
+    adminController.createServiceType(req, res)
+);
+
+router.get("/service-types", async (req: Request, res: Response) =>
+  adminController.findServiceTypes(req, res)
+);
+
+router.get("/service-types/:id", async (req: Request, res: Response) =>
+  adminController.findServiceType(req, res)
+);
+
+router.put(
+  "/service-types/:id",
+  ValidateDtoMiddleware(UpdateServiceDTO),
+  async (req: Request, res: Response) =>
+    adminController.updateServiceType(req, res)
+);
+
+// Announcements
+
+router.get("/annoncements", async (req: Request, res: Response) =>
+  adminController.findPendingAds(req, res)
+);
+
+router.get("/annoncements/:id", async (req: Request, res: Response) =>
+  adminController.findAd(req, res)
+);
+
+router.put("/annoncements/:id", async (req: Request, res: Response) =>
+  adminController.validateAd(req, res)
 );
 
 export default router;

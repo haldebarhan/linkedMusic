@@ -22,23 +22,23 @@ const router: Router = Router();
 const authController = container.resolve(AuthController);
 
 router.post(
-  "/activate",
+  "/auth/activate",
   ValidateDtoMiddleware(VerifyToken),
   async (req: Request, res: Response) =>
     authController.activateAccount(req, res)
 );
 router.post(
-  "/login",
+  "/auth/login",
   ValidateDtoMiddleware(LoginDTO),
   async (req: Request, res: Response) => authController.signIn(req, res)
 );
 
-router.post("/logout", async (req: AuthenticatedRequest, res: Response) =>
+router.post("/auth/logout", async (req: AuthenticatedRequest, res: Response) =>
   authController.logout(req, res)
 );
 
 router.post(
-  "/me/approval-request",
+  "/auth/me/approval-request",
   UserAndProviderMiddleware,
   uploads.array("files", 5),
   async (req: AuthenticatedRequest, res: Response) =>
@@ -46,7 +46,7 @@ router.post(
 );
 
 router.put(
-  "/me/change-password",
+  "/auth/me/change-password",
   ValidateDtoMiddleware(ChangePasswordDTO),
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
@@ -54,14 +54,14 @@ router.put(
 );
 
 router.put(
-  "/me/close-account",
+  "/auth/me/close-account",
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
     authController.closeAccount(req, res)
 );
 
 router.put(
-  "/me/update-profile",
+  "/auth/me/update-profile",
   uploads.single("profileImage"),
   ValidateDtoMiddleware(UpdateUserDTO),
   authMiddleware,
@@ -70,35 +70,39 @@ router.put(
 );
 
 router.post(
-  "/forgot-password",
+  "/auth/forgot-password",
   ValidateDtoMiddleware(ForgotPasswordDTO),
   async (req: Request, res: Response) => authController.forgotPassword(req, res)
 );
 
 router.post(
-  "/reset-password",
+  "/auth/reset-password",
   ValidateDtoMiddleware(ResetPasswordDTO),
   async (req: Request, res: Response) => authController.resetPassword(req, res)
 );
 
 router.post(
-  "/refresh-token",
+  "/auth/refresh-token",
   refreshTokenMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
     authController.refreshToken(req, res)
 );
 
 router.post(
-  "/register",
+  "/auth/register",
   uploads.single("profileImage"),
   ValidateDtoMiddleware(CreateUserDTO),
   async (req: Request, res: Response) => authController.signUp(req, res)
 );
 router.get(
-  "/me",
+  "/auth/me",
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
     authController.getMe(req, res)
+);
+
+router.get("/announcements", async (req: Request, res: Response) =>
+  authController.searchAd(req, res)
 );
 
 export default router;

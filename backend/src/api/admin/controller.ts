@@ -1,5 +1,7 @@
+import { AnnoncementController } from "@/microservices/announcements/annoncement.controller";
 import { CategoryController } from "@/microservices/categories/category.controller";
 import { RoleGroupController } from "@/microservices/role-groups/role-group.controller";
+import { ServiceTypeController } from "@/microservices/service-types/service-type.controller";
 import { UserController } from "@/microservices/users/user.controller";
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
@@ -9,7 +11,9 @@ export class AdminController {
   constructor(
     private readonly userController: UserController,
     private readonly categoryController: CategoryController,
-    private readonly roleGroupController: RoleGroupController
+    private readonly roleGroupController: RoleGroupController,
+    private readonly serviceTypeController: ServiceTypeController,
+    private readonly announcementController: AnnoncementController
   ) {}
 
   // Users
@@ -69,5 +73,35 @@ export class AdminController {
 
   async removeRoleGroup(req: Request, res: Response) {
     return this.roleGroupController.remove(req, res);
+  }
+
+  // services types
+  async createServiceType(req: Request, res: Response) {
+    return this.serviceTypeController.create(req, res);
+  }
+
+  async findServiceTypes(req: Request, res: Response) {
+    return this.serviceTypeController.findAll(req, res);
+  }
+
+  async findServiceType(req: Request, res: Response) {
+    return this.serviceTypeController.findOne(req, res);
+  }
+
+  async updateServiceType(req: Request, res: Response) {
+    return this.serviceTypeController.update(req, res);
+  }
+
+  // Announcements
+  async findPendingAds(req: Request, res: Response) {
+    return this.announcementController.findPendingAds(req, res);
+  }
+
+  async findAd(req: Request, res: Response) {
+    return this.announcementController.findOne(req, res);
+  }
+
+  async validateAd(req: Request, res: Response) {
+    return this.announcementController.validateAd(req, res);
   }
 }

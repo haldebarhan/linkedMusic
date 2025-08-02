@@ -12,6 +12,8 @@ import swaggerUi from "swagger-ui-express";
 // ROUTES
 import authRoutes from "./api/auth/route";
 import adminRoutes from "./api/admin/route";
+import userRoutes from "./api/users/route";
+import { syncDbToMeiliSearch } from "./scripts/sync-meilisearch";
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -117,8 +119,9 @@ class Server {
       swaggerUi.setup(swaggerOptions, { explorer: true })
     );
 
-    this.app.use("/api/auth", authLimiter, authRoutes);
+    this.app.use("/api", authLimiter, authRoutes);
     this.app.use("/api/admin", adminLimiter, adminRoutes);
+    this.app.use("/api/users", authLimiter, userRoutes);
 
     this.app.use((req, res) => {
       res.status(404).json({ error: "Route non trouvée" });
@@ -127,7 +130,8 @@ class Server {
 
   start() {
     const port = this.app.get("PORT");
-    this.app.listen(port, () => {
+    this.app.listen(port, async () => {
+      await syncDbToMeiliSearch();
       logger.info(`🚀 Serveur démarré sur http://localhost:${port}`);
       logger.info(`📚 Documentation API: http://localhost:${port}/api-docs`);
       logger.info(`🏥 Health check: http://localhost:${port}/health`);
