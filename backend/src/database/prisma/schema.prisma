@@ -5,154 +5,265 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 enum Role {
-  USER
-  ADMIN
-  PROVIDER
+    USER
+    ADMIN
+    PROVIDER
 }
 
 enum Status {
-  ACTIVATED
-  DESACTIVATED
-  SUSPENDED
-  REMOVED
-  CLOSED
+    ACTIVATED
+    DESACTIVATED
+    SUSPENDED
+    REMOVED
+    CLOSED
 }
 
 enum ProfileStatus {
-  VERIFIED
-  UNVERIFIED
-  PENDING_APPROVAL
-  CLOSED
+    VERIFIED
+    UNVERIFIED
+    PENDING_APPROVAL
+    CLOSED
 }
 
 enum ProfileType {
-  STANDARD
-  PREMIUM
+    STANDARD
+    PREMIUM
 }
 
 enum FieldType {
-  text
-  number
-  textarea
-  select
-  checkbox
+    text
+    number
+    textarea
+    select
+    checkbox
+}
+
+enum AnnouncementStatus {
+    PUBLISHED
+    DRAFT
+    ARCHIVED
+    PENDING_APPROVAL
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  uid          String  @unique
-  email        String  @unique
-  phone        String  @unique
-  firstName    String  @map("first_name")
-  lastName     String  @map("last_name")
-  role         Role    @default(USER)
-  status       Status  @default(ACTIVATED)
-  profileImage String  @map("profile_image")
-  comments     String?
+    id                    Int            @id @default(autoincrement())
+    uid                   String         @unique
+    email                 String         @unique
+    phone                 String         @unique
+    firstName             String         @map("first_name")
+    lastName              String         @map("last_name")
+    role                  Role           @default(USER)
+    status                Status         @default(ACTIVATED)
+    profileImage          String         @map("profile_image")
+    comments              String?
+    createdAt             DateTime       @default(now()) @map("created_at")
+    updatedAt             DateTime       @updatedAt @map("updated_at")
+    Profile               Profile?
+    Announcement          Announcement[]
+    Favorite              Favorite[]
+    Message               Message[]
+    sentConversations     Conversation[] @relation("ConversationSender")
+    receivedConversations Conversation[] @relation("ConversationReceiver")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  Profile   Profile?
-
-  @@map("users")
+    @@map("users")
 }
 
 model Profile {
-  id          Int           @id @default(autoincrement())
-  displayName String?       @map("display_name")
-  bio         String?
-  location    String?
-  userId      Int           @unique @map("user_id")
-  status      ProfileStatus @default(UNVERIFIED)
-  type        ProfileType   @default(STANDARD)
-  user        User          @relation(fields: [userId], references: [id])
-  File        File[]
+    id          Int           @id @default(autoincrement())
+    displayName String?       @map("display_name")
+    bio         String?
+    location    String?
+    userId      Int           @unique @map("user_id")
+    status      ProfileStatus @default(UNVERIFIED)
+    type        ProfileType   @default(STANDARD)
+    user        User          @relation(fields: [userId], references: [id])
+    File        File[]
+    createdAt   DateTime      @default(now()) @map("created_at")
+    updatedAt   DateTime      @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("profiles")
+    @@map("profiles")
 }
 
 model File {
-  id         Int      @id @default(autoincrement()) @map("id")
-  name       String   @map("name")
-  fileUrl    String   @map("file_url")
-  profileId  Int      @map("profile_id")
-  profile    Profile  @relation(fields: [profileId], references: [id])
-  uploadedAt DateTime @default(now()) @map("uploaded_at")
+    id         Int      @id @default(autoincrement()) @map("id")
+    name       String   @map("name")
+    fileUrl    String   @map("file_url")
+    profileId  Int      @map("profile_id")
+    profile    Profile  @relation(fields: [profileId], references: [id])
+    uploadedAt DateTime @default(now()) @map("uploaded_at")
 
-  @@map("files")
+    @@map("files")
 }
 
 model Category {
-  id        Int           @id @default(autoincrement()) @map("id")
-  name      String        @unique
-  icon      String?
-  services  ServiceType[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+    id        Int           @id @default(autoincrement()) @map("id")
+    name      String        @unique
+    icon      String?
+    services  ServiceType[]
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
 
-  @@map("categories")
+    @@map("categories")
 }
 
 model ServiceType {
-  id          Int        @id @default(autoincrement()) @map("id")
-  name        String
-  slug        String     @unique
-  description String?
-  categoryId  Int        @map("category_id")
-  groupId     Int?       @map("group_id")
-  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  fields      Field[]
-  group       RoleGroup? @relation("ServiceGroup", fields: [groupId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+    id           Int                @id @default(autoincrement()) @map("id")
+    name         String
+    slug         String             @unique
+    description  String?
+    categoryId   Int                @map("category_id")
+    groupId      Int?               @map("group_id")
+    createdAt    DateTime           @default(now())
+    updatedAt    DateTime           @updatedAt
+    parentId     Int?               @map("parent_id")
+    parent       ServiceType?       @relation("ServiceTypeToParent", fields: [parentId], references: [id])
+    group        RoleGroup?         @relation("ServiceGroup", fields: [groupId], references: [id])
+    category     Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    Announcement Announcement[]
+    fields       ServiceTypeField[]
+    children     ServiceType[]      @relation("ServiceTypeToParent")
 
-  @@map("service_types")
+    @@map("service_types")
 }
 
 model Field {
-  id              Int           @id @default(autoincrement()) @map("id")
-  name            String        @unique
-  label           String
-  type            FieldType
-  required        Boolean       @default(false)
-  order           Int           @default(0)
-  serviceId       Int           @map("service_id")
-  visibleInSearch Boolean       @default(false) @map("visible_in_search")
-  service         ServiceType   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  options         FieldOption[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+    id              Int                @id @default(autoincrement()) @map("id")
+    name            String
+    label           String
+    type            FieldType
+    required        Boolean            @default(false)
+    order           Int                @default(0)
+    visibleInSearch Boolean            @default(false) @map("visible_in_search")
+    options         FieldOption[]
+    createdAt       DateTime           @default(now())
+    updatedAt       DateTime           @updatedAt
+    services        ServiceTypeField[]
 
-  @@map("fields")
+    @@map("fields")
 }
 
 model FieldOption {
-  id        Int      @id @default(autoincrement()) @map("id")
-  value     String
-  fieldId   Int      @map("field_id")
-  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        Int      @id @default(autoincrement()) @map("id")
+    value     String
+    fieldId   Int      @map("field_id")
+    field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  @@map("field_options")
+    @@map("field_options")
+}
+
+model ServiceTypeField {
+    serviceTypeId Int
+    fieldId       Int
+    serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+    field         Field       @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+    @@id([serviceTypeId, fieldId])
+    @@map("service_type_fields")
 }
 
 model RoleGroup {
-  id        Int           @id @default(autoincrement()) @map("id")
-  name      String        @unique
-  services  ServiceType[] @relation("ServiceGroup")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+    id        Int           @id @default(autoincrement()) @map("id")
+    name      String        @unique
+    services  ServiceType[] @relation("ServiceGroup")
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
+
+    @@map("role_groups")
+}
+
+model Announcement {
+    id            Int                @id @default(autoincrement()) @map("id")
+    title         String
+    description   String
+    ownerId       Int
+    images        String[]
+    serviceTypeId Int
+    data          Json
+    isPublished   Boolean            @default(false)
+    isHighlighted Boolean            @default(false)
+    status        AnnouncementStatus @default(PENDING_APPROVAL)
+    price         Int?
+    location      String?
+    views         Int                @default(0)
+    createdAt     DateTime           @default(now())
+    updatedAt     DateTime           @updatedAt
+    owner         User               @relation(fields: [ownerId], references: [id])
+    serviceType   ServiceType        @relation(fields: [serviceTypeId], references: [id])
+    Favorite      Favorite[]
+    Conversation  Conversation[]
+    CustomField   CustomField[]
+
+    @@map("announcements")
+}
+
+model Favorite {
+    id             Int          @id @default(autoincrement()) @map("id")
+    userId         Int
+    announcementId Int
+    createdAt      DateTime     @default(now())
+    user           User         @relation(fields: [userId], references: [id])
+    announcement   Announcement @relation(fields: [announcementId], references: [id])
+
+    @@map("favorites")
+}
+
+model Conversation {
+    id             Int           @id @default(autoincrement()) @map("id")
+    senderId       Int
+    receiverId     Int
+    sender         User          @relation("ConversationSender", fields: [senderId], references: [id])
+    receiver       User          @relation("ConversationReceiver", fields: [receiverId], references: [id])
+    announcementId Int?
+    announcement   Announcement? @relation(fields: [announcementId], references: [id])
+    createdAt      DateTime      @default(now())
+    Messages       Message[]
+
+    @@unique([senderId, receiverId, announcementId])
+    @@map("conversations")
+}
+
+model Message {
+    id             Int          @id @default(autoincrement()) @map("id")
+    conversationId Int
+    senderId       Int
+    content        String
+    readAt         DateTime?
+    createdAt      DateTime     @default(now())
+    conversation   Conversation @relation(fields: [conversationId], references: [id])
+    sender         User         @relation(fields: [senderId], references: [id])
+
+    @@map("messages")
+}
+
+model CustomField {
+    id            Int          @id @default(autoincrement()) @map("id")
+    label         String
+    type          FieldType
+    value         String
+    annoncementId Int
+    annoncement   Announcement @relation(fields: [annoncementId], references: [id])
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+
+    @@map("custom_fields")
+}
+
+model Styles {
+    id        Int      @id @default(autoincrement()) @map("id")
+    name      String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("styles")
 }
