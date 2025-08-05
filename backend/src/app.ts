@@ -8,11 +8,15 @@ import { rateLimit } from "express-rate-limit";
 import logger, { logMiddleware } from "./config/logger";
 import { swaggerOptions } from "./swagger-config";
 import swaggerUi from "swagger-ui-express";
+import { createServer, Server as HTTPServer } from "http";
+import { Server as IOServer } from "socket.io";
 
 // ROUTES
 import authRoutes from "./api/auth/route";
 import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
+import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
+import { setupSocket } from "./sockets";
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -49,6 +53,8 @@ const adminLimiter = rateLimit({
 
 class Server {
   public app: Application;
+  private httpServer: HTTPServer;
+  private io: IOServer;
 
   constructor() {
     this.app = express();
@@ -99,6 +105,7 @@ class Server {
     this.app.use(logMiddleware);
     this.app.use(express.urlencoded({ extended: false }));
     this.app.set("PORT", ENV.PORT ?? 4000);
+    this.httpServer = createServer(this.app);
   }
 
   routes() {
@@ -129,7 +136,8 @@ class Server {
 
   start() {
     const port = this.app.get("PORT");
-    this.app.listen(port, async () => {
+    this.socketConfig();
+    this.httpServer.listen(port, async () => {
       logger.info(`🚀 Serveur démarré sur http://localhost:${port}`);
       logger.info(`📚 Documentation API: http://localhost:${port}/api-docs`);
       logger.info(`🏥 Health check: http://localhost:${port}/health`);
@@ -190,6 +198,19 @@ class Server {
       logger.error("Exception non gérée:", error);
       process.exit(1);
     });
+  }
+
+  private socketConfig() {
+    this.httpServer = createServer(this.app);
+    this.io = new IOServer(this.httpServer, {
+      cors: {
+        origin: this.getAllowedOrigins(),
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    });
+    this.io.use(authSocketMiddleware);
+    setupSocket(this.io);
   }
 
   private getAllowedOrigins(): string[] {
