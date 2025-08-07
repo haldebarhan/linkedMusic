@@ -55,24 +55,33 @@ enum AnnouncementStatus {
 }
 
 model User {
-    id                    Int            @id @default(autoincrement())
-    uid                   String         @unique
-    email                 String         @unique
-    phone                 String         @unique
-    firstName             String         @map("first_name")
-    lastName              String         @map("last_name")
-    role                  Role           @default(USER)
-    status                Status         @default(ACTIVATED)
-    profileImage          String         @map("profile_image")
+    id                    Int             @id @default(autoincrement())
+    uid                   String          @unique
+    email                 String          @unique
+    phone                 String          @unique
+    firstName             String          @map("first_name")
+    lastName              String          @map("last_name")
+    role                  Role            @default(USER)
+    status                Status          @default(ACTIVATED)
+    profileImage          String          @map("profile_image")
     comments              String?
-    createdAt             DateTime       @default(now()) @map("created_at")
-    updatedAt             DateTime       @updatedAt @map("updated_at")
+    createdAt             DateTime        @default(now()) @map("created_at")
+    updatedAt             DateTime        @updatedAt @map("updated_at")
     Profile               Profile?
     Announcement          Announcement[]
     Favorite              Favorite[]
     Message               Message[]
-    sentConversations     Conversation[] @relation("ConversationSender")
-    receivedConversations Conversation[] @relation("ConversationReceiver")
+    sentConversations     Conversation[]  @relation("ConversationSender")
+    receivedConversations Conversation[]  @relation("ConversationReceiver")
+    Topic                 Topic[]
+    Comment               Comment[]
+    Reply                 Reply[]
+    CommentLike           CommentLike[]
+    ReplyLike             ReplyLike[]
+    CommentReport         CommentReport[]
+    ReplyReport           ReplyReport[]
+    FavoriteTopic         FavoriteTopic[]
+    WatchTopic            WatchTopic[]
 
     @@map("users")
 }
@@ -266,4 +275,133 @@ model Styles {
     updatedAt DateTime @updatedAt
 
     @@map("styles")
+}
+
+model TopicCategory {
+    id        Int      @id @default(autoincrement()) @map("id")
+    name      String   @unique
+    slug      String   @unique
+    topics    Topic[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Topic {
+    id            Int             @id @default(autoincrement()) @map("id")
+    title         String
+    content       String
+    authorId      Int
+    categoryId    Int
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    author        User            @relation(fields: [authorId], references: [id])
+    Comment       Comment[]
+    category      TopicCategory   @relation(fields: [categoryId], references: [id])
+    FavoriteTopic FavoriteTopic[]
+    WatchTopic    WatchTopic[]
+
+    @@map("topics")
+}
+
+model Comment {
+    id        Int             @id @default(autoincrement()) @map("id")
+    content   String
+    authorId  Int
+    topicId   Int
+    author    User            @relation(fields: [authorId], references: [id])
+    topic     Topic           @relation(fields: [topicId], references: [id])
+    replies   Reply[]
+    likes     CommentLike[]
+    reports   CommentReport[]
+    createdAt DateTime        @default(now())
+
+    @@map("comments")
+}
+
+model Reply {
+    id        Int           @id @default(autoincrement()) @map("id")
+    content   String
+    authorId  Int
+    commentId Int
+    author    User          @relation(fields: [authorId], references: [id])
+    comment   Comment       @relation(fields: [commentId], references: [id])
+    likes     ReplyLike[]
+    reports   ReplyReport[]
+    createdAt DateTime      @default(now())
+
+    @@map("replies")
+}
+
+model CommentLike {
+    id        Int      @id @default(autoincrement()) @map("id")
+    userId    Int
+    user      User     @relation(fields: [userId], references: [id])
+    comment   Comment  @relation(fields: [commentId], references: [id])
+    commentId Int
+    createdAt DateTime @default(now())
+
+    @@unique([userId, commentId])
+    @@map("comment_likes")
+}
+
+model ReplyLike {
+    id        Int      @id @default(autoincrement()) @map("id")
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    reply     Reply    @relation(fields: [replyId], references: [id])
+    replyId   Int
+    createdAt DateTime @default(now())
+
+    @@unique([userId, replyId])
+    @@map("reply_likes")
+}
+
+model CommentReport {
+    id        Int      @id @default(autoincrement()) @map("id")
+    reason    String
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    comment   Comment  @relation(fields: [commentId], references: [id])
+    commentId Int
+    createdAt DateTime @default(now())
+
+    @@unique([userId, commentId])
+    @@map("comment_reports")
+}
+
+model ReplyReport {
+    id        Int      @id @default(autoincrement()) @map("id")
+    reason    String
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    reply     Reply    @relation(fields: [replyId], references: [id])
+    replyId   Int
+    createdAt DateTime @default(now())
+
+    @@unique([userId, replyId])
+    @@map("reply_reports")
+}
+
+model FavoriteTopic {
+    id        Int      @id @default(autoincrement()) @map("id")
+    topicId   Int
+    userId    Int
+    user      User     @relation(fields: [userId], references: [id])
+    topic     Topic    @relation(fields: [topicId], references: [id])
+    createdAt DateTime
+
+    @@unique([userId, topicId])
+    @@map("favorite_topics")
+}
+
+model WatchTopic {
+    id        Int      @id @default(autoincrement()) @map("id")
+    topicId   Int
+    userId    Int
+    user      User     @relation(fields: [userId], references: [id])
+    topic     Topic    @relation(fields: [topicId], references: [id])
+    createdAt DateTime
+
+    @@unique([userId, topicId])
+    @@map("watch_topics")
 }

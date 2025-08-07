@@ -3,6 +3,7 @@ import { CategoryController } from "@/microservices/categories/category.controll
 import { StyleController } from "@/microservices/music-styles/style.controller";
 import { RoleGroupController } from "@/microservices/role-groups/role-group.controller";
 import { ServiceTypeController } from "@/microservices/service-types/service-type.controller";
+import { TopicCategoryController } from "@/microservices/topic-categories/topic-category.controller";
 import { UserController } from "@/microservices/users/user.controller";
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
@@ -15,7 +16,8 @@ export class AdminController {
     private readonly roleGroupController: RoleGroupController,
     private readonly serviceTypeController: ServiceTypeController,
     private readonly announcementController: AnnoncementController,
-    private readonly styleController: StyleController
+    private readonly styleController: StyleController,
+    private readonly topicCategoryController: TopicCategoryController
   ) {}
 
   // Users
@@ -126,5 +128,18 @@ export class AdminController {
 
   async removeStyle(req: Request, res: Response) {
     return this.styleController.remove(req, res);
+  }
+
+  // Topic Category
+  async createTopicCategory(req: Request, res: Response) {
+    return await this.topicCategoryController.create(req, res);
+  }
+
+  async updateTopicCategory(req: Request, res: Response) {
+    return await this.topicCategoryController.update(req, res);
+  }
+
+  async removeTopicCategory(req: Request, res: Response) {
+    return await this.topicCategoryController.remove(req, res);
   }
 }

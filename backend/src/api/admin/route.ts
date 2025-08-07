@@ -18,6 +18,10 @@ import {
   CreateStyleDTO,
   UpdateStyleDTO,
 } from "@/microservices/music-styles/style.dto";
+import {
+  CreateTopicCategoryDTO,
+  UpdateTopicCategoryDTO,
+} from "@/microservices/topic-categories/topic-category.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -161,4 +165,23 @@ router.put(
 router.delete("/styles/:id", async (req: Request, res: Response) =>
   adminController.removeStyle(req, res)
 );
+
+router.post(
+  "/topic-category",
+  ValidateDtoMiddleware(CreateTopicCategoryDTO),
+  async (req: Request, res: Response) =>
+    adminController.createTopicCategory(req, res)
+);
+
+router.put(
+  "/topic-category/:id",
+  ValidateDtoMiddleware(UpdateTopicCategoryDTO),
+  async (req: Request, res: Response) =>
+    adminController.updateTopicCategory(req, res)
+);
+
+router.delete("/topic-category/:id", async (req: Request, res: Response) =>
+  adminController.removeTopicCategory(req, res)
+);
+
 export default router;
