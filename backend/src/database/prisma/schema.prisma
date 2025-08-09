@@ -54,6 +54,13 @@ enum AnnouncementStatus {
     PENDING_APPROVAL
 }
 
+enum ConfigType {
+    BOOLEAN
+    NUMBER
+    STRING
+    JSON
+}
+
 model User {
     id                    Int             @id @default(autoincrement())
     uid                   String          @unique
@@ -388,7 +395,7 @@ model FavoriteTopic {
     userId    Int
     user      User     @relation(fields: [userId], references: [id])
     topic     Topic    @relation(fields: [topicId], references: [id])
-    createdAt DateTime
+    createdAt DateTime @default(now())
 
     @@unique([userId, topicId])
     @@map("favorite_topics")
@@ -400,8 +407,17 @@ model WatchTopic {
     userId    Int
     user      User     @relation(fields: [userId], references: [id])
     topic     Topic    @relation(fields: [topicId], references: [id])
-    createdAt DateTime
+    createdAt DateTime @default(now())
 
     @@unique([userId, topicId])
     @@map("watch_topics")
+}
+
+model AppConfig {
+    id        Int      @id @default(autoincrement()) @map("id")
+    key       String   @unique
+    value     String
+    type      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
