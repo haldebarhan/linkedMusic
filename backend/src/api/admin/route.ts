@@ -22,6 +22,11 @@ import {
   CreateTopicCategoryDTO,
   UpdateTopicCategoryDTO,
 } from "@/microservices/topic-categories/topic-category.dto";
+import {
+  CreateConfigDTO,
+  UpdateConfigDTO,
+} from "@/microservices/configurations/configuration.dto";
+import { UpdateCommentDTO } from "@/microservices/comments/comment.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -182,6 +187,26 @@ router.put(
 
 router.delete("/topic-category/:id", async (req: Request, res: Response) =>
   adminController.removeTopicCategory(req, res)
+);
+
+router.post(
+  "/configurations",
+  ValidateDtoMiddleware(CreateConfigDTO),
+  async (req: Request, res: Response) => adminController.createConfig(req, res)
+);
+router.get("/configurations", async (req: Request, res: Response) =>
+  adminController.findConfigs(req, res)
+);
+router.get("/configurations/:id", async (req: Request, res: Response) =>
+  adminController.findConfig(req, res)
+);
+router.put(
+  "/configurations/:id",
+  ValidateDtoMiddleware(UpdateCommentDTO),
+  async (req: Request, res: Response) => adminController.updateConfig(req, res)
+);
+router.delete("/configurations/:id", async (req: Request, res: Response) =>
+  adminController.removeConfig(req, res)
 );
 
 export default router;
