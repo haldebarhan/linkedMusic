@@ -1,5 +1,6 @@
 import { AnnoncementController } from "@/microservices/announcements/annoncement.controller";
 import { CategoryController } from "@/microservices/categories/category.controller";
+import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
 import { StyleController } from "@/microservices/music-styles/style.controller";
 import { RoleGroupController } from "@/microservices/role-groups/role-group.controller";
 import { ServiceTypeController } from "@/microservices/service-types/service-type.controller";
@@ -17,7 +18,8 @@ export class AdminController {
     private readonly serviceTypeController: ServiceTypeController,
     private readonly announcementController: AnnoncementController,
     private readonly styleController: StyleController,
-    private readonly topicCategoryController: TopicCategoryController
+    private readonly topicCategoryController: TopicCategoryController,
+    private readonly configController: ConfigurationController
   ) {}
 
   // Users
@@ -141,5 +143,24 @@ export class AdminController {
 
   async removeTopicCategory(req: Request, res: Response) {
     return await this.topicCategoryController.remove(req, res);
+  }
+
+  // CONFIGS
+
+  async createConfig(req: Request, res: Response) {
+    return await this.configController.create(req, res);
+  }
+
+  async updateConfig(req: Request, res: Response) {
+    return await this.configController.update(req, res);
+  }
+  async findConfigs(req: Request, res: Response) {
+    return await this.configController.findAll(req, res);
+  }
+  async findConfig(req: Request, res: Response) {
+    return await this.configController.findOne(req, res);
+  }
+  async removeConfig(req: Request, res: Response) {
+    return await this.configController.remove(req, res);
   }
 }

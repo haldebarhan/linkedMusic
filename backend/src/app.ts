@@ -17,6 +17,7 @@ import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
+import { ConfigService } from "./utils/services/configuration.service";
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -231,6 +232,8 @@ class Server {
     return origins;
   }
 }
-
-const server = new Server();
-server.start();
+(async () => {
+  await ConfigService.loadConfigs();
+  const server = new Server();
+  server.start();
+})();
