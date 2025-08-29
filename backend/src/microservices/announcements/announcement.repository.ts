@@ -93,6 +93,7 @@ export class AnnouncementRepository extends BaseRepository<
         isPublished: true,
         status: Status.PUBLISHED,
       },
+      include: { serviceType: true },
     });
   }
 }

@@ -1,0 +1,71 @@
+<!-- Bannière image -->
+<div class="position-relative overflow-hidden">
+  <img
+    src="https://www.baltana.com/files/wallpapers-11/Imagine-Dragons-Wallpaper-HD-30579.jpg"
+    class="w-100"
+    style="height: 500px; object-fit: cover"
+    alt="Bannière promotionnelle"
+  />
+
+  <!-- Overlay optionnel avec contenu -->
+  <div
+    class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center"
+    style="background: rgba(0, 0, 0, 0.4)"
+  >
+    <div class="container text-white">
+      <div class="row">
+        <div class="col-lg-6"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contenu de démonstration -->
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="text-center">Vous recherchez un acteur de la musique ?</h1>
+      <div class="main-content">
+        <div
+          class="d-flex justify-content-center align-items-center"
+          style="padding: 20px"
+        >
+          <div class="card-custom" [routerLink]="['/annonces', 'equipement']">
+            <div class="icon-text">
+              <i class="fas fa-tools"></i>
+              <p>Équipement & Logistique</p>
+            </div>
+          </div>
+
+          <div class="card-custom" [routerLink]="['/annonces', 'studios']">
+            <div class="icon-text">
+              <i class="fas fa-microphone"></i>
+              <p>Producteurs & Studios</p>
+            </div>
+          </div>
+
+          <div class="card-custom" [routerLink]="['/annonces', 'chanteur']">
+            <div class="icon-text">
+              <i class="fas fa-music"></i>
+              <p>Chanteur & Danseur</p>
+            </div>
+          </div>
+
+          <div class="card-custom" [routerLink]="['/annonces', 'professeur']">
+            <div class="icon-text">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <p>Formateurs & Professeurs</p>
+            </div>
+          </div>
+
+          <div class="card-custom" [routerLink]="['/annonces', 'compositeur']">
+            <div class="icon-text">
+              <i class="fas fa-pen-fancy"></i>
+              <p>Compositeurs & Paroles</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

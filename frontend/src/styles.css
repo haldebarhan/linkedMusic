@@ -1,0 +1,125 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* prend toute la hauteur de la fenêtre */
+}
+
+main {
+  flex: 1; /* pousse le footer en bas */
+}
+
+/* Styles pour les cartes */
+.card-custom {
+  text-align: center;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  margin: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.icon-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.icon-text i {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 1.2rem;
+}
+
+.icon-text p {
+  margin: 0;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+  font-size: 0.9rem;
+  flex: 1;
+  text-align: left;
+}
+
+/* Styles responsifs pour les cartes */
+@media (max-width: 768px) {
+  .main-content .d-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .card-custom {
+    margin: 0.5rem 0;
+    min-width: auto;
+    width: 100%;
+    max-width: 300px;
+    align-self: center;
+    cursor: pointer;
+  }
+
+  .icon-text {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .icon-text p {
+    max-width: none;
+    width: auto;
+  }
+}
+
+/* Profile image styles */
+.profile-img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* FIX PRINCIPAL : Z-index pour les dropdowns */
+.navbar {
+  z-index: 1030; /* Plus élevé que la barre secondaire */
+}
+
+.dropdown-menu {
+  z-index: 1035; /* Encore plus élevé pour être sûr */
+}
+
+/* Barre secondaire avec z-index plus faible */
+.secondary-navbar {
+  z-index: 1020; /* Moins élevé que la navbar principale */
+}
+
+/* Footer styles */
+footer {
+  margin-top: auto;
+}
+
+.social-links a {
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #ffffff !important;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
