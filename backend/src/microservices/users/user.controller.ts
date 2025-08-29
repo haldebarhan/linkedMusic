@@ -39,11 +39,13 @@ export class UserController {
 
   async activateAccount(req: Request, res: Response) {
     try {
-      const user = await this.userService.registerTempUser(req.body);
-      res.cookie("access_token", user.access_token, {
+      const { user, accessToken } = await this.userService.registerTempUser(
+        req.body
+      );
+      res.cookie("access_token", accessToken, {
         httpOnly: true,
       });
-      const response = formatResponse(200, user);
+      const response = formatResponse(200, { user, accessToken });
       res.status(201).json(response);
     } catch (error) {
       handleError(res, error);
@@ -82,7 +84,7 @@ export class UserController {
   async udpate(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const user = req.user;
-    const data = <UpdateUserDTO>req.body
+    const data = <UpdateUserDTO>req.body;
     const userId = id ? +id : user.id;
     const file: Express.Multer.File | undefined = req.file as
       | Express.Multer.File
@@ -119,14 +121,14 @@ export class UserController {
       const userAgent = req.get("user-agent");
       const ip = req.ip;
       if (!userAgent || !ip) throw createError(400, "Unknown user agent or IP");
-      const { idToken } = await this.userService.login(req.body, {
+      const { accessToken, user } = await this.userService.login(req.body, {
         userAgent,
         ip,
       });
-      res.cookie("access_token", idToken, {
+      res.cookie("access_token", accessToken, {
         httpOnly: true,
       });
-      const response = formatResponse(200, { accessToken: idToken });
+      const response = formatResponse(200, { accessToken, user });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

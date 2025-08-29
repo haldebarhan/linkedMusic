@@ -1,0 +1,88 @@
+<div
+  class="container-fluid d-flex justify-content-center align-items-center"
+  style="min-height: 70vh"
+  *ngIf="state === 'success'"
+>
+  <div
+    class="p-4 shadow rounded text-center"
+    style="max-width: 520px; width: 100%"
+  >
+    <!-- Icône de succès -->
+    <div class="mb-3">
+      <i class="fas fa-check-circle fa-3x text-success"></i>
+    </div>
+
+    <h3 class="mb-2">Compte activé avec succès 🎉</h3>
+    <p class="text-muted mb-4">
+      Merci d’avoir confirmé votre adresse email. Votre compte est maintenant
+      actif et prêt à être utilisé.
+    </p>
+    <p class="text-muted mb-4">
+      Redirection vers accueil dans {{ cooldown }} seconds
+    </p>
+
+    <!-- Bouton connexion -->
+    <a routerLink="/login" class="btn btn-success btn-lg w-100 mb-3">
+      <i class="fas fa-sign-in-alt me-2"></i> Se connecter
+    </a>
+
+    <hr class="my-4" />
+
+    <p class="small text-muted mb-0">
+      Si vous avez besoin d’aide, contactez notre support :
+      <a href="mailto:support@tondomaine.com">support-tondomaine.com</a>
+    </p>
+  </div>
+</div>
+
+<div
+  class="container-fluid d-flex justify-content-center align-items-center"
+  style="min-height: 70vh"
+  *ngIf="state === 'error'"
+>
+  <div
+    class="p-4 shadow rounded text-center"
+    style="max-width: 520px; width: 100%"
+  >
+    <!-- Icône erreur -->
+    <div class="mb-3">
+      <i class="fas fa-times-circle fa-3x text-danger"></i>
+    </div>
+
+    <h3 class="mb-2">Échec de l’activation</h3>
+    <p class="text-muted mb-4">
+      Le lien d’activation est invalide ou a expiré. Veuillez recommencer la
+      procédure d’inscription pour recevoir un nouveau lien.
+    </p>
+
+    <!-- Bouton vers inscription -->
+    <a routerLink="/register" class="btn btn-danger btn-lg w-100 mb-3">
+      <i class="fas fa-user-plus me-2"></i> Refaire mon inscription
+    </a>
+
+    <hr class="my-4" />
+
+    <p class="small text-muted mb-0">
+      Si le problème persiste, contactez notre support :
+      <a href="mailto:support@tondomaine.com">support-tondomaine.com</a>
+    </p>
+  </div>
+</div>
+
+<div
+  class="container-fluid d-flex justify-content-center align-items-center"
+  style="min-height: 70vh"
+  *ngIf="state === 'loading'"
+>
+  <div
+    class="p-4 shadow rounded text-center"
+    style="max-width: 520px; width: 100%"
+  >
+    <!-- Icône erreur -->
+    <div class="mb-3">
+      <i class="fa-solid fa-hourglass-half fa-3x text-primary"></i>
+    </div>
+
+    <h3 class="mb-2">Patientez...</h3>
+  </div>
+</div>

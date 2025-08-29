@@ -141,7 +141,7 @@ router.get("/annoncements/:id", async (req: Request, res: Response) =>
   adminController.findAd(req, res)
 );
 
-router.put("/annoncements/:id", async (req: Request, res: Response) =>
+router.put("/annoncements/:id/validate", async (req: Request, res: Response) =>
   adminController.validateAd(req, res)
 );
 

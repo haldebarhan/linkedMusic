@@ -82,7 +82,7 @@ router.post(
 );
 
 router.post(
-  "/auth/refresh-token",
+  "/auth/refresh",
   refreshTokenMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
     authController.refreshToken(req, res)

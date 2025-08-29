@@ -1,0 +1,134 @@
+<!-- Navigation principale -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container">
+    <!-- Menu burger -->
+    <button
+      class="navbar-toggler me-2"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarContent"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Logo -->
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-rocket text-primary"></i> MonSite
+    </a>
+
+    <!-- Bouton de connexion (mobile, à droite) -->
+    <div class="d-lg-none">
+      <!-- Version non connecté -->
+      <button
+        class="btn btn-outline-primary btn-sm"
+        *ngIf="!(isLoggedIn$ | async)"
+        (click)="goToLogin()"
+      >
+        <i class="fas fa-sign-in-alt"></i>
+      </button>
+
+      <!-- Version connecté -->
+      <div class="dropdown" *ngIf="user$ | async as user">
+        <button
+          class="btn btn-link p-0"
+          type="button"
+          data-bs-toggle="dropdown"
+        >
+          <img src="assets/images/logo.png" alt="Profile" class="profile-img" />
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li>
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-user me-2"></i>Profil</a
+            >
+          </li>
+          <li>
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-cog me-2"></i>Paramètres</a
+            >
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item" href="#" (click)="logout()">
+              <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Contenu collapsible -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <!-- Navigation centrale -->
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item">
+          <a class="nav-link active" href="#">Accueil</a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="#">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">À propos</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+      </ul>
+
+      <!-- Desktop -->
+      <div class="d-none d-lg-block">
+        <!-- Non connecté -->
+        <div *ngIf="!(isLoggedIn$ | async)">
+          <button class="btn btn-primary" (click)="goToLogin()">
+            Se connecter
+          </button>
+        </div>
+
+        <!-- Connecté -->
+        <div class="dropdown" *ngIf="user$ | async as user">
+          <button
+            class="btn btn-link p-0 d-flex align-items-center text-decoration-none"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            <img
+              src="assets/images/logo.png"
+              alt="Profile"
+              class="profile-img me-2"
+            />
+            <span class="text-dark">{{ displayName(user) }}</span>
+            <i class="fas fa-chevron-down ms-2 text-muted"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <h6 class="dropdown-header">{{ user.email }}</h6>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-user me-2"></i>Mon profil</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-cog me-2"></i>Paramètres</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-bell me-2"></i>Notifications</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#" (click)="logout()">
+                <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bouton connexion mobile (dans menu collapsible) - UNIQUEMENT si non connecté -->
+      <div class="d-lg-none mt-3" *ngIf="isLoggedIn$ | async">
+        <button class="btn btn-primary w-100" (click)="toggleUserState()">
+          Se connecter
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

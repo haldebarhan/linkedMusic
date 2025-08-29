@@ -36,7 +36,6 @@ export class AnnoncementController {
     try {
       const { q, serviceTypeId, isHighlighted, location, order, page, limit } =
         req.query;
-      console.log(q);
       const filters: string[] = [];
 
       const service: number | undefined = parseInt(serviceTypeId as string);

@@ -143,7 +143,20 @@ export class AnnouncementService {
 
   async validateAd(adId: number) {
     const announcement = await this.findOne(adId, false);
-    return await this.annoncemontRepository.validateAd(announcement.id);
+    const validateAd = await this.annoncemontRepository.validateAd(
+      announcement.id
+    );
+    const { data, ...rest } = validateAd;
+    const parsedData = parseObject(data);
+    const flattenedData = flattenArrayValues(parsedData);
+    await Promise.all([
+      SearchService.deleteById(rest.id),
+      SearchService.addAnnouncement({
+        ...rest,
+        serviceType: validateAd.serviceType.name ?? "",
+        ...flattenedData,
+      }),
+    ]);
   }
 
   private async checkServiceType(serviceTypeId: number) {

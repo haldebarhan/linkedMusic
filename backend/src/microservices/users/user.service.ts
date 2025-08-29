@@ -49,7 +49,7 @@ export class UserService {
       role,
       profileImage,
     });
-    const link = `${ENV.FRONTEND_URL}/auth/activate-account?token=${token}`;
+    const link = `${ENV.FRONTEND_URL}/auth/activate-account?token=${token}&email=${email}`;
     return await this.mailService.sendActivateAccountMail({
       to: email,
       name: `${firstName} ${lastName}`,
@@ -94,10 +94,10 @@ export class UserService {
         userId: user.id,
         displayName: `${user.firstName} ${user.lastName}`,
       });
-      const access_token = await firebaseService.loginWithUid(user.uid);
+      const accessToken = await firebaseService.loginWithUid(user.uid);
       await invalideCache("GET:/users*");
       const userData = { ...user, profile };
-      return { user: userData, access_token };
+      return { user: userData, accessToken };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -166,14 +166,11 @@ export class UserService {
     const updateUserPromise = this.userRepository.update(user.id, userData);
     let updateProfilePromise: Promise<any> = Promise.resolve();
     if (displayName || location || bio) {
-      updateProfilePromise = this.profileRepository.updateByUserId(
-        user.id,
-        {
-          ...displayName && {displayName},
-          ...location && {location},
-          ...bio && {bio},
-        }
-      );
+      updateProfilePromise = this.profileRepository.updateByUserId(user.id, {
+        ...(displayName && { displayName }),
+        ...(location && { location }),
+        ...(bio && { bio }),
+      });
     }
     const [updatedUser] = await Promise.all([
       updateUserPromise,
@@ -192,25 +189,48 @@ export class UserService {
 
     try {
       const user = await this.userRepository.findByParams({ email });
+
+      // Utilise 401 pour les identifiants invalides (ne divulgue pas l'existence de l'email)
       if (!user) {
-        throw createError(404, "Login error: Email or user not found");
+        throw createError(401, "Invalid credentials");
       }
 
       const { userCredential } =
         await firebaseService.LoginUserWithEmailAndPassword(email, password);
 
+      // Si Firebase ne renvoie pas d'utilisateur, considère comme invalid credentials
       if (!userCredential?.user) {
-        throw createError(401, "Authentication failed");
+        throw createError(401, "Invalid credentials");
       }
 
+      // Ajoute/Met à jour des claims "non sensibles"
       await firebaseService.setCustomUserClaims(user.uid, claims);
-      const freshToken = await userCredential.user.getIdToken(true);
 
-      return { userCredential, idToken: freshToken };
-    } catch (error) {
-      const status = error.status || 500;
-      const message = error.message || "Login failed";
-      throw createError(status, `Login error: ${message}`);
+      // Force un token fraîchement signé
+      const accessToken = await userCredential.user.getIdToken(true);
+
+      // Normalise le retour pour le front
+      return { accessToken, user };
+    } catch (error: any) {
+      // Mapping propre des erreurs Firebase -> 401
+      const fbCode = error?.code as string | undefined;
+      if (
+        fbCode === "auth/user-not-found" ||
+        fbCode === "auth/wrong-password" ||
+        fbCode === "auth/invalid-credential" ||
+        fbCode === "auth/invalid-password" ||
+        fbCode === "auth/invalid-email"
+      ) {
+        throw createError(401, "Invalid credentials");
+      }
+
+      // Si c'est déjà un http-error avec status défini, relance tel quel
+      if (error?.status) {
+        throw error;
+      }
+
+      // Sinon, 500 générique
+      throw createError(500, "Login failed");
     }
   }
 

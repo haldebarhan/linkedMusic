@@ -1,0 +1,119 @@
+<div
+  class="container-fluid d-flex justify-content-center align-items-center"
+  style="min-height: 85vh"
+>
+  <div class="p-4 shadow rounded" style="max-width: 420px; width: 100%">
+    <h2 class="text-center mb-2">Connexion</h2>
+    <p class="text-center text-muted mb-4">
+      Connectez-vous pour accéder à votre compte.
+    </p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Email -->
+      <div class="mb-3">
+        <div class="input-group input-group-lg has-validation">
+          <span class="input-group-text">
+            <i class="fas fa-envelope"></i>
+          </span>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [ngClass]="{
+              'is-invalid':
+                (loginForm.get('email')?.touched || submitted) &&
+                loginForm.get('email')?.invalid,
+              'is-valid':
+                (loginForm.get('email')?.touched || submitted) &&
+                loginForm.get('email')?.valid
+            }"
+            placeholder="Votre email"
+          />
+          <!-- ⚠️ feedback DANS l’input-group -->
+          <div class="invalid-feedback">
+            <span *ngIf="loginForm.get('email')?.errors?.['required']">
+              L’email est requis.
+            </span>
+            <span *ngIf="loginForm.get('email')?.errors?.['email']">
+              Format d’email invalide.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-3">
+        <div class="input-group input-group-lg has-validation">
+          <span class="input-group-text">
+            <i class="fas fa-lock"></i>
+          </span>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [ngClass]="{
+              'is-invalid':
+                (loginForm.get('password')?.touched || submitted) &&
+                loginForm.get('password')?.invalid,
+              'is-valid':
+                (loginForm.get('password')?.touched || submitted) &&
+                loginForm.get('password')?.valid
+            }"
+            placeholder="Mot de passe"
+          />
+          <!-- ⚠️ feedback DANS l’input-group -->
+          <div class="invalid-feedback">
+            <span *ngIf="loginForm.get('password')?.errors?.['required']">
+              Le mot de passe est requis.
+            </span>
+            <span *ngIf="loginForm.get('password')?.errors?.['minlength']">
+              Minimum
+              {{
+                loginForm.get('password')?.errors?.['minlength']?.requiredLength
+              }}
+              caractères.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg w-100"
+        [disabled]="!loginForm.valid"
+        *ngIf="!submitted"
+      >
+        Connexion
+      </button>
+
+      <button
+        class="btn btn-primary btn-lg w-100"
+        type="button"
+        disabled
+        *ngIf="submitted"
+      >
+        <span
+          class="spinner-border spinner-border-sm"
+          aria-hidden="true"
+        ></span>
+        <span role="status">Patientez...</span>
+      </button>
+    </form>
+
+    <!-- Lien -->
+    <div class="text-center mt-3">
+      <small class="text-muted">
+        Vous n'avez pas de compte ?
+        <a
+          class="text-decoration-none"
+          (click)="goToRegister()"
+          style="cursor: pointer"
+          >Inscrivez-vous</a
+        >
+      </small>
+    </div>
+  </div>
+</div>

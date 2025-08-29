@@ -19,6 +19,8 @@ import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
 import { ConfigService } from "./utils/services/configuration.service";
 
+const skipOptions = (req: Request) => req.method === "OPTIONS";
+
 // Rate limiting global
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -29,6 +31,7 @@ const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipOptions,
 });
 
 // Rate limiting spécifique pour l'authentification
@@ -40,6 +43,7 @@ const authLimiter = rateLimit({
     retryAfter: 15 * 60,
   },
   skipSuccessfulRequests: true,
+  skip: skipOptions,
 });
 
 // Rate limiting pour les routes admin
@@ -50,6 +54,7 @@ const adminLimiter = rateLimit({
     error: "Limite de requêtes admin atteinte",
     retryAfter: 60,
   },
+  skip: skipOptions,
 });
 
 class Server {
@@ -65,6 +70,20 @@ class Server {
   }
 
   config() {
+    // CORS sécurisé
+
+    const corsConfig: cors.CorsOptions = {
+      origin: this.getAllowedOrigins(),
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    };
+
+    this.app.use(cors(corsConfig));
+    this.app.use((req, res, next) => {
+      if (req.method === "OPTIONS") return res.sendStatus(204); // preflight OK
+      return next();
+    });
+
     // Sécurité - Headers de sécurité
     this.app.use(
       helmet({
@@ -92,21 +111,9 @@ class Server {
     this.app.use(express.json({ limit: "10mb" }));
     this.app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
-    // CORS sécurisé
-    this.app.use(
-      cors({
-        origin: this.getAllowedOrigins(),
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-      })
-    );
-
     this.app.use(globalLimiter as any);
     this.app.use(logMiddleware);
-    this.app.use(express.urlencoded({ extended: false }));
     this.app.set("PORT", ENV.PORT ?? 4000);
-    this.httpServer = createServer(this.app);
   }
 
   routes() {
