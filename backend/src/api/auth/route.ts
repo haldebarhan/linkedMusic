@@ -101,22 +101,4 @@ router.get(
     authController.getMe(req, res)
 );
 
-router.get("/announcements", async (req: Request, res: Response) =>
-  authController.searchAd(req, res)
-);
-
-// Forums
-
-router.get("/forum/topics", async (req: Request, res: Response) =>
-  authController.getTopics(req, res)
-);
-
-router.get("/forum/topics/:id", async (req: Request, res: Response) =>
-  authController.findTopic(req, res)
-);
-
-router.get("/forum/topics/categories", async (req: Request, res: Response) =>
-  authController.findTopicCategories(req, res)
-);
-
 export default router;
