@@ -17,7 +17,7 @@ import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
-import { ConfigService } from "./utils/services/configuration.service";
+// import { ConfigService } from "./utils/services/configuration.service";
 
 const skipOptions = (req: Request) => req.method === "OPTIONS";
 
@@ -240,7 +240,7 @@ class Server {
   }
 }
 (async () => {
-  await ConfigService.loadConfigs();
+  //   await ConfigService.loadConfigs();
   const server = new Server();
   server.start();
 })();

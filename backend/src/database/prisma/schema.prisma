@@ -47,6 +47,18 @@ enum FieldType {
     checkbox
 }
 
+enum FieldInputType {
+    TEXT
+    TEXTAREA
+    NUMBER
+    SELECT
+    CHECKBOX
+    RADIO
+    MULTISELECT
+    TOGGLE
+    RANGE
+}
+
 enum AnnouncementStatus {
     PUBLISHED
     DRAFT
@@ -121,12 +133,13 @@ model File {
 }
 
 model Category {
-    id        Int           @id @default(autoincrement()) @map("id")
-    name      String        @unique
-    icon      String?
-    services  ServiceType[]
-    createdAt DateTime      @default(now())
-    updatedAt DateTime      @updatedAt
+    id           Int            @id @default(autoincrement()) @map("id")
+    name         String         @unique
+    icon         String?
+    services     ServiceType[]
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    Announcement Announcement[]
 
     @@map("categories")
 }
@@ -152,29 +165,37 @@ model ServiceType {
 }
 
 model Field {
-    id              Int                @id @default(autoincrement()) @map("id")
-    name            String
-    label           String
-    type            FieldType
-    required        Boolean            @default(false)
-    order           Int                @default(0)
-    visibleInSearch Boolean            @default(false) @map("visible_in_search")
-    options         FieldOption[]
-    createdAt       DateTime           @default(now())
-    updatedAt       DateTime           @updatedAt
-    services        ServiceTypeField[]
+    id          Int            @id @default(autoincrement()) @map("id")
+    key         String         @unique
+    label       String
+    inputType   FieldInputType
+    placeholder String?
+    unit        String?
+    searchable  Boolean        @default(true)
+    filterable  Boolean        @default(true)
+
+    options  FieldOption[]
+    services ServiceTypeField[]
+
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    AnnFieldValue AnnFieldValue[]
 
     @@map("fields")
 }
 
 model FieldOption {
-    id        Int      @id @default(autoincrement()) @map("id")
-    value     String
-    fieldId   Int      @map("field_id")
-    field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id                  Int                   @id @default(autoincrement()) @map("id")
+    fieldId             Int
+    field               Field                 @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+    label               String
+    value               String
+    order               Int                   @default(0)
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @updatedAt
+    AnnFieldValueOption AnnFieldValueOption[]
 
+    @@unique([fieldId, value])
     @@map("field_options")
 }
 
@@ -184,8 +205,12 @@ model ServiceTypeField {
     serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
     field         Field       @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
+    required        Boolean @default(false)
+    visibleInForm   Boolean @default(true)
+    visibleInFilter Boolean @default(true)
+    order           Int     @default(0)
+
     @@id([serviceTypeId, fieldId])
-    @@map("service_type_fields")
 }
 
 model RoleGroup {
@@ -199,28 +224,72 @@ model RoleGroup {
 }
 
 model Announcement {
-    id            Int                @id @default(autoincrement()) @map("id")
+    id            Int                @id @default(autoincrement())
     title         String
     description   String
     ownerId       Int
     images        String[]
     serviceTypeId Int
-    data          Json
-    isPublished   Boolean            @default(false)
-    isHighlighted Boolean            @default(false)
-    status        AnnouncementStatus @default(PENDING_APPROVAL)
+    // NEW: pour requêtes rapides par catégorie
+    categoryId    Int? // temporairement nullable, on backfill puis NOT NULL
     price         Int?
     location      String?
+    status        AnnouncementStatus @default(PENDING_APPROVAL)
+    isPublished   Boolean            @default(false)
+    isHighlighted Boolean            @default(false)
     views         Int                @default(0)
     createdAt     DateTime           @default(now())
     updatedAt     DateTime           @updatedAt
-    owner         User               @relation(fields: [ownerId], references: [id])
-    serviceType   ServiceType        @relation(fields: [serviceTypeId], references: [id])
-    Favorite      Favorite[]
-    Conversation  Conversation[]
-    CustomField   CustomField[]
 
+    serviceType  ServiceType     @relation(fields: [serviceTypeId], references: [id])
+    category     Category?       @relation(fields: [categoryId], references: [id])
+    AnnValues    AnnFieldValue[]
+    User         User?           @relation(fields: [userId], references: [id])
+    userId       Int?
+    Favorite     Favorite[]
+    Conversation Conversation[]
+    CustomField  CustomField[]
+
+    @@index([serviceTypeId])
+    @@index([categoryId])
     @@map("announcements")
+}
+
+model AnnFieldValue {
+    id             BigInt @id @default(autoincrement())
+    announcementId Int
+    fieldId        Int
+
+    announcement Announcement @relation(fields: [announcementId], references: [id])
+    field        Field        @relation(fields: [fieldId], references: [id])
+
+    valueText    String?
+    valueNumber  Float?
+    valueBoolean Boolean?
+
+    options AnnFieldValueOption[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([announcementId, fieldId])
+    @@index([fieldId])
+    @@index([fieldId, valueBoolean])
+    @@index([fieldId, valueNumber])
+    @@map("ann_field_values")
+}
+
+model AnnFieldValueOption {
+    id              BigInt @id @default(autoincrement())
+    annFieldValueId BigInt
+    optionId        Int
+
+    annFieldValue AnnFieldValue @relation(fields: [annFieldValueId], references: [id])
+    option        FieldOption   @relation(fields: [optionId], references: [id])
+
+    @@unique([annFieldValueId, optionId])
+    @@index([optionId])
+    @@map("ann_field_value_options")
 }
 
 model Favorite {

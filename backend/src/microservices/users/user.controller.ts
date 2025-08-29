@@ -3,7 +3,6 @@ import { UserService } from "./user.service";
 import { formatResponse } from "@/utils/helpers/response-formatter";
 import { Request, Response } from "express";
 import { handleError } from "@/utils/helpers/handle-error";
-import { ENV } from "@/config/env";
 import { MinioService } from "@/utils/services/minio.service";
 import { Order } from "@/utils/enums/order.enum";
 import { paginatedResponse } from "@/utils/helpers/paginated-response";
