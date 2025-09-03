@@ -135,6 +135,7 @@ model File {
 model Category {
     id           Int            @id @default(autoincrement()) @map("id")
     name         String         @unique
+    slug         String         @unique
     icon         String?
     services     ServiceType[]
     createdAt    DateTime       @default(now())

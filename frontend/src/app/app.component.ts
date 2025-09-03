@@ -31,4 +31,9 @@ export class AppComponent {
       currentRoute.startsWith('/home')
     );
   }
+
+  desableNavBarAndFooter(): boolean {
+    const currentRoute = this.router.url;
+    return currentRoute === '/admin' || currentRoute.startsWith('/admin');
+  }
 }

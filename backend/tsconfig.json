@@ -8,7 +8,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    // "ignoreDeprecations": "6.0",
     "removeComments": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
