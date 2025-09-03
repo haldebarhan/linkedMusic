@@ -6,6 +6,15 @@ import { ValidateDtoMiddleware } from "@/middlewares/validate-dto.middleware";
 import { UpdateUserDTO } from "@/microservices/users/user.dto";
 import { cache } from "@/middlewares/cache.middleware";
 import { CreateConfigDTO } from "@/microservices/configurations/configuration.dto";
+import {
+  AttachFieldDTO,
+  AttachFieldsDTO,
+  CreateCategoryDTO,
+  CreateFieldDto,
+  CreateFieldOptionDto,
+  CreateServiceTypeDTO,
+  UpdateCategoryDTO,
+} from "@/microservices/catalogues/catalogue.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -45,6 +54,70 @@ router.get("/configurations/:id", async (req: Request, res: Response) =>
 
 router.delete("/configurations/:id", async (req: Request, res: Response) =>
   adminController.removeConfig(req, res)
+);
+
+// Catalogues
+
+router.post(
+  "/catalog/categories",
+  ValidateDtoMiddleware(CreateCategoryDTO),
+  async (req: Request, res: Response) =>
+    adminController.createCategory(req, res)
+);
+
+router.put(
+  "/catalog/categories/:id",
+  ValidateDtoMiddleware(UpdateCategoryDTO),
+  async (req: Request, res: Response) =>
+    adminController.updateCategory(req, res)
+);
+
+router.delete("/catalog/categories/:id", async (req: Request, res: Response) =>
+  adminController.removeCategory(req, res)
+);
+
+router.post(
+  "/catalog/service-types",
+  ValidateDtoMiddleware(CreateServiceTypeDTO),
+  async (req: Request, res: Response) =>
+    adminController.createServiceType(req, res)
+);
+
+router.post(
+  "/catalog/fields",
+  ValidateDtoMiddleware(CreateFieldDto),
+  async (req: Request, res: Response) => adminController.createField(req, res)
+);
+
+router.get("/catalog/fields", async (req: Request, res: Response) =>
+  adminController.listFields(req, res)
+);
+
+router.get("/catalog/fields/:id", async (req: Request, res: Response) =>
+  adminController.findField(req, res)
+);
+
+router.delete("/catalog/fields/:id", async (req: Request, res: Response) =>
+  adminController.removeField(req, res)
+);
+
+router.post(
+  "/catalog/field-options",
+  ValidateDtoMiddleware(CreateFieldOptionDto),
+  async (req: Request, res: Response) =>
+    adminController.createFieldOption(req, res)
+);
+
+router.post(
+  "/catalog/attach-fields",
+  ValidateDtoMiddleware(AttachFieldsDTO),
+  async (req: Request, res: Response) => adminController.attachField(req, res)
+);
+
+router.post(
+  "/catalog/detach-fields",
+  ValidateDtoMiddleware(AttachFieldDTO),
+  async (req: Request, res: Response) => adminController.detachField(req, res)
 );
 
 export default router;

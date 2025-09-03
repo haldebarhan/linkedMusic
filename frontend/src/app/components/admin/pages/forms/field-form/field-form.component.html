@@ -1,0 +1,188 @@
+<div class="admin-card">
+  <div class="card-head d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">
+        {{ isEdit ? "Modifier un champ" : "Créer un champ" }}
+      </h5>
+      <div class="text-muted small">Catalogue des champs</div>
+    </div>
+    <div>
+      <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="fas fa-arrow-left me-1"></i>Retour
+      </button>
+    </div>
+  </div>
+
+  <div class="admin-table-wrap">
+    <form [formGroup]="form" (ngSubmit)="save()" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Key <span class="text-danger">*</span></label>
+        <input
+          class="form-control"
+          formControlName="key"
+          placeholder="ex: styles, price_min"
+          [readonly]="isEdit"
+        />
+        <div
+          class="invalid-feedback d-block"
+          *ngIf="form.controls['key'].invalid && (form.touched || submitted)"
+        >
+          Clé requise (a-z 0-9 _ -).
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label"
+          >Label <span class="text-danger">*</span></label
+        >
+        <input
+          class="form-control"
+          formControlName="label"
+          placeholder="Libellé"
+        />
+        <div
+          class="invalid-feedback d-block"
+          *ngIf="form.controls['label'].invalid && (form.touched || submitted)"
+        >
+          Label requis (≥ 2).
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label"
+          >Type <span class="text-danger">*</span></label
+        >
+        <select
+          class="form-select"
+          formControlName="inputType"
+          (change)="onTypeChange()"
+        >
+          <option *ngFor="let t of inputTypes" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+
+      <div class="col-md-6" *ngIf="showPlaceholder()">
+        <label class="form-label">Placeholder</label>
+        <input
+          class="form-control"
+          formControlName="placeholder"
+          placeholder="ex: Saisir une valeur"
+        />
+      </div>
+
+      <div class="col-md-3" *ngIf="showUnit()">
+        <label class="form-label">Unité</label>
+        <input
+          class="form-control"
+          formControlName="unit"
+          placeholder="ex: €, km"
+        />
+      </div>
+
+      <div class="col-md-3 d-flex align-items-center gap-3">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            formControlName="searchable"
+            id="searchable"
+          />
+          <label class="form-check-label" for="searchable">Searchable</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            formControlName="filterable"
+            id="filterable"
+          />
+          <label class="form-check-label" for="filterable">Filterable</label>
+        </div>
+      </div>
+
+      <!-- Options dynamiques -->
+      <div class="col-12" *ngIf="acceptsOptions()">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">Options</h6>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            (click)="addOption()"
+          >
+            <i class="fas fa-plus me-1"></i>Ajouter
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 45%">Label</th>
+                <th style="width: 35%">Value (auto)</th>
+                <th style="width: 10%">Ordre</th>
+                <th style="width: 10%"></th>
+              </tr>
+            </thead>
+            <tbody formArrayName="options">
+              <tr
+                *ngFor="let opt of options.controls; index as i"
+                [formGroupName]="i"
+              >
+                <td data-label="Label">
+                  <input
+                    class="form-control form-control-sm"
+                    formControlName="label"
+                    (input)="setOptionValue(i)"
+                  />
+                </td>
+                <td data-label="Value">
+                  <input
+                    class="form-control form-control-sm bg-light"
+                    formControlName="value"
+                    [readonly]="true"
+                  />
+                </td>
+                <td data-label="Ordre">
+                  <input
+                    type="number"
+                    min="0"
+                    class="form-control form-control-sm"
+                    formControlName="order"
+                  />
+                </td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="removeOption(i)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!options.length">
+                <td colspan="4" class="text-center text-muted py-3">
+                  Aucune option
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="invalid-feedback d-block"
+          *ngIf="optionsRequiredInvalid() && (form.touched || submitted)"
+        >
+          Au moins une option est requise pour ce type.
+        </div>
+      </div>
+
+      <div class="col-12 d-flex justify-content-end">
+        <button class="btn btn-primary" [disabled]="saving || !canSubmit()">
+          <i class="fas fa-save me-1"></i
+          >{{ isEdit ? "Mettre à jour" : "Enregistrer" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

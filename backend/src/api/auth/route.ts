@@ -101,4 +101,20 @@ router.get(
     authController.getMe(req, res)
 );
 
+router.get("/catalog/:category/filters", async (req: Request, res: Response) =>
+  authController.getFilterSchemaByCategorySlug(req, res)
+);
+
+router.get("/catalog/categories", async (req: Request, res: Response) =>
+  authController.listCategories(req, res)
+);
+
+router.get("/catalog/categories/:id", async (req: Request, res: Response) =>
+  authController.findCategory(req, res)
+);
+
+router.get("/catalog/service-types", async (req: Request, res: Response) =>
+  authController.listServiceTypes(req, res)
+);
+
 export default router;

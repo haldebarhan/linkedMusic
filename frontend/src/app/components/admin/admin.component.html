@@ -1,0 +1,38 @@
+<header class="topbar">
+  <button class="hamburger d-lg-none" (click)="open = !open">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="brand"><i class="fas fa-shield-alt me-2"></i>Admin</div>
+  <div class="small d-none d-md-block opacity-75">Back-office</div>
+  <div class="ms-auto small">
+    <a routerLink="/" class="text-white text-decoration-none"
+      ><i class="fas fa-home me-1"></i>Site</a
+    >
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" [class.open]="open">
+    <a routerLink="pending" routerLinkActive="active"
+      ><i class="fas fa-clipboard-list"></i> Publications</a
+    >
+    <a routerLink="categories" routerLinkActive="active"
+      ><i class="fas fa-layer-group"></i> Catégories</a
+    >
+    <a routerLink="services" routerLinkActive="active"
+      ><i class="fas fa-music"></i> Service-Types</a
+    >
+    <a routerLink="fields" routerLinkActive="active"
+      ><i class="fas fa-music"></i> fields</a
+    >
+  </aside>
+  <div
+    class="backdrop d-lg-none"
+    [class.show]="open"
+    (click)="open = false"
+  ></div>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

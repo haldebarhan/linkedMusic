@@ -17,8 +17,12 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@types/jquery": "^3.5.33",
     "bootstrap": "^5.3.7",
+    "jquery": "^3.7.1",
     "rxjs": "~7.8.0",
+    "select2": "^4.1.0-rc.0",
+    "sweetalert2": "^11.22.5",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },

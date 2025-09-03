@@ -1,0 +1,117 @@
+/* ============ Admin UI (responsive) ============ */
+body {
+  background-color: #9c2d5d;
+}
+.admin-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.06);
+}
+.admin-card .card-head {
+  padding: 1rem 1.25rem 0.25rem;
+}
+.admin-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-toolbar .btn {
+  border-radius: 10px;
+}
+.admin-table-wrap {
+  padding: 0 1rem 1rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.admin-table thead th {
+  background: #243043;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 0.9rem 0.85rem;
+  border: 0;
+}
+.admin-table tbody td {
+  padding: 0.85rem;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: middle;
+}
+.badge-soft {
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.badge-soft.pink {
+  background: #ffd5ea;
+  color: #9c2d5d;
+}
+.badge-soft.purple {
+  background: #e8defa;
+  color: #5b3db6;
+}
+.badge-soft.blue {
+  background: #d8ecff;
+  color: #1d63a8;
+}
+.badge-soft.orange {
+  background: #ffe2c6;
+  color: #a85c1d;
+}
+.badge-soft.green {
+  background: #d6f5e5;
+  color: #217a52;
+}
+
+.pagination-pills .page-link {
+  border: 0;
+  margin: 0 0.2rem;
+  border-radius: 999px;
+  min-width: 34px;
+  text-align: center;
+  color: #374151;
+}
+.pagination-pills .page-item.active .page-link {
+  background: #ff3f8c;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(255, 63, 140, 0.35);
+}
+
+/* ========== Responsive table → cards (≤576px) ========== */
+@media (max-width: 576px) {
+  .admin-table thead {
+    display: none;
+  }
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+  .admin-table tr {
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    margin: 0.6rem 0;
+    padding: 0.25rem 0.5rem;
+  }
+  .admin-table td {
+    border: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0.5rem;
+  }
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+  }
+}

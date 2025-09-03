@@ -3,12 +3,14 @@ import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { UserController } from "@/microservices/users/user.controller";
 import { ProfileController } from "@/microservices/profiles/profile.controller";
+import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 
 @injectable()
 export class AuthController {
   constructor(
     private readonly userController: UserController,
-    private readonly profileController: ProfileController
+    private readonly profileController: ProfileController,
+    private readonly catalogController: CatalogueController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -57,5 +59,22 @@ export class AuthController {
 
   async approvalRequest(req: AuthenticatedRequest, res: Response) {
     return await this.profileController.approvalRequest(req, res);
+  }
+
+  // Catalogs
+  async getFilterSchemaByCategorySlug(req: Request, res: Response) {
+    return await this.catalogController.getFilters(req, res);
+  }
+
+  async listCategories(req: Request, res: Response) {
+    return await this.catalogController.listCategories(req, res);
+  }
+
+  async findCategory(req: Request, res: Response) {
+    return await this.catalogController.findCategory(req, res);
+  }
+
+  async listServiceTypes(req: Request, res: Response) {
+    return await this.catalogController.listServiceTypes(req, res);
   }
 }
