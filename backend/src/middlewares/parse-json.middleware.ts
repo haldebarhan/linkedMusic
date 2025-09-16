@@ -22,3 +22,15 @@ export const ParseJsonMiddleware = (fields: string[]) => {
     return next();
   };
 };
+
+export const parseMaybeJSON = (value: unknown) => {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};

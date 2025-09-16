@@ -1,18 +1,31 @@
-import { Type } from "class-transformer";
+import { parseMaybeJSON } from "@/middlewares/parse-json.middleware";
+import { Transform, Type } from "class-transformer";
 import {
+  ArrayNotEmpty,
+  ArrayUnique,
   IsArray,
   IsInt,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
+  Min,
   MinLength,
 } from "class-validator";
 
+/**
+ * CREATE
+ * - Requiert au moins 1 catégorie (categoryIds)
+ * - serviceTypeId obligatoire
+ */
 export class CreateAnnouncementDto {
   @IsString()
   @MinLength(3)
-  title: string;
+  title!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  categoryId: number;
 
   @IsString()
   @MinLength(10)
@@ -25,22 +38,20 @@ export class CreateAnnouncementDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   price?: number;
 
   @IsOptional()
   @IsString()
   location?: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
   /**
-   * Valeurs dynamiques (EAV) mappées par key de Field (ex: styles, instrument, pro, priceMin/Max, etc.)
-   * On valide ici que c'est un objet ; la validation fine par type se fait côté service (selon Field.inputType).
+   * Valeurs dynamiques (EAV) mappées par key de Field
+   * La validation fine (selon Field.inputType) se fait côté service.
    */
+  @Type(() => Object)
   @IsOptional()
+  @Transform(({ value }) => parseMaybeJSON(value))
   @IsObject()
   values?: Record<string, any>;
 }
@@ -56,30 +67,44 @@ export class UpdateAnnouncementDto {
   @MinLength(10)
   description?: string;
 
+  // A) Remplacement complet
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  categoryIds?: number[];
+
+  // B) Modification incrémentale
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  categoryIdsAdd?: number[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  categoryIdsRemove?: number[];
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   serviceTypeId?: number;
 
   @IsOptional()
-  @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   price?: number;
 
   @IsOptional()
   @IsString()
   location?: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
-  /**
-   * Valeurs dynamiques (EAV) mappées par key de Field (ex: styles, instrument, pro, priceMin/Max, etc.)
-   * On valide ici que c'est un objet ; la validation fine par type se fait côté service (selon Field.inputType).
-   */
   @IsOptional()
   @IsObject()
   values?: Record<string, any>;

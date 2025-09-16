@@ -1,0 +1,21 @@
+.bg-rub {
+  background: #2f4e32;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #3a3a3a;
+  border: 1px solid #4b4b4b;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  width: 100%;
+  transition: 0.15s;
+}
+.cat-item:hover {
+  background: #4a4a4a;
+}
+.cat-name {
+  font-weight: 600;
+}

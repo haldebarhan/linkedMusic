@@ -7,6 +7,7 @@ import { ServiceFormComponent } from './pages/forms/service-form/service-form.co
 import { FieldsComponent } from './pages/fields/fields.component';
 import { FieldFormComponent } from './pages/forms/field-form/field-form.component';
 import { FieldsViewComponent } from './pages/fields-view/fields-view.component';
+import { ServiceViewComponent } from './pages/service-view/service-view.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -52,6 +53,10 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'fields/view/:id',
         component: FieldsViewComponent,
+      },
+      {
+        path: 'services/view/:id',
+        component: ServiceViewComponent,
       },
     ],
   },

@@ -2,32 +2,29 @@
 import { MeiliSearch } from "meilisearch";
 import { ENV } from "@/config/env";
 
+// ---------- Client & index ----------
+const INDEX_NAME = "announcements";
+
 const client = new MeiliSearch({
   host: ENV.MEILISEARCH_API_URL,
   apiKey: ENV.MEILISEARCH_API_KEY,
 });
-
-const INDEX_NAME = "announcements";
 const index = client.index(INDEX_NAME);
 
-// ---- Helper universel : attend la fin de la tâche Meili quelle que soit la version du SDK
+// ---------- Wait task universel ----------
 type MeiliTask = { taskUid?: number; updateId?: number };
-
 async function waitTask(task: MeiliTask, timeoutMs = 30_000, intervalMs = 100) {
   const anyClient = client as any;
   const anyIndex = index as any;
 
-  // 1) Nouvelle API (client.waitForTask)
   if (task?.taskUid != null && typeof anyClient.waitForTask === "function") {
     await anyClient.waitForTask(task.taskUid, { timeOutMs: timeoutMs });
     return;
   }
-  // 2) Nouvelle API (index.waitForTask)
   if (task?.taskUid != null && typeof anyIndex.waitForTask === "function") {
     await anyIndex.waitForTask(task.taskUid, { timeOutMs: timeoutMs });
     return;
   }
-  // 3) Ancienne API (index.waitForPendingUpdate / updateId)
   if (
     task?.updateId != null &&
     typeof anyIndex.waitForPendingUpdate === "function"
@@ -37,7 +34,6 @@ async function waitTask(task: MeiliTask, timeoutMs = 30_000, intervalMs = 100) {
     });
     return;
   }
-  // 4) Fallback polling (nouvelle API: client.getTask)
   if (task?.taskUid != null && typeof anyClient.getTask === "function") {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -49,10 +45,55 @@ async function waitTask(task: MeiliTask, timeoutMs = 30_000, intervalMs = 100) {
     }
     throw new Error("Timeout waiting for Meili task");
   }
-  // 5) Rien de dispo → ne bloque pas (best-effort)
 }
 
-// ---- Service
+// ---------- Settings souhaitées ----------
+const SEARCHABLE = [
+  "title",
+  "description",
+  "tag",
+  "location",
+  "serviceType", // string (ex: slug/label), utile pour le search plein-texte
+  "instrument",
+  "niveau",
+  "styles",
+  "category", // compat éventuelle si tu avais un champ string unique
+  "status",
+];
+
+const FILTERABLE = [
+  "location",
+  "price",
+  "tag",
+  "serviceTypeId",
+  "serviceType",
+  "instrument",
+  "niveau",
+  "isPublished",
+  "isHighlighted",
+  "styles",
+  "category",
+  "status",
+];
+
+const SORTABLE = [
+  "title",
+  "createdAt",
+  "price",
+  "location",
+  "serviceTypeId",
+  "instrument",
+];
+
+// utilitaires petite comparaison (ordre non pris en compte)
+function sameSet(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const sa = new Set(a);
+  for (const x of b) if (!sa.has(x)) return false;
+  return true;
+}
+
+// ---------- Service ----------
 export type MeiliDoc = {
   id: number | string;
   title: string;
@@ -60,9 +101,43 @@ export type MeiliDoc = {
 };
 
 export class SearchService {
-  /** Idempotent : crée l’index si besoin (sans settings) */
-  static async init() {
-    await client.createIndex(INDEX_NAME, { primaryKey: "id" }).catch(() => {});
+  /** Idempotent : crée l’index si besoin et configure les settings */
+  static async initAndConfigure() {
+    // 1) crée l’index si absent
+    try {
+      await client.createIndex(INDEX_NAME, { primaryKey: "id" });
+    } catch {
+      /* ignore if exists */
+    }
+
+    // 2) applique les settings en une fois si la config diverge
+    // Certaines versions du SDK renvoient `getSettings()`, sinon on pousse directement.
+    try {
+      const current = (await (index as any).getSettings?.()) || {};
+      const needSearchable =
+        !current.searchableAttributes ||
+        !sameSet(current.searchableAttributes, SEARCHABLE);
+      const needFilterable =
+        !current.filterableAttributes ||
+        !sameSet(current.filterableAttributes, FILTERABLE);
+      const needSortable =
+        !current.sortableAttributes ||
+        !sameSet(current.sortableAttributes, SORTABLE);
+
+      if (needSearchable || needFilterable || needSortable) {
+        const task = await index.updateSettings({
+          searchableAttributes: SEARCHABLE,
+          filterableAttributes: FILTERABLE,
+          sortableAttributes: SORTABLE,
+        });
+        await waitTask(task);
+      }
+    } catch {
+      // Fallback: pousser chaque famille séparément (versions anciennes)
+      await waitTask(await index.updateSearchableAttributes(SEARCHABLE as any));
+      await waitTask(await index.updateFilterableAttributes(FILTERABLE as any));
+      await waitTask(await index.updateSortableAttributes(SORTABLE as any));
+    }
   }
 
   /** Upsert 1 document */
@@ -77,7 +152,7 @@ export class SearchService {
     await waitTask(task);
   }
 
-  /** Update (équivaut à addDocuments côté Meili) */
+  /** Update (équivaut souvent à addDocuments côté Meili) */
   static async update(doc: MeiliDoc) {
     const task = await index.updateDocuments([doc]);
     await waitTask(task);
@@ -95,7 +170,7 @@ export class SearchService {
     await waitTask(await index.addDocuments(allDocs));
   }
 
-  /** Recherche (page/hitsPerPage si dispo, sinon limit/offset fonctionnera aussi) */
+  /** Recherche paginée */
   static async searchPaged(
     query: string,
     opts?: {
@@ -113,6 +188,9 @@ export class SearchService {
       filter: filters,
       sort,
       facets,
-    } as any); // cast pour supporter les variantes de SDK
+    } as any);
+  }
+  static async clearDoc() {
+    await waitTask(await index.deleteAllDocuments());
   }
 }

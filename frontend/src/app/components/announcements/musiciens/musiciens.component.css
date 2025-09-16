@@ -1,0 +1,23 @@
+.filter-panel {
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* caper la largeur des champs pour éviter l’effet “trop long” */
+.form-narrow {
+  max-width: 560px;
+  width: 100%;
+}
+.form-status {
+  max-width: 160px;
+  width: 100%;
+}
+
+/* optionnel : évite que les inputs débordent en petits écrans */
+@media (max-width: 991.98px) {
+  .form-narrow,
+  .form-status {
+    max-width: 100%;
+  }
+}

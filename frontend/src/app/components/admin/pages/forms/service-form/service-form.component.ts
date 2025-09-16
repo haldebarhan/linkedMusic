@@ -75,7 +75,7 @@ export class ServiceFormComponent implements OnInit {
         .updateResource('service-types', this.serviceId, {
           name,
           slug: name,
-          categoryId,
+          categoryIds: [categoryId],
         })
         .subscribe({
           next: () => {
@@ -89,7 +89,11 @@ export class ServiceFormComponent implements OnInit {
         });
     } else {
       this.api
-        .createResource('service-types', { name, slug: name, categoryId })
+        .createResource('service-types', {
+          name,
+          slug: name,
+          categoryIds: [categoryId],
+        })
         .subscribe({
           next: () => {
             this.router.navigate(['admin/services']);

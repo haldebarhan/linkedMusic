@@ -53,21 +53,26 @@ export class FieldsViewComponent implements OnInit {
 
   /* ---------- Load Field & attached ---------- */
   loadField() {
-    this.api.findAdminResource('fields', this.fieldId).subscribe((r) => {
-      const f = r.data ?? r;
-      this.field = f;
+    this.api.findAdminResource('fields', this.fieldId).subscribe({
+      next: (res) => {
+        const response = res.data;
+        this.field = res.data;
+        const attached = Array.isArray(response.CategoryField)
+          ? response.CategoryField
+          : [];
+        this.attached = attached.map((cf: any) => {
+          const id = cf.category.id;
+          const name = cf.category?.name ?? `#${id}`;
+          return { id, name };
+        });
 
-      const attached = Array.isArray(f.services) ? f.services : [];
-      this.attached = attached.map((stf: any) => {
-        const id = stf.serviceTypeId ?? stf.serviceType?.id ?? stf.id;
-        const name = stf.serviceType?.name ?? stf.name ?? `#${id}`;
-        return { id, name };
-      });
+        // préselectionner les attachés
+        this.selectedIds = new Set(this.attached.map((a) => a.id));
 
-      // préselectionner les attachés
-      this.selectedIds = new Set(this.attached.map((a) => a.id));
-      // alimenter le cache noms
-      this.attached.forEach((a) => this.selectedCache.set(a.id, a.name));
+        // alimenter le cache noms
+        this.attached.forEach((a) => this.selectedCache.set(a.id, a.name));
+      },
+      error: (err) => console.error(err),
     });
   }
 
@@ -75,7 +80,7 @@ export class FieldsViewComponent implements OnInit {
   reload() {
     this.api
       .listResources({
-        endpoint: 'service-types',
+        endpoint: 'categories',
         page: this.page,
         limit: this.limit,
         params: { q: this.q || undefined },
@@ -151,7 +156,7 @@ export class FieldsViewComponent implements OnInit {
     if (!this.selectedIds.size) return;
     const ids = Array.from(this.selectedIds);
     const payload = ids.map((id) => {
-      return { serviceTypeId: id, fieldId: this.fieldId };
+      return { categoryId: id, fieldId: this.fieldId };
     });
     this.api
       .createResource('attach-fields', { fields: payload })
@@ -175,7 +180,7 @@ export class FieldsViewComponent implements OnInit {
       if (result.isConfirmed) {
         this.api
           .createResource('detach-fields', {
-            serviceTypeId,
+            categoryId: serviceTypeId,
             fieldId: this.fieldId,
           })
           .subscribe({

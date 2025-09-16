@@ -55,9 +55,10 @@ export class CategorieFormComponent implements OnInit {
   onSubmit() {
     this.isSubmit = true;
     const { name } = this.CategoryForm.value;
+    const slug = String(name).toLocaleLowerCase();
     if (this.categoryId) {
       this.api
-        .updateResource('categories', this.categoryId, { name, slug: name })
+        .updateResource('categories', this.categoryId, { name, slug })
         .subscribe({
           next: () => {
             this.router.navigate(['admin/categories']);
@@ -69,7 +70,7 @@ export class CategorieFormComponent implements OnInit {
           },
         });
     } else {
-      this.api.createResource('categories', { name, slug: name }).subscribe({
+      this.api.createResource('categories', { name, slug }).subscribe({
         next: () => {
           this.router.navigate(['admin/categories']);
           this.isSubmit = false;

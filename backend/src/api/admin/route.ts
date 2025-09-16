@@ -9,6 +9,8 @@ import { CreateConfigDTO } from "@/microservices/configurations/configuration.dt
 import {
   AttachFieldDTO,
   AttachFieldsDTO,
+  AttachServicedDTO,
+  AttachServicesDTO,
   CreateCategoryDTO,
   CreateFieldDto,
   CreateFieldOptionDto,
@@ -83,6 +85,16 @@ router.post(
     adminController.createServiceType(req, res)
 );
 
+router.get("/catalog/service-types/:id", async (req: Request, res: Response) =>
+  adminController.findServiceType(req, res)
+);
+
+router.delete(
+  "/catalog/service-types/:id",
+  async (req: Request, res: Response) =>
+    adminController.removeServiceType(req, res)
+);
+
 router.post(
   "/catalog/fields",
   ValidateDtoMiddleware(CreateFieldDto),
@@ -106,6 +118,18 @@ router.post(
   ValidateDtoMiddleware(CreateFieldOptionDto),
   async (req: Request, res: Response) =>
     adminController.createFieldOption(req, res)
+);
+
+router.post(
+  "/catalog/attach-services",
+  ValidateDtoMiddleware(AttachServicesDTO),
+  async (req: Request, res: Response) => adminController.attachService(req, res)
+);
+
+router.post(
+  "/catalog/detach-services",
+  ValidateDtoMiddleware(AttachServicedDTO),
+  async (req: Request, res: Response) => adminController.detachService(req, res)
 );
 
 router.post(

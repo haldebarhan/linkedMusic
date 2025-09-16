@@ -30,38 +30,18 @@
           class="d-flex justify-content-center align-items-center"
           style="padding: 20px"
         >
-          <div class="card-custom" [routerLink]="['/annonces', 'equipement']">
+          <div
+            class="card-custom"
+            *ngFor="let category of categories"
+            [routerLink]="
+              category.slug === 'musiciens'
+                ? ['/annonces', 'musiciens']
+                : ['/announcemnts', category.slug]
+            "
+          >
             <div class="icon-text">
-              <i class="fas fa-tools"></i>
-              <p>Équipement & Logistique</p>
-            </div>
-          </div>
-
-          <div class="card-custom" [routerLink]="['/annonces', 'studios']">
-            <div class="icon-text">
-              <i class="fas fa-microphone"></i>
-              <p>Producteurs & Studios</p>
-            </div>
-          </div>
-
-          <div class="card-custom" [routerLink]="['/annonces', 'chanteur']">
-            <div class="icon-text">
-              <i class="fas fa-music"></i>
-              <p>Chanteur & Danseur</p>
-            </div>
-          </div>
-
-          <div class="card-custom" [routerLink]="['/annonces', 'professeur']">
-            <div class="icon-text">
-              <i class="fas fa-chalkboard-teacher"></i>
-              <p>Formateurs & Professeurs</p>
-            </div>
-          </div>
-
-          <div class="card-custom" [routerLink]="['/annonces', 'compositeur']">
-            <div class="icon-text">
-              <i class="fas fa-pen-fancy"></i>
-              <p>Compositeurs & Paroles</p>
+              <i class="{{ getIcon(category.slug) }}"></i>
+              <p>{{ category.name }}</p>
             </div>
           </div>
         </div>

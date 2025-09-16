@@ -1,0 +1,21 @@
+<div class="container-fluid d-flex justify-content-center align-items-center">
+  <div style="min-height: 50vh">
+    <h2 class="mb-3 mt-5">Passer une annonce</h2>
+    <div class="rub-head bg-rub px-3 py-2 rounded text-white mb-3">
+      Choisissez la rubrique correspondant à votre annonce :
+    </div>
+
+    <div class="row g-2 justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6" *ngIf="loading">
+        <div class="text-center py-4">Chargement…</div>
+      </div>
+
+      <div class="col-12 col-md-8 col-lg-6" *ngFor="let c of categories">
+        <button class="cat-item w-100" (click)="choose(c)">
+          <span class="cat-name">{{ c.name }}</span>
+          <i class="fas fa-chevron-right ms-auto"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

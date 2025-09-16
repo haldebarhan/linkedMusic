@@ -8,48 +8,65 @@ import DatabaseService from "@/utils/services/database.service";
 import {
   applyDynamicValues,
   buildDocForIndex,
-  mapSort,
 } from "@/utils/helpers/apply-dynamique-values";
 import { AnnouncementRepository } from "./ann.repository";
-import { buildWhere } from "./filter-builder";
 import { SearchService } from "@/utils/services/search.service";
 import { buildMeiliFilter } from "./meili-filters";
+import { Order } from "@/utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
-type ListOpts = { q?: string; sort?: string };
 
 @injectable()
 export class AnnouncementService {
   constructor(
     private readonly catalogueRepository: CatalogueRepository,
-    private annRepository: AnnouncementRepository
+    private annRepository: AnnouncementRepository,
+    private readonly searchService: SearchService
   ) {}
 
-  async create(userId: number, data: CreateAnnouncementDto) {
+  async create(userId: number, data: CreateAnnouncementDto, files: string[]) {
+    let specialValues: Record<string, string> = {};
     try {
-      const serviceType = await this.getServiceType(data.serviceTypeId);
-      const annData = this.buildAnnDTO(userId, serviceType, data);
+      const [serviceType, category] = await Promise.all([
+        await this.getServiceType(data.serviceTypeId),
+        await this.findCategory(data.categoryId),
+      ]);
+      const annData = this.buildAnnDTO(userId, serviceType, data, files);
       const fieldsByKey = new Map(
-        serviceType.fields.map((sf) => [sf.field.key, { sf, field: sf.field }])
+        category.CategoryField.map((cf) => [
+          cf.field.key,
+          { sf: cf, field: cf.field },
+        ])
       );
+
       this.checkRequiredFields(fieldsByKey, data.values);
-      return await prisma.$transaction(async (tx) => {
-        const ann = await tx.announcement.create(annData);
-        await applyDynamicValues({
+      const { id: annId } = await prisma.$transaction(async (tx) => {
+        const ann = await tx.announcement.create({
+          data: {
+            title: annData.title,
+            description: annData.description,
+            ownerId: userId,
+            images: files,
+            serviceType: { connect: { id: annData.serviceTypeId } },
+            price: annData.price ?? null,
+            location: annData.location ?? null,
+          },
+        });
+        specialValues = await applyDynamicValues({
           tx,
           announcementId: ann.id,
           values: data.values ?? {},
           fieldsByKey,
-          mode: "create", // pas de suppression préalable
+          mode: "create",
         });
-        try {
-          const doc = await buildDocForIndex(ann.id);
-          await SearchService.addOrUpdate(doc);
-        } catch (e) {
-          console.error("[meili] addOrUpdate failed", e);
-        }
-        return ann;
+        return { id: ann.id };
       });
+      try {
+        const doc = await buildDocForIndex(annId, specialValues);
+        await SearchService.addOrUpdate(doc);
+      } catch (e) {
+        console.error("[meili] addOrUpdate failed", e);
+      }
     } catch (error) {
       const status = error.status ?? 500;
       throw createError(status, error.message);
@@ -67,42 +84,38 @@ export class AnnouncementService {
     filters: Record<string, any>,
     page: number,
     limit: number,
-    opts?: ListOpts
+    opts?: { q?: string; order?: Order }
   ) {
-    const q = opts?.q?.trim();
-    const sort = mapSort(opts?.sort);
-    if (q) {
-      const meiliFilter = buildMeiliFilter(categorySlug, filters);
-      const { hits, estimatedTotalHits } = await SearchService.searchPaged(q, {
-        filters: meiliFilter,
-        sort,
-        page,
-        hitsPerPage: limit,
-        facets: ["styles", "serviceType", "city", "pro"],
-      });
-      const total = estimatedTotalHits || 0;
-      return {
-        data: hits,
-        metadata: {
-          total,
-          page,
-          totalPage: Math.max(Math.ceil(total / limit), 1),
-        },
-      };
-    }
-    const where = await buildWhere(categorySlug, filters);
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.annRepository.findAll(where, skip, limit),
-      this.annRepository.count(where),
-    ]);
+    const query = (opts?.q ?? "").trim();
+    const meiliFilter = buildMeiliFilter(categorySlug, {
+      styles: filters.styles,
+      location: filters.location,
+      serviceTypeId: filters.serviceTypeId,
+      tag: filters.tag,
+      serviceType: filters.serviceType,
+    });
 
+    const meiliSort =
+      opts?.order === Order.ASC ? ["createdAt:asc"] : ["createdAt:desc"];
+
+    const res = await SearchService.searchPaged(query, {
+      filters: meiliFilter,
+      sort: meiliSort,
+      page,
+      hitsPerPage: limit,
+    });
+    const hits = (res as any).hits ?? [];
+    const total =
+      (res as any).totalHits ?? (res as any).estimatedTotalHits ?? 0;
+    const totalPage =
+      Math.max((res as any).totalPages, 1) ??
+      Math.max(Math.ceil(total / limit), 1);
     return {
-      data,
+      data: hits,
       metadata: {
         total,
         page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
+        totalPage,
       },
     };
   }
@@ -121,69 +134,75 @@ export class AnnouncementService {
     return deleted;
   }
 
-  async update(
-    announcementId: number,
-    userId: number,
-    dto: UpdateAnnouncementDto
-  ) {
-    const announcement = await this.findOne(announcementId);
-    if (announcement.ownerId !== userId) throw createError(403, "Forbidden");
-    const serviceType = await this.catalogueRepository.findOneServiceType({
-      id: announcement.serviceTypeId,
-    });
-    if (!serviceType) throw createError(404, "service type not found");
-    const fieldsByKey = new Map(
-      serviceType.fields.map((sf) => [sf.field.key, { sf, field: sf.field }])
-    );
+  //   async update(
+  //     announcementId: number,
+  //     userId: number,
+  //     dto: UpdateAnnouncementDto,
+  //     files: string[]
+  //   ) {
+  //     const announcement = await this.findOne(announcementId);
+  //     if (announcement.ownerId !== userId) throw createError(403, "Forbidden");
+  //     const categories = await this.findCategory(announcement);
+  //     const serviceType = await this.catalogueRepository.findOneServiceType({
+  //       id: announcement.serviceTypeId,
+  //     });
 
-    const missingRequired: string[] = [];
-    for (const { sf, field } of fieldsByKey.values()) {
-      if (
-        sf.required &&
-        hasOwn(dto.values, field.key) &&
-        isEmptyValue(dto.values![field.key])
-      ) {
-        missingRequired.push(field.key);
-      }
-    }
-    if (missingRequired.length)
-      throw new Error(
-        `Missing required dynamic fields: ${missingRequired.join(", ")}`
-      );
+  //     if (!serviceType) throw createError(404, "service type not found");
+  //     const fieldsByKey = new Map(
+  //       category.CategoryField.map((cf) => [
+  //         cf.field.key,
+  //         { sf: cf, field: cf.field },
+  //       ])
+  //     );
 
-    return await prisma.$transaction(async (tx) => {
-      // champs "plats"
-      const updated = await tx.announcement.update({
-        where: { id: announcementId },
-        data: {
-          title: dto.title ?? undefined,
-          description: dto.description ?? undefined,
-          images: dto.images ?? undefined,
-          price: dto.price ?? undefined,
-          location: dto.location ?? undefined,
-        },
-      });
+  //     const missingRequired: string[] = [];
+  //     for (const { sf, field } of fieldsByKey.values()) {
+  //       if (
+  //         sf.required &&
+  //         hasOwn(dto.values, field.key) &&
+  //         isEmptyValue(dto.values![field.key])
+  //       ) {
+  //         missingRequired.push(field.key);
+  //       }
+  //     }
+  //     if (missingRequired.length)
+  //       throw new Error(
+  //         `Missing required dynamic fields: ${missingRequired.join(", ")}`
+  //       );
 
-      // valeurs dynamiques : on remplace uniquement les clés présentes
-      if (dto.values && Object.keys(dto.values).length) {
-        await applyDynamicValues({
-          tx,
-          announcementId,
-          values: dto.values,
-          fieldsByKey,
-          mode: "replace-keys", // supprime la/les clé(s) ciblées et réécrit
-        });
-      }
-      try {
-        const doc = await buildDocForIndex(announcementId);
-        await SearchService.addOrUpdate(doc); // update = upsert chez Meili
-      } catch (e) {
-        console.error("[meili] update failed", e);
-      }
+  //     return await prisma.$transaction(async (tx) => {
+  //       // champs "plats"
+  //       const updated = await tx.announcement.update({
+  //         where: { id: announcementId },
+  //         data: {
+  //           title: dto.title ?? undefined,
+  //           description: dto.description ?? undefined,
+  //           images: files ?? undefined,
+  //           price: dto.price ?? undefined,
+  //           location: dto.location ?? undefined,
+  //         },
+  //       });
 
-      return updated;
-    });
-  }
+  //       // valeurs dynamiques : on remplace uniquement les clés présentes
+  //       if (dto.values && Object.keys(dto.values).length) {
+  //         await applyDynamicValues({
+  //           tx,
+  //           announcementId,
+  //           values: dto.values,
+  //           fieldsByKey,
+  //           mode: "replace-keys", // supprime la/les clé(s) ciblées et réécrit
+  //         });
+  //       }
+  //       try {
+  //         const doc = await buildDocForIndex(announcementId);
+  //         await SearchService.addOrUpdate(doc); // update = upsert chez Meili
+  //       } catch (e) {
+  //         console.error("[meili] update failed", e);
+  //       }
+
+  //       return updated;
+  //     });
+  //   }
 
   private async getServiceType(id: number) {
     const serviceType = await this.catalogueRepository.findServiceType(id);
@@ -191,16 +210,23 @@ export class AnnouncementService {
     return serviceType;
   }
 
+  private async findCategory(id: number) {
+    const category = await this.catalogueRepository.findCategory(id);
+    if (!category) throw createError(404, `Invalid Service Type for ID: ${id}`);
+    return category;
+  }
+
   private buildAnnDTO(
     userId: number,
     serviceType: any,
-    data: CreateAnnouncementDto
+    data: CreateAnnouncementDto,
+    images: string[]
   ) {
     const annData: any = {
       title: data.title,
       description: data.description,
       ownerId: userId,
-      images: data.images ?? [],
+      images: images ?? [],
       serviceTypeId: serviceType.id,
       categoryId: serviceType.categoryId,
       price: data.price ?? null,
@@ -222,6 +248,26 @@ export class AnnouncementService {
     if (missingRequired.length) {
       throw new Error(
         `Missing required dynamic fields: ${missingRequired.join(", ")}`
+      );
+    }
+  }
+
+  private async assertCategoriesAllowed(
+    tx: PrismaClient,
+    serviceTypeId: number,
+    categoryIds: number[]
+  ) {
+    const distinct = Array.from(new Set(categoryIds || []));
+    if (!distinct.length) return;
+
+    const count = await tx.categoryServiceType.count({
+      where: { serviceTypeId, categoryId: { in: distinct } },
+    });
+
+    if (count !== distinct.length) {
+      throw createError(
+        400,
+        "Certaines catégories ne sont pas compatibles avec ce serviceType"
       );
     }
   }

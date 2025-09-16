@@ -1,60 +1,56 @@
-/** Construit un filter Meili à partir d’un objet de filtres + la catégorie */
+const esc = (s: string) => String(s).replace(/"/g, '\\"');
+
 export function buildMeiliFilter(
   categorySlug: string,
-  filters: Record<string, any>
-): string {
-  const clauses: string[] = [`category = ${quote(categorySlug)}`];
+  f: {
+    styles?: string[];
+    location?: string;
+    serviceTypeId?: number | string;
+    status?: string;
+    tag?: string;
+    serviceType?: string;
+  } = {}
+) {
+  const parts: string[] = [];
 
-  for (const [k, raw] of Object.entries(filters)) {
-    if (raw == null || raw === "" || (Array.isArray(raw) && raw.length === 0))
-      continue;
+  parts.push(`category = "${esc(categorySlug)}"`);
+  parts.push("status = PENDING_APPROVAL");
 
-    // Cas classiques min/max (ex: priceMin/priceMax)
-    if (k.endsWith("Min")) {
-      const base = k.slice(0, -3);
-      const n = Number(raw);
-      if (!Number.isNaN(n)) clauses.push(`${base} >= ${n}`);
-      continue;
-    }
-    if (k.endsWith("Max")) {
-      const base = k.slice(0, -3);
-      const n = Number(raw);
-      if (!Number.isNaN(n)) clauses.push(`${base} <= ${n}`);
-      continue;
-    }
-
-    // Booléens
-    if (isBoolish(raw)) {
-      clauses.push(`${k} = ${toBool(raw) ? "true" : "false"}`);
-      continue;
-    }
-
-    // Arrays -> OR
-    if (Array.isArray(raw)) {
-      const or = raw
-        .filter((v) => v !== null && v !== undefined && v !== "")
-        .map((v) => `${k} = ${quote(v)}`);
-      if (or.length) clauses.push(`(${or.join(" OR ")})`);
-      continue;
-    }
-
-    // Fallback égalité
-    clauses.push(`${k} = ${quote(raw)}`);
+  // Styles (array string) -> OR entre les valeurs
+  if (Array.isArray(f.styles) && f.styles.length) {
+    const or = f.styles
+      .filter((s) => s !== null && s !== undefined && String(s).trim() !== "")
+      .map((s) => `styles = "${esc(String(s))}"`);
+    if (or.length === 1) parts.push(or[0]);
+    else if (or.length > 1) parts.push(`(${or.join(" OR ")})`);
   }
 
-  return clauses.join(" AND ");
-}
+  // Localisation (string)
+  if (f.location && String(f.location).trim() !== "") {
+    parts.push(`location = "${esc(String(f.location))}"`);
+  }
 
-function isBoolish(v: any) {
-  return [true, false, "true", "false", "1", "0", 1, 0, "on", "off"].includes(
-    v
-  );
-}
-function toBool(v: any) {
-  return v === true || v === 1 || v === "1" || v === "true" || v === "on";
-}
-function quote(v: any) {
-  return typeof v === "number"
-    ? String(v)
-    : `"${String(v).replace(/"/g, '\\"')}"`;
+  // Service type (number)
+  if (
+    f.serviceTypeId !== undefined &&
+    f.serviceTypeId !== null &&
+    String(f.serviceTypeId) !== ""
+  ) {
+    parts.push(`serviceTypeId = ${Number(f.serviceTypeId)}`);
+  }
+
+  // Statut texte (si tu l'utilises au lieu de isPublished)
+  if (f.status && String(f.status).trim() !== "") {
+    parts.push(`status = "${esc(String(f.status))}"`);
+  }
+
+  if (f.tag && String(f.tag).trim() !== "") {
+    parts.push(`tag = "${esc(String(f.tag))}"`);
+  }
+
+  if (f.serviceType && String(f.serviceType).trim() !== "") {
+    parts.push(`serviceType = "${esc(String(f.serviceType))}"`);
+  }
+
+  return parts.join(" AND ");
 }

@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import {
   AttachFieldDTO,
   AttachFieldsDTO,
+  AttachServicedDTO,
+  AttachServicesDTO,
   CreateCategoryDTO,
   CreateFieldDto,
   CreateFieldOptionDto,
@@ -39,8 +41,16 @@ export class CatalogueController {
         page: pageQuery,
         limit: limitQuery,
         order: orderQuery,
+        q: searchQuery,
       } = req.query;
       const where: any = {};
+
+      if (searchQuery) {
+        where.name = {
+          contains: searchQuery,
+          mode: "insensitive",
+        };
+      }
 
       const page = parseInt(pageQuery as string) || 1;
       const limit = parseInt(limitQuery as string) || 10;
@@ -155,6 +165,28 @@ export class CatalogueController {
     }
   }
 
+  async findServiceTypes(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const service = await this.catalogueService.findOneServiceType(+id);
+      const response = formatResponse(200, service);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async removeServiceTypes(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const service = await this.catalogueService.removeServiceType(+id);
+      const response = formatResponse(200, service);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
   // Fields
   async createField(req: Request, res: Response) {
     try {
@@ -235,6 +267,33 @@ export class CatalogueController {
     }
   }
 
+  async attachService(req: Request, res: Response) {
+    try {
+      const dto: AttachServicesDTO = Object.assign(
+        new AttachServicesDTO(),
+        req.body
+      );
+      const result = await this.catalogueService.attachServiceToCategories(dto);
+      const response = formatResponse(201, result);
+      res.status(201).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async detachService(req: Request, res: Response) {
+    try {
+      const dto: AttachServicedDTO = Object.assign(
+        new AttachServicedDTO(),
+        req.body
+      );
+      const result = await this.catalogueService.dettachServiceToCategory(dto);
+      const response = formatResponse(201, result);
+      res.status(201).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
   async attachField(req: Request, res: Response) {
     try {
       const dto: AttachFieldsDTO = Object.assign(
@@ -260,12 +319,10 @@ export class CatalogueController {
     }
   }
 
-  async getFilters(req: Request, res: Response) {
+  async getFilterSchema(req: Request, res: Response) {
     try {
       const { category } = req.params;
-      const result = await this.catalogueService.getFilterSchemaByCategorySlug(
-        category
-      );
+      const result = await this.catalogueService.getFilterSchema(category);
       const response = formatResponse(201, result);
       res.status(201).json(response);
     } catch (error) {

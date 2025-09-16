@@ -61,9 +61,18 @@ export class AdminController {
     return await this.catalogueController.removeCategory(req, res);
   }
 
+  async removeServiceType(req: Request, res: Response) {
+    return await this.catalogueController.removeServiceTypes(req, res);
+  }
+
   async createServiceType(req: Request, res: Response) {
     return await this.catalogueController.createServiceType(req, res);
   }
+
+  async findServiceType(req: Request, res: Response) {
+    return await this.catalogueController.findServiceTypes(req, res);
+  }
+
   async createField(req: Request, res: Response) {
     return await this.catalogueController.createField(req, res);
   }
@@ -84,6 +93,13 @@ export class AdminController {
     return await this.catalogueController.removeFields(req, res);
   }
 
+  async attachService(req: Request, res: Response) {
+    return await this.catalogueController.attachService(req, res);
+  }
+
+  async detachService(req: Request, res: Response) {
+    return await this.catalogueController.detachService(req, res);
+  }
   async attachField(req: Request, res: Response) {
     return await this.catalogueController.attachField(req, res);
   }
