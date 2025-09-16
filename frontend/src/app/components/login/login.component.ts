@@ -37,8 +37,8 @@ export class LoginComponent {
     const { email, password } = this.loginForm.value;
     this.authService.login({ email, password }).subscribe({
       next: () => {
-        this.submitted = false;
         this.router.navigate(['/home']);
+        this.submitted = false;
       },
       error: (err: HttpErrorResponse) => {
         const msg = this.extractError(err);

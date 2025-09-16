@@ -1,0 +1,333 @@
+<div class="container-fluid py-3">
+  <!-- Fil d'ariane -->
+  <nav aria-label="breadcrumb" class="mb-4 bg-light">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Annonces</a></li>
+      <li class="breadcrumb-item active" aria-current="page">
+        Musiciens & groupes
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Titre -->
+  <h1 class="h2 mb-4">Musiciens et groupes de musique</h1>
+
+  <!-- ================== VERSION DESKTOP ================== -->
+
+  <div class="d-none d-md-block bg-light" [formGroup]="form">
+    <div class="d-flex justify-content-center">
+      <div class="col-lg-8 col-xl-6">
+        <!-- ======== Je Cherche ======= -->
+        <div class="rounded p-4 mb-4">
+          <div class="row align-items-center mb-3">
+            <div class="col-3 text-end">
+              <label class="form-label mb-0">Je cherche</label>
+            </div>
+            <div class="col-6">
+              <select class="form-select" formControlName="lookingFor">
+                <option value="">-- Indifférent --</option>
+                <option *ngFor="let s of services" [value]="s.slug">
+                  {{ s.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-3">
+              <select class="form-select">
+                <option>Tout statut</option>
+                <option>Pro</option>
+                <option>Amateur</option>
+              </select>
+            </div>
+          </div>
+          <!-- Je suis -->
+          <div class="row align-items-center mb-3">
+            <div class="col-3 text-end">
+              <label class="form-label mb-0">Je suis</label>
+            </div>
+            <div class="col-6">
+              <select class="form-select" formControlName="iAm">
+                <option value="">-- Indifférent --</option>
+                <option *ngFor="let s of services" ngValue="{{ s.slug }}">
+                  {{ s.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Localisation -->
+          <div class="row align-items-center mb-4">
+            <div class="col-3 text-end">
+              <label class="form-label mb-0">
+                <i class="fas fa-map-marker-alt"></i> :
+              </label>
+            </div>
+            <div class="col-6">
+              <select class="form-select" formControlName="location">
+                <option [ngValue]="''">Monde entier</option>
+                <option [ngValue]="'France'">France</option>
+                <option [ngValue]="'Paris'">Paris</option>
+                <option [ngValue]="'Lyon'">Lyon</option>
+                <option [ngValue]="'Marseille'">Marseille</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Styles -->
+          <div class="row">
+            <div class="col-3 text-end">
+              <label class="form-label">Styles</label>
+            </div>
+            <div class="col-9">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-check" *ngFor="let opt of options">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [checked]="isStyleChecked(opt.value)"
+                      (change)="
+                        toggleStyle(opt.value, $any($event.target).checked)
+                      "
+                      id="style-{{ opt.value }}"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="style-{{ opt.value }}"
+                      >{{ opt.label }}</label
+                    >
+                  </div>
+                </div>
+                <div class="col-md-4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== VERSION MOBILE ================== -->
+
+  <div class="d-block d-md-none">
+    <div class="p-3 bg-light rounded mb-4">
+      <!-- Je cherche -->
+      <div class="d-flex align-items-center mb-3">
+        <label class="form-label mb-0 me-2">Je cherche</label>
+        <select class="form-select">
+          <option>-- Indifférent --</option>
+          <option *ngFor="let s of services" [value]="s.slug">
+            {{ s.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Je suis -->
+      <div class="d-flex align-items-center mb-3">
+        <label class="form-label mb-0 me-2">Je suis</label>
+        <select class="form-select">
+          <option>-- Indifférent --</option>
+          <option *ngFor="let s of services" [value]="s.slug">
+            {{ s.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Statut -->
+      <div class="d-flex align-items-center mb-3">
+        <label class="form-label mb-0 me-2">Statut</label>
+        <div class="btn-group flex-grow-1" role="group">
+          <button type="button" class="btn btn-outline-secondary">Tout</button>
+          <button type="button" class="btn btn-outline-secondary">
+            Amateur
+          </button>
+          <button type="button" class="btn btn-success">Pro</button>
+        </div>
+      </div>
+
+      <!-- Localisation -->
+      <div class="d-flex align-items-center mb-3">
+        <label class="form-label mb-0 me-2">Pays</label>
+        <select class="form-select">
+          <option>France</option>
+          <option>Monde entier</option>
+        </select>
+      </div>
+
+      <!-- Styles avec bouton -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <label class="form-label mb-0">Styles</label>
+          <button
+            class="btn btn-link p-0"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mobileStyles"
+            aria-expanded="false"
+            aria-controls="mobileStyles"
+          >
+            Ouvrir / Fermer
+          </button>
+        </div>
+        <!-- Grille 4 par ligne -->
+        <div class="collapse mt-2" id="mobileStyles">
+          <div class="row g-1">
+            <div class="col-3">
+              <div class="form-check mb-1" *ngFor="let opt of options">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [checked]="isStyleChecked(opt.value)"
+                  (change)="toggleStyle(opt.value, $any($event.target).checked)"
+                  id="style-{{ opt.value }}"
+                />
+                <label class="form-check-label" for="style-{{ opt.value }}">{{
+                  opt.label
+                }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== RÉSULTATS ================== -->
+  <div class="d-none d-md-block">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="text-muted">
+        <strong>{{ metadata?.total }}</strong> annonces – page
+        <strong>{{ metadata?.page }}</strong>
+      </div>
+      <div class="d-flex align-items-center">
+        <span class="me-2">Tri par :</span>
+        <select class="form-select" style="width: auto">
+          <option>Date</option>
+          <option>Localisation</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="table-responsive d-none d-md-block">
+    <table class="table table-light table-hover">
+      <thead>
+        <tr>
+          <th>Annonce</th>
+          <th>Lieu</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of rows">
+          <td>
+            <div class="d-flex align-items-start">
+              <img
+                src="https://placehold.co/400"
+                alt="Annonce"
+                class="listing-image me-3"
+                width="60"
+                height="60"
+              />
+              <div>
+                <a href="#" class="listing-title">
+                  {{ item.title }}
+                  <span *ngIf="item.isHighlighted" class="badge-pro">PRO</span>
+                </a>
+                <div class="listing-description mt-1">
+                  {{ item.description | truncate }}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>{{ item.location }}</td>
+          <td>{{ item.createdAt | date }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Pagination -->
+  <div
+    class="pagination d-flex justify-content-center mt-3"
+    *ngIf="metadata && metadata.totalPage > 1"
+  >
+    <button
+      class="btn btn-outline-light me-2"
+      [disabled]="metadata.page === 1"
+      (click)="changePage(metadata.page - 1)"
+    >
+      Précédent
+    </button>
+    <ng-container *ngFor="let page of pages">
+      <button
+        class="btn"
+        [ngClass]="{
+          'btn-primary': page === metadata.page,
+          'btn-outline-light': page !== metadata.page
+        }"
+        (click)="changePage(page)"
+      >
+        {{ page }}
+      </button>
+    </ng-container>
+    <span *ngIf="metadata.totalPage > 5" class="mx-2">...</span>
+    <button
+      *ngIf="metadata.totalPage > 5"
+      class="btn btn-outline-light"
+      (click)="changePage(metadata.totalPage)"
+    >
+      Dernière
+    </button>
+    <button
+      class="btn btn-outline-light ms-2"
+      [disabled]="metadata.page === metadata.totalPage"
+      (click)="changePage(metadata.page + 1)"
+    >
+      Suivant
+    </button>
+  </div>
+
+  <!-- Mobile : infinite scroll -->
+  <div class="d-block d-md-none">
+    <div class="list-group">
+      <a
+        href="#"
+        class="list-group-item list-group-item-action d-flex align-items-start"
+        *ngFor="let item of rows"
+      >
+        <img
+          src="https://placehold.co/400"
+          class="rounded me-2"
+          width="60"
+          height="60"
+          alt="Annonce"
+        />
+        <div>
+          <div class="fw-bold">
+            {{ item.title }}
+            <span class="badge bg-success" *ngIf="item.isHighlighted">PRO</span>
+          </div>
+          <div class="text-muted small">
+            {{ item.description | slice : 0 : 40 }}
+          </div>
+          <div class="small">
+            {{ item.location }} • {{ item.createdAt | date }}
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Loader -->
+    <div class="text-center my-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+      </div>
+    </div>
+
+    <!-- Bouton retour en haut -->
+    <button
+      class="btn btn-primary rounded-circle shadow position-fixed back-to-top"
+      (click)="scrollToTop()"
+    >
+      ↑
+    </button>
+  </div>
+</div>

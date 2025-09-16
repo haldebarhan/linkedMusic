@@ -21,6 +21,16 @@ import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
 const router: Router = Router();
 const authController = container.resolve(AuthController);
 
+// Announcements
+
+router.get("/announcements/:category", async (req: Request, res: Response) =>
+  authController.listByCategory(req, res)
+);
+
+router.get("/announcements/:id", async (req: Request, res: Response) =>
+  authController.findAnnouncement(req, res)
+);
+
 router.post(
   "/auth/activate",
   ValidateDtoMiddleware(VerifyToken),
@@ -101,8 +111,10 @@ router.get(
     authController.getMe(req, res)
 );
 
-router.get("/catalog/:category/filters", async (req: Request, res: Response) =>
-  authController.getFilterSchemaByCategorySlug(req, res)
+router.get(
+  "/catalog/categories/:category/filters",
+  async (req: Request, res: Response) =>
+    authController.getFilterSchema(req, res)
 );
 
 router.get("/catalog/categories", async (req: Request, res: Response) =>

@@ -64,6 +64,10 @@ export class ServiceTypesComponent implements OnInit {
     this.router.navigate(['/admin/services/new']);
   }
 
+  goToDetails(service: any) {
+    this.router.navigate(['/admin/services/view', service.id]);
+  }
+
   removeService(service: any) {
     SweetAlert.fire({
       title: 'Etes-vous sure ?',
@@ -77,7 +81,7 @@ export class ServiceTypesComponent implements OnInit {
       reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.api.removeResource('categories', service.id).subscribe({
+        this.api.removeResource('service-types', service.id).subscribe({
           next: () => {
             SweetAlert.fire({
               title: 'Supprimé!',

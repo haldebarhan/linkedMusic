@@ -34,7 +34,7 @@
           <a href="#" class="text-decoration-none text-dark">
             <i class="fas fa-search me-1"></i> Mes recherches
           </a>
-          <button class="btn btn-success btn-sm">
+          <button class="btn btn-success btn-sm" (click)="createAnnouncement()">
             <i class="fas fa-plus me-1"></i> Passer une annonce
           </button>
         </div>
@@ -42,7 +42,7 @@
 
       <!-- Bouton "Passer une annonce" mobile -->
       <div class="col-12 mt-3 d-lg-none">
-        <button class="btn btn-success w-100">
+        <button class="btn btn-success w-100" (click)="createAnnouncement()">
           <i class="fas fa-plus me-2"></i> Passer une annonce
         </button>
       </div>

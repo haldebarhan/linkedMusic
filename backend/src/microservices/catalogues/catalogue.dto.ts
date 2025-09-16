@@ -25,8 +25,9 @@ export class CreateCategoryDTO {
 }
 
 export class CreateServiceTypeDTO {
-  @IsNumber({}, { message: "Category name must be a string" })
-  categoryId: number;
+  @IsArray()
+  @IsNumber({}, { message: "Category name must be a string", each: true })
+  categoryIds: number[];
 
   @IsNotEmpty({ message: "name is required" })
   @IsString({ message: "name must be a string" })
@@ -107,11 +108,18 @@ export class AttachFieldsDTO {
   fields: AttachFieldDTO[];
 }
 
-export class AttachFieldDTO {
-  @IsNumber({}, { message: "serviceTypeId must be a number" })
-  serviceTypeId: number;
+export class AttachServicesDTO {
+  @IsArray({ message: "services must be an array" })
+  @ValidateNested({ each: true })
+  @Type(() => AttachServicedDTO)
+  services: AttachServicedDTO[];
+}
 
-  @IsNumber({}, { message: "serviceTypeId must be a number" })
+export class AttachFieldDTO {
+  @IsNumber({}, { message: "categoryId must be a number" })
+  categoryId: number;
+
+  @IsNumber({}, { message: "fieldId must be a number" })
   fieldId: number;
 
   @IsOptional()
@@ -129,6 +137,14 @@ export class AttachFieldDTO {
   @IsOptional()
   @IsNumber({}, { message: "order must be a number" })
   order?: number;
+}
+
+export class AttachServicedDTO {
+  @IsNumber({}, { message: "categoryId must be a number" })
+  categoryId: number;
+
+  @IsNumber({}, { message: "fieldId must be a number" })
+  serviceTypeId: number;
 }
 
 // Update DTO

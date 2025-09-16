@@ -1,0 +1,60 @@
+/* taille de colonne & look */
+.services-col {
+  min-width: 220px; /* ajuste selon ton design */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-item {
+  background: transparent;
+  border: 0;
+  color: #e8e8e8;
+  padding: 0;
+  text-align: left;
+  font-size: 1.125rem; /* ~18px comme ta capture */
+  cursor: pointer;
+}
+
+.service-item:hover {
+  text-decoration: underline;
+}
+.service-item.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* panneau sombre (optionnel) */
+.services-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.location-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #2f2f2f; /* fond sombre */
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.location-bar i {
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.location-select {
+  width: auto; /* s’adapte au contenu */
+  min-width: 180px; /* ajuste si besoin */
+  background: #5f5f5f;
+  color: #fff;
+  border: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.location-select:focus {
+  box-shadow: none;
+  outline: 2px solid rgba(255, 255, 255, 0.15);
+}

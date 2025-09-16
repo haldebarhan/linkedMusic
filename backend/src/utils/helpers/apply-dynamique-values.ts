@@ -23,12 +23,14 @@ export async function applyDynamicValues(args: {
   values: Record<string, any>;
   fieldsByKey: FieldsByKey;
   mode: "create" | "replace-keys";
-}) {
+}): Promise<Record<string, string>> {
   const { tx, announcementId, values, fieldsByKey, mode } = args;
+  const specialRecord: Record<string, string> = {};
 
   for (const [key, raw] of Object.entries(values)) {
     const meta = fieldsByKey.get(key);
     if (!meta) {
+      specialRecord[key] = String(raw);
       // Le champ n'est pas attaché à ce ServiceType → on ignore (ou throw si tu préfères)
       continue;
     }
@@ -112,14 +114,21 @@ export async function applyDynamicValues(args: {
       }
     }
   }
+  return specialRecord;
 }
 
-export const buildDocForIndex = async (id: number): Promise<MeiliDoc> => {
+export const buildDocForIndex = async (
+  id: number,
+  values?: Record<any, string>
+): Promise<MeiliDoc> => {
   const a = await prisma.announcement.findUniqueOrThrow({
     where: { id },
     include: {
       serviceType: {
-        select: { slug: true, category: { select: { slug: true } } },
+        select: {
+          slug: true,
+          categories: { select: { category: { select: { slug: true } } } },
+        },
       },
       AnnValues: {
         include: { field: true, options: { include: { option: true } } },
@@ -131,13 +140,18 @@ export const buildDocForIndex = async (id: number): Promise<MeiliDoc> => {
   const doc: MeiliDoc = {
     id: a.id,
     title: a.title,
-    excerpt: a.description?.slice(0, 200) ?? "",
-    category: a.serviceType.category.slug,
+    description: a.description?.slice(0, 200) ?? "",
+    category: a.serviceType.categories.map((ann) => ann.category.slug),
     serviceType: a.serviceType.slug,
+    fichiers: a.images,
+    isPublished: a.isPublished,
+    isHighlighted: a.isHighlighted,
+    status: a.status,
+    views: a.views,
     price: a.price ?? undefined,
-    city: a.location ?? undefined,
-    createdAt: Math.floor(a.createdAt.getTime() / 1000),
-    updatedAt: Math.floor(a.updatedAt.getTime() / 1000),
+    location: a.location ?? undefined,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
   };
 
   for (const v of a.AnnValues) {
@@ -160,6 +174,12 @@ export const buildDocForIndex = async (id: number): Promise<MeiliDoc> => {
         break;
       default:
         (doc as any)[key] = v.valueText ?? null;
+    }
+  }
+
+  if (values && Object.keys(values).length > 0) {
+    for (const [key, raw] of Object.entries(values)) {
+      (doc as any)[key] = raw;
     }
   }
   return doc;

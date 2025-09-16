@@ -1,24 +1,63 @@
 import { Routes } from '@angular/router';
-import { AuthGuard, GuestGuard } from './auth/auth.guard';
 import { RoleGuard } from './auth/role.guard';
+import {
+  authCanActivate,
+  authCanMatch,
+  guestCanActivate,
+  guestCanMatch,
+} from './auth/auth.guard';
 
 export const routes: Routes = [
+  {
+    path: 'annonces/publier',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements-post/announcements-post.component'
+      ).then((m) => m.AnnouncementsPostComponent),
+  },
+  {
+    path: 'annonces/publier/:category',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/post-form/post-form.component').then(
+        (m) => m.PostFormComponent
+      ),
+  },
   {
     path: 'home',
     loadComponent: () =>
       import('./components/home/home.component').then((m) => m.HomeComponent),
   },
   {
-    path: 'annonces/:category',
-    canActivate: [GuestGuard],
+    path: 'annonces/musiciens',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
     loadComponent: () =>
-      import('./components/annonce/annonce.component').then(
-        (m) => m.AnnonceComponent
+      import('./components/announcements/musiciens/musiciens.component').then(
+        (m) => m.MusiciensComponent
       ),
   },
   {
+    path: 'announcemnts/:category',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements/announcement/announcement.component'
+      ).then((m) => m.AnnouncementComponent),
+  },
+  {
     path: 'login',
-    canActivate: [GuestGuard],
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/home' },
     loadComponent: () =>
       import('./components/login/login.component').then(
         (m) => m.LoginComponent
@@ -26,7 +65,12 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    canActivate: [GuestGuard],
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: {
+      guestPolicy: 'redirectIfAuth',
+      redirectTo: '/home',
+    },
     loadComponent: () =>
       import('./components/register/register.component').then(
         (m) => m.RegisterComponent
@@ -34,7 +78,9 @@ export const routes: Routes = [
   },
   {
     path: 'verify',
-    canActivate: [GuestGuard],
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/home' },
     loadComponent: () =>
       import('./components/verify-email/verify-email.component').then(
         (m) => m.VerifyEmailComponent
@@ -42,7 +88,9 @@ export const routes: Routes = [
   },
   {
     path: 'auth/activate-account',
-    canActivate: [GuestGuard],
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/home' },
     loadComponent: () =>
       import('./components/activation/activation.component').then(
         (m) => m.ActivationComponent

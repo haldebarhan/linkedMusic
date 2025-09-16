@@ -3,14 +3,16 @@ import { CatalogueRepository } from "./catalogue.repository";
 import {
   AttachFieldDTO,
   AttachFieldsDTO,
+  AttachServicedDTO,
+  AttachServicesDTO,
   CreateCategoryDTO,
   CreateFieldDto,
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
 } from "./catalogue.dto";
-import { Prisma } from "@prisma/client";
 import createError from "http-errors";
 import { Order } from "@/utils/enums/order.enum";
+import { Prisma } from "@prisma/client";
 
 @injectable()
 export class CatalogueService {
@@ -94,9 +96,24 @@ export class CatalogueService {
   // Services Types
   async createServiceType(data: CreateServiceTypeDTO) {
     try {
-      const where: any = { name: data.name, slug: data.slug };
+      console.log("data ", data);
+      const { name, slug, categoryIds } = data;
+      const where: any = { name, slug };
       await this.checkServiceType(where);
-      return await this.catalogueRepository.createServiceType(data);
+      const created = await this.catalogueRepository.createServiceType({
+        name,
+        slug,
+      });
+      await Promise.all(
+        categoryIds.map(
+          async (id) =>
+            await this.catalogueRepository.addCategoryToServiceType({
+              categoryId: id,
+              serviceTypeId: created.id,
+            })
+        )
+      );
+      return created;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -136,12 +153,15 @@ export class CatalogueService {
     };
   }
 
-  async findOneServiceType(where: any) {
-    const serviceType = await this.catalogueRepository.findOneServiceType(
-      where
-    );
+  async findOneServiceType(id: number) {
+    const serviceType = await this.catalogueRepository.findOneServiceType(id);
     if (!serviceType) throw createError(404, "service type not found");
     return serviceType;
+  }
+
+  async removeServiceType(id: number) {
+    const service = await this.findOneServiceType(id);
+    return await this.catalogueRepository.removeServiceType(service.id);
   }
 
   async createField(data: CreateFieldDto) {
@@ -217,6 +237,47 @@ export class CatalogueService {
     }
   }
 
+  async attachServiceToCategories(data: AttachServicesDTO) {
+    try {
+      if (!data.services || data.services.length === 0) {
+        throw createError(400, "No fields to attach");
+      }
+
+      const results = await Promise.allSettled(
+        data.services.map((service) =>
+          this.catalogueRepository.attachServiceCategory(service)
+        )
+      );
+
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected");
+
+      if (failed.length > 0) {
+        console.error(`${failed.length} categorie failed to attach:`, failed);
+
+        // Si toutes ont échoué, lever une erreur
+        if (successful === 0) {
+          throw createError(500, "All category attachments failed");
+        }
+
+        // Si partiellement réussi, retourner les résultats avec info
+        return {
+          successful,
+          failed: failed.length,
+          results: results.map((r) =>
+            r.status === "fulfilled" ? r.value : { error: r.reason.message }
+          ),
+        };
+      }
+
+      return results.map((r) => r);
+    } catch (error) {
+      throw createError(
+        error.status || 500,
+        `Failed to attach fields to service: ${error.message}`
+      );
+    }
+  }
   async attachFieldToService(data: AttachFieldsDTO) {
     try {
       if (!data.fields || data.fields.length === 0) {
@@ -225,7 +286,7 @@ export class CatalogueService {
 
       const results = await Promise.allSettled(
         data.fields.map((field) =>
-          this.catalogueRepository.attachFieldToService(field)
+          this.catalogueRepository.attachFieldToCategory(field)
         )
       );
 
@@ -261,9 +322,9 @@ export class CatalogueService {
 
   async dettachFieldToService(data: AttachFieldDTO) {
     try {
-      const { fieldId, serviceTypeId } = data;
-      return await this.catalogueRepository.detachFieldToService(
-        serviceTypeId,
+      const { fieldId, categoryId } = data;
+      return await this.catalogueRepository.detachFieldToCategory(
+        categoryId,
         fieldId
       );
     } catch (error) {
@@ -274,24 +335,48 @@ export class CatalogueService {
     }
   }
 
-  async getFilterSchemaByCategorySlug(slug: string) {
+  async dettachServiceToCategory(data: AttachServicedDTO) {
+    try {
+      const { serviceTypeId, categoryId } = data;
+      return await this.catalogueRepository.detachServiceToCategory(
+        categoryId,
+        serviceTypeId
+      );
+    } catch (error) {
+      throw createError(
+        error.status || 500,
+        `Failed to detach category to service: ${error.message}`
+      );
+    }
+  }
+
+  async getFilterSchema(slug: string) {
     try {
       const category = await this.findOneCategoryBySlug(slug);
-      const serviceTypeFields =
-        await this.catalogueRepository.findServiceTypeByCategory(category.id);
+      const services = category.services.map((cf: any) => {
+        return {
+          name: cf.serviceType.name,
+          slug: cf.serviceType.slug,
+          id: cf.serviceType.id,
+        };
+      });
+
+      const fields = category.CategoryField.map((cf: any) => ({
+        key: cf.field.key,
+        label: cf.field.label,
+        type: cf.field.inputType,
+        placeholder: cf.field.placeholder || null,
+        options: cf.field.options.map((opt: any) => ({
+          label: opt.label,
+          value: opt.value,
+        })),
+      }));
       return {
+        id: category.id,
         category: category.name,
         categorySlug: category.slug,
-        fields: serviceTypeFields.map((stf) => ({
-          key: stf.field.key,
-          label: stf.field.label,
-          type: stf.field.inputType,
-          placeholder: stf.field.placeholder || null,
-          options: stf.field.options.map((o) => ({
-            label: o.label,
-            value: o.value,
-          })),
-        })),
+        services: services,
+        fields,
       };
     } catch (error) {
       throw createError(
@@ -302,9 +387,8 @@ export class CatalogueService {
   }
 
   private async checkServiceType(where: any) {
-    const serviceType = await this.catalogueRepository.findOneServiceType(
-      where
-    );
+    const serviceType =
+      await this.catalogueRepository.findOneServiceTypeByParams(where);
     if (serviceType) throw createError(409, `Ce service existe deja`);
   }
 }

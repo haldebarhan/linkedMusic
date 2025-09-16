@@ -241,8 +241,9 @@ class Server {
   }
 }
 (async () => {
-  //   await ConfigService.loadConfigs();
-  await SearchService.init();
+  // await ConfigService.loadConfigs();
+  await SearchService.initAndConfigure();
+  //   await SearchService.clearDoc();
   const server = new Server();
   server.start();
 })();

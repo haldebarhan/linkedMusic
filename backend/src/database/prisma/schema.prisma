@@ -133,36 +133,64 @@ model File {
 }
 
 model Category {
-    id           Int            @id @default(autoincrement()) @map("id")
-    name         String         @unique
-    slug         String         @unique
-    icon         String?
-    services     ServiceType[]
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime       @updatedAt
-    Announcement Announcement[]
+    id            Int                    @id @default(autoincrement()) @map("id")
+    name          String                 @unique
+    slug          String                 @unique
+    icon          String?
+    createdAt     DateTime               @default(now())
+    updatedAt     DateTime               @updatedAt
+    Announcement  Announcement[]
+    CategoryField CategoryField[]
+    services      CategoryServiceType[]
+    Announcements AnnouncementCategory[]
 
     @@map("categories")
 }
 
 model ServiceType {
-    id           Int                @id @default(autoincrement()) @map("id")
-    name         String
-    slug         String             @unique
-    description  String?
-    categoryId   Int                @map("category_id")
-    groupId      Int?               @map("group_id")
-    createdAt    DateTime           @default(now())
-    updatedAt    DateTime           @updatedAt
-    parentId     Int?               @map("parent_id")
-    parent       ServiceType?       @relation("ServiceTypeToParent", fields: [parentId], references: [id])
-    group        RoleGroup?         @relation("ServiceGroup", fields: [groupId], references: [id])
-    category     Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    Announcement Announcement[]
-    fields       ServiceTypeField[]
-    children     ServiceType[]      @relation("ServiceTypeToParent")
+    id            Int                   @id @default(autoincrement()) @map("id")
+    name          String
+    slug          String                @unique
+    description   String?
+    groupId       Int?                  @map("group_id")
+    createdAt     DateTime              @default(now())
+    updatedAt     DateTime              @updatedAt
+    parentId      Int?                  @map("parent_id")
+    parent        ServiceType?          @relation("ServiceTypeToParent", fields: [parentId], references: [id])
+    group         RoleGroup?            @relation("ServiceGroup", fields: [groupId], references: [id])
+    Announcements Announcement[]
+    children      ServiceType[]         @relation("ServiceTypeToParent")
+    categories    CategoryServiceType[]
 
     @@map("service_types")
+}
+
+model CategoryServiceType {
+    categoryId    Int @map("category_id")
+    serviceTypeId Int @map("service_type_id")
+
+    category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    serviceType ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+
+    isDefault Boolean  @default(false)
+    order     Int      @default(0)
+    createdAt DateTime @default(now())
+
+    @@id([categoryId, serviceTypeId])
+    @@index([serviceTypeId])
+    @@map("category_service_types")
+}
+
+model AnnouncementCategory {
+    announcementId Int
+    categoryId     Int
+
+    announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+    category     Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@id([announcementId, categoryId])
+    @@index([categoryId])
+    @@map("announcement_categories")
 }
 
 model Field {
@@ -175,12 +203,12 @@ model Field {
     searchable  Boolean        @default(true)
     filterable  Boolean        @default(true)
 
-    options  FieldOption[]
-    services ServiceTypeField[]
+    options FieldOption[]
 
     createdAt     DateTime        @default(now())
     updatedAt     DateTime        @updatedAt
     AnnFieldValue AnnFieldValue[]
+    CategoryField CategoryField[]
 
     @@map("fields")
 }
@@ -198,20 +226,6 @@ model FieldOption {
 
     @@unique([fieldId, value])
     @@map("field_options")
-}
-
-model ServiceTypeField {
-    serviceTypeId Int
-    fieldId       Int
-    serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
-    field         Field       @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-
-    required        Boolean @default(false)
-    visibleInForm   Boolean @default(true)
-    visibleInFilter Boolean @default(true)
-    order           Int     @default(0)
-
-    @@id([serviceTypeId, fieldId])
 }
 
 model RoleGroup {
@@ -242,18 +256,35 @@ model Announcement {
     createdAt     DateTime           @default(now())
     updatedAt     DateTime           @updatedAt
 
-    serviceType  ServiceType     @relation(fields: [serviceTypeId], references: [id])
-    category     Category?       @relation(fields: [categoryId], references: [id])
+    serviceType  ServiceType            @relation(fields: [serviceTypeId], references: [id])
+    category     Category?              @relation(fields: [categoryId], references: [id])
     AnnValues    AnnFieldValue[]
-    User         User?           @relation(fields: [userId], references: [id])
+    User         User?                  @relation(fields: [userId], references: [id])
     userId       Int?
     Favorite     Favorite[]
     Conversation Conversation[]
     CustomField  CustomField[]
+    categories   AnnouncementCategory[]
 
     @@index([serviceTypeId])
     @@index([categoryId])
     @@map("announcements")
+}
+
+model CategoryField {
+    categoryId Int
+    fieldId    Int
+
+    required        Boolean @default(false)
+    visibleInFilter Boolean @default(true)
+    visibleInForm   Boolean @default(true)
+    order           Int     @default(0)
+
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    field    Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+    @@id([categoryId, fieldId])
+    @@map("category_fields")
 }
 
 model AnnFieldValue {
@@ -261,8 +292,8 @@ model AnnFieldValue {
     announcementId Int
     fieldId        Int
 
-    announcement Announcement @relation(fields: [announcementId], references: [id])
-    field        Field        @relation(fields: [fieldId], references: [id])
+    announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+    field        Field        @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
     valueText    String?
     valueNumber  Float?
@@ -285,8 +316,8 @@ model AnnFieldValueOption {
     annFieldValueId BigInt
     optionId        Int
 
-    annFieldValue AnnFieldValue @relation(fields: [annFieldValueId], references: [id])
-    option        FieldOption   @relation(fields: [optionId], references: [id])
+    annFieldValue AnnFieldValue @relation(fields: [annFieldValueId], references: [id], onDelete: Cascade)
+    option        FieldOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
     @@unique([annFieldValueId, optionId])
     @@index([optionId])

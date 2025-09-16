@@ -4,13 +4,15 @@ import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-reque
 import { UserController } from "@/microservices/users/user.controller";
 import { ProfileController } from "@/microservices/profiles/profile.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
+import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 
 @injectable()
 export class AuthController {
   constructor(
     private readonly userController: UserController,
     private readonly profileController: ProfileController,
-    private readonly catalogController: CatalogueController
+    private readonly catalogController: CatalogueController,
+    private readonly announcementController: AnnouncementController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -62,8 +64,8 @@ export class AuthController {
   }
 
   // Catalogs
-  async getFilterSchemaByCategorySlug(req: Request, res: Response) {
-    return await this.catalogController.getFilters(req, res);
+  async getFilterSchema(req: Request, res: Response) {
+    return await this.catalogController.getFilterSchema(req, res);
   }
 
   async listCategories(req: Request, res: Response) {
@@ -76,5 +78,13 @@ export class AuthController {
 
   async listServiceTypes(req: Request, res: Response) {
     return await this.catalogController.listServiceTypes(req, res);
+  }
+
+  async listByCategory(req: Request, res: Response) {
+    return await this.announcementController.listByCategory(req, res);
+  }
+
+  async findAnnouncement(req: Request, res: Response) {
+    return await this.announcementController.findOne(req, res);
   }
 }

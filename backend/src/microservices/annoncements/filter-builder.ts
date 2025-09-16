@@ -5,24 +5,61 @@ import createError from "http-errors";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 /**
- * Transforme des query params en conditions Prisma basées sur Field.key
- * ex: { styles: ['rock','jazz'], pro: 'true', priceMin: '50', priceMax: '300' }
+ * Transforme les query params en where Prisma.
+ * - Catégorie: via slug
+ * - serviceType: id ou slug (NEW)
+ * - Prix natif: priceMin/priceMax (NEW)
+ * - Champs dynamiques: via AnnValues selon Field.inputType (inchangé)
  */
+
 export const buildWhere = async (
   categorySlug: string,
   query: Record<string, any>
 ) => {
+  // 1) catégorie
   const category = await prisma.category.findUnique({
     where: { slug: categorySlug },
     select: { id: true },
   });
   if (!category) throw createError(404, "Category not found");
-  const whereAND: any[] = [{ categoryId: category.id }];
+  const AND: any[] = [{ categoryId: category.id }];
 
-  // Charger les fields concernés par les filtres (par leurs keys présentes dans query)
-  const keys = Object.keys(query).filter(
-    (k) => !["page", "q", "sort"].includes(k)
-  );
+  // 2) serviceType (id ou slug)  // NEW
+  const serviceType =
+    query.serviceType ?? query.serviceTypeId ?? query.serviceTypeSlug;
+  if (serviceType !== undefined && serviceType !== "") {
+    const n = Number(serviceType);
+    if (!Number.isNaN(n)) {
+      AND.push({ serviceTypeId: n });
+    } else {
+      AND.push({ serviceType: { slug: String(serviceType) } });
+    }
+  }
+
+  // 3) prix natif sur announcement (NEW)
+  const priceMin = query.priceMin ?? query["price_min"];
+  const priceMax = query.priceMax ?? query["price_max"];
+  if (priceMin) AND.push({ price: { gte: Number(priceMin) } });
+  if (priceMax) AND.push({ price: { lte: Number(priceMax) } });
+
+  // 4) Champs dynamiques AnnValues
+  //    - on ne prend pas les clés techniques
+  const ignore = new Set([
+    "page",
+    "limit",
+    "q",
+    "sort",
+    "serviceType",
+    "serviceTypeId",
+    "serviceTypeSlug",
+    "priceMin",
+    "priceMax",
+    "price_min",
+    "price_max",
+  ]);
+  const keys = Object.keys(query).filter((k) => !ignore.has(k));
+
+  // Charge uniquement les fields présents dans la query
   const fields = await prisma.field.findMany({
     where: { key: { in: keys } },
     select: { id: true, key: true, inputType: true },
@@ -32,21 +69,20 @@ export const buildWhere = async (
     const raw = query[f.key];
     if (raw === undefined) continue;
 
-    // normalise la valeur en tableau (utile pour multi)
+    // normalise en tableau (utile pour multi)
     const values = Array.isArray(raw) ? raw : [raw];
 
     if (f.inputType === "TOGGLE") {
       const val = ["true", "1", 1, true, "on"].includes(values[0]);
-      whereAND.push({
-        AnnValues: {
-          some: { fieldId: f.id, valueBoolean: val },
-        },
+      AND.push({
+        AnnValues: { some: { fieldId: f.id, valueBoolean: val } },
       });
     } else if (f.inputType === "NUMBER" || f.inputType === "RANGE") {
+      // convention côté front: keyMin/keyMax
       const min = query[`${f.key}Min`];
       const max = query[`${f.key}Max`];
       if (min || max) {
-        whereAND.push({
+        AND.push({
           AnnValues: {
             some: {
               fieldId: f.id,
@@ -59,7 +95,7 @@ export const buildWhere = async (
         });
       }
     } else if (f.inputType === "SELECT" || f.inputType === "RADIO") {
-      whereAND.push({
+      AND.push({
         AnnValues: {
           some: {
             fieldId: f.id,
@@ -68,8 +104,7 @@ export const buildWhere = async (
         },
       });
     } else if (f.inputType === "MULTISELECT" || f.inputType === "CHECKBOX") {
-      // au moins une des valeurs
-      whereAND.push({
+      AND.push({
         AnnValues: {
           some: {
             fieldId: f.id,
@@ -80,8 +115,8 @@ export const buildWhere = async (
         },
       });
     } else {
-      // TEXT/TEXTAREA: contient
-      whereAND.push({
+      // TEXT/TEXTAREA
+      AND.push({
         AnnValues: {
           some: {
             fieldId: f.id,
@@ -92,5 +127,5 @@ export const buildWhere = async (
     }
   }
 
-  return { AND: whereAND };
+  return { AND };
 };

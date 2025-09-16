@@ -10,6 +10,10 @@ export class AnnouncementRepository {
   async create(data: any) {
     return await prisma.announcement.create({
       data,
+      include: {
+        serviceType: { select: { id: true, name: true, slug: true } },
+        categories: { include: { category: true } },
+      },
     });
   }
 
@@ -21,7 +25,7 @@ export class AnnouncementRepository {
           select: {
             id: true,
             slug: true,
-            category: { select: { slug: true } },
+            categories: { include: { category: { select: { slug: true } } } },
           },
         },
         AnnValues: {
@@ -31,7 +35,13 @@ export class AnnouncementRepository {
     });
   }
 
-  async findAll(where: any, skip: number, take: number) {
+  async findAll(params: {
+    skip?: number;
+    take?: number;
+    where?: any;
+    order?: Order;
+  }) {
+    const { where, skip, take } = params;
     return await prisma.announcement.findMany({
       where,
       skip,
@@ -44,6 +54,7 @@ export class AnnouncementRepository {
         price: true,
         location: true,
         createdAt: true,
+        serviceType: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { createdAt: Order.DESC },
     });
@@ -56,5 +67,4 @@ export class AnnouncementRepository {
   async count(where?: any) {
     return await prisma.announcement.count({ where });
   }
-  async listByCategory() {}
 }
