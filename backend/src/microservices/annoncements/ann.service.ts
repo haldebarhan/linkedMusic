@@ -13,8 +13,11 @@ import { AnnouncementRepository } from "./ann.repository";
 import { SearchService } from "@/utils/services/search.service";
 import { buildMeiliFilter } from "./meili-filters";
 import { Order } from "@/utils/enums/order.enum";
+import { MinioService } from "@/utils/services/minio.service";
+import { ENV } from "@/config/env";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
+const minioService: MinioService = MinioService.getInstance();
 
 @injectable()
 export class AnnouncementService {
@@ -47,7 +50,7 @@ export class AnnouncementService {
             description: annData.description,
             ownerId: userId,
             images: files,
-            serviceType: { connect: { id: annData.serviceTypeId } },
+            serviceTypeId: annData.serviceTypeId,
             price: annData.price ?? null,
             location: annData.location ?? null,
           },
@@ -77,6 +80,47 @@ export class AnnouncementService {
     const announcement = await this.annRepository.findOne(id);
     if (!announcement) throw createError(404, "announcement not found");
     return announcement;
+  }
+
+  async findAnnouncement(id: number, userId?: number) {
+    const [announcement, document] = await Promise.all([
+      this.findOne(id),
+      SearchService.getDocument(id),
+    ]);
+    if (userId && announcement.ownerId !== userId)
+      throw createError(403, "Forbidden");
+    const files = document.fichiers;
+    const urls =
+      files && Array.isArray(files) && files.length > 0
+        ? await Promise.all(
+            files.map((f) =>
+              minioService.presignGetUrl(ENV.MINIO_BUCKET_NAME, f)
+            )
+          )
+        : [];
+    return { ...document, fichiers: urls };
+  }
+
+  async findAnnouncements(params: {
+    limit: number;
+    page: number;
+    order: Order;
+    where?: any;
+  }) {
+    const { limit, page, order, where } = params;
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.annRepository.findAll({ where, take: limit, skip, order }),
+      this.annRepository.count(where),
+    ]);
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
   }
 
   async listByCategory(
@@ -123,6 +167,13 @@ export class AnnouncementService {
   async removeAnnouncement(announcementId: number, userId: number) {
     const announcement = await this.findOne(announcementId);
     if (announcement.ownerId !== userId) throw createError(403, "Forbidden");
+    if (announcement.images && announcement.images.length > 0) {
+      await Promise.all(
+        announcement.images.map((ann) =>
+          minioService.deleteFile(ENV.MINIO_BUCKET_NAME, ann)
+        )
+      );
+    }
     const deleted = await this.annRepository.removeAnnouncement(
       announcement.id
     );

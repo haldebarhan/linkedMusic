@@ -1,6 +1,7 @@
 // src/utils/services/search.service.ts
 import { MeiliSearch } from "meilisearch";
 import { ENV } from "@/config/env";
+import createError from "http-errors";
 
 // ---------- Client & index ----------
 const INDEX_NAME = "announcements";
@@ -156,6 +157,13 @@ export class SearchService {
   static async update(doc: MeiliDoc) {
     const task = await index.updateDocuments([doc]);
     await waitTask(task);
+  }
+
+  /** Récupère un document par son ID */
+  static async getDocument(id: number): Promise<MeiliDoc> {
+    const document = await index.getDocument(id);
+    if (!document) throw createError(404, "Document not found");
+    return document as MeiliDoc;
   }
 
   /** Suppression par id */

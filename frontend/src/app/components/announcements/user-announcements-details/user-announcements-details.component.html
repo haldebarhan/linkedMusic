@@ -1,0 +1,98 @@
+<div class="container py-3" *ngIf="announcement">
+  <div class="row g-4">
+    <!-- Bloc principal -->
+    <div class="col-lg-8">
+      <div class="card bg-light p-3">
+        <h1 class="display-6">{{ announcement.title }}</h1>
+
+        <div class="row mt-3">
+          <div class="col-4 text-muted">Le</div>
+          <div class="col-8">
+            {{ announcement.createdAt | date : "d MMMM y" }}
+          </div>
+
+          <div class="col-4 text-muted">Lieu</div>
+          <div class="col-8">{{ announcement.location || "—" }}</div>
+
+          <div class="col-4 text-muted" *ngIf="styles().length">Styles</div>
+          <div class="col-8" *ngIf="styles().length">
+            {{ styles().join(", ") }}
+          </div>
+
+          <div class="col-12 mt-2" *ngIf="tag() as t">
+            <strong>{{ t }}</strong>
+          </div>
+        </div>
+
+        <hr class="my-3" />
+
+        <p class="mb-3" style="white-space: pre-line">
+          {{ announcement.description }}
+        </p>
+
+        <!-- Lecteur médias (images + audio + vidéo) -->
+        <app-media-gallery
+          [files]="announcement.fichiers || []"
+          [autoplay]="{ audio: false, video: false }"
+        ></app-media-gallery>
+
+        <div
+          class="text-end text-muted small"
+          *ngIf="announcement.views != null"
+        >
+          Cette annonce a été lue {{ announcement.views }} fois
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card bg-light text-light p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <!-- place un bouton "Actualiser" si besoin -->
+        </div>
+
+        <button class="btn btn-secondary w-100 mb-2">
+          Modifier mon annonce
+        </button>
+        <button
+          class="btn btn-outline-danger w-100 mb-3"
+          (click)="removeAnnouncement(announcement.id)"
+        >
+          Supprimer mon annonce
+        </button>
+
+        <!-- <div class="card bg-secondary-subtle p-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="fw-semibold">
+                {{ user.Profile?.displayName || "—" }}
+              </div>
+              <span
+                class="badge bg-success"
+                *ngIf="announcement.owner?.role === 'PRO'"
+                >MUSICIEN PRO</span
+              >
+              <div
+                class="small mt-1"
+                *ngIf="announcement.owner?.adsCount != null"
+              >
+                {{ announcement.owner?.adsCount }} annonce{{
+                  announcement.owner?.adsCount === 1 ? "" : "s"
+                }}
+              </div>
+            </div>
+            <img
+              *ngIf="announcement.owner?.avatarUrl"
+              [src]="announcement.owner?.avatarUrl"
+              alt=""
+              class="rounded-circle"
+              width="48"
+              height="48"
+            />
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </div>
+</div>

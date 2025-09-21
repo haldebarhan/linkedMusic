@@ -41,7 +41,7 @@ export class AnnouncementRepository {
     where?: any;
     order?: Order;
   }) {
-    const { where, skip, take } = params;
+    const { where, skip, take, order } = params;
     return await prisma.announcement.findMany({
       where,
       skip,
@@ -56,7 +56,7 @@ export class AnnouncementRepository {
         createdAt: true,
         serviceType: { select: { id: true, name: true, slug: true } },
       },
-      orderBy: { createdAt: Order.DESC },
+      orderBy: { createdAt: order ?? Order.DESC },
     });
   }
 

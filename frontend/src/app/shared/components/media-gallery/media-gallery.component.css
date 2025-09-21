@@ -1,0 +1,219 @@
+/* Layout: playlist + cadre */
+.media-player {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+}
+@media (max-width: 768px) {
+  .media-player {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Playlist */
+.playlist {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  max-height: 420px;
+  overflow: auto;
+}
+.track {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.track:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.track.active {
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+}
+.track .ico {
+  width: 1.5rem;
+  display: inline-flex;
+  justify-content: center;
+}
+.track .lbl {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cadre lecteur stable (16:9) */
+.player-shell {
+  position: relative;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  aspect-ratio: 16 / 9; /* 👈 hauteur fixe relative à la largeur */
+}
+
+/* Vidéo occupe tout le cadre */
+.media-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* garde le ratio sans recadrer */
+}
+/* On masque les contrôles natifs pour garder notre UI */
+.media-video::-webkit-media-controls {
+  display: none !important;
+}
+.media-video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+.media-video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+/* Image overlay dans le même cadre */
+.image-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+.image-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Barre de contrôle commune */
+.controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0.2),
+    transparent
+  );
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+.controls .btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  min-width: 2rem;
+}
+.controls .btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.controls .time {
+  font-variant-numeric: tabular-nums;
+  min-width: 54px;
+  text-align: center;
+}
+
+.controls .seek {
+  flex: 1;
+  accent-color: #3fa9f5;
+}
+.controls .vol {
+  width: 90px;
+  accent-color: #3fa9f5;
+}
+.controls .spacer {
+  flex: 0 0 auto;
+}
+
+.img-controls {
+  justify-content: space-between;
+}
+.img-controls .title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+/* image cliquable dans le cadre */
+.image-frame img.clickable {
+  cursor: zoom-in;
+}
+
+/* Overlay */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  outline: none; /* pour tabindex */
+}
+.lightbox-inner {
+  position: relative;
+  width: min(96vw, 1400px);
+  height: min(92vh, 900px);
+  background: #000;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+}
+.lightbox-img {
+  user-select: none;
+  max-width: none; /* on gère la taille via transform scale */
+  max-height: none;
+  transform-origin: center center;
+  transition: transform 0.05s linear;
+  cursor: grab;
+}
+.lightbox-img:active {
+  cursor: grabbing;
+}
+
+.lightbox-toolbar {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  color: #fff;
+}
+.lightbox-toolbar .btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  min-width: 2rem;
+}
+.lightbox-toolbar .btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.lightbox-toolbar .spacer {
+  flex: 1;
+}

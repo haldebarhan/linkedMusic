@@ -39,10 +39,46 @@ export class AnnouncementController {
     }
   }
 
-  async findOne(req: Request, res: Response) {
+  async findAnnouncements(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { user } = req;
+      const {
+        page: pageQuery,
+        limit: limitQuery,
+        order: orderQuery,
+      } = req.query;
+
+      const where: any = {};
+      if (user) where.ownerId = user.id;
+
+      const page = parseInt(pageQuery as string) || 1;
+      const limit = parseInt(limitQuery as string) || 10;
+
+      const page_number = Math.max(page, 1);
+      const limit_query = Math.max(limit, 10);
+      const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
+        ? (orderQuery as Order)
+        : Order.DESC;
+
+      const announcements = await this.annService.findAnnouncements({
+        limit: limit_query,
+        page: page_number,
+        order,
+        where,
+      });
+
+      const response = paginatedResponse(200, announcements);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async findOne(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
-      const announcement = await this.annService.findOne(+id);
+      const { user } = req;
+      const announcement = await this.annService.findAnnouncement(+id, user.id);
       const response = formatResponse(200, announcement);
       res.status(200).json(response);
     } catch (error) {

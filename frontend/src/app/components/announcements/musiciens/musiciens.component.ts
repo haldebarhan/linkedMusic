@@ -9,11 +9,10 @@ import {
 } from '@angular/forms';
 import { debounceTime, Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TruncatePipe } from '../../../shared/pipes/truncate.pipe';
 
 @Component({
   selector: 'app-musiciens',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, TruncatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './musiciens.component.html',
   styleUrl: './musiciens.component.css',
 })
@@ -212,5 +211,16 @@ export class MusiciensComponent implements OnInit {
 
   scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  flatStyles(styles: any) {
+    if (!styles) return '';
+    if (styles && Array.isArray(styles)) {
+      return styles.map((s) => s).join(', ');
+    }
+    if (styles && typeof styles === 'string') {
+      return styles.split(' | ').join(', ');
+    }
+    return '';
   }
 }

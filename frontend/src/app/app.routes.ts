@@ -97,6 +97,26 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'profile/announcements',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements/user-announcements/user-announcements.component'
+      ).then((m) => m.UserAnnouncementsComponent),
+  },
+  {
+    path: 'profile/announcements/:id',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements/user-announcements-details/user-announcements-details.component'
+      ).then((m) => m.UserAnnouncementsDetailsComponent),
+  },
+  {
     path: 'admin',
     canActivate: [RoleGuard],
     data: { roles: ['ADMIN'] },

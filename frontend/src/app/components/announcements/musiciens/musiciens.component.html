@@ -2,7 +2,7 @@
   <!-- Fil d'ariane -->
   <nav aria-label="breadcrumb" class="mb-4 bg-light">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Annonces</a></li>
+      <li class="breadcrumb-item"><a href="#">Accueil</a></li>
       <li class="breadcrumb-item active" aria-current="page">
         Musiciens & groupes
       </li>
@@ -210,11 +210,7 @@
   <div class="table-responsive d-none d-md-block">
     <table class="table table-light table-hover">
       <thead>
-        <tr>
-          <th>Annonce</th>
-          <th>Lieu</th>
-          <th>Date</th>
-        </tr>
+        <tr></tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of rows">
@@ -233,7 +229,7 @@
                   <span *ngIf="item.isHighlighted" class="badge-pro">PRO</span>
                 </a>
                 <div class="listing-description mt-1">
-                  {{ item.description | truncate }}
+                  {{ flatStyles(item.styles) }}
                 </div>
               </div>
             </div>
