@@ -1,0 +1,142 @@
+<div *ngIf="files.length; else empty" class="media-player">
+  <!-- Playlist -->
+  <div class="playlist">
+    <button
+      type="button"
+      class="track"
+      *ngFor="let f of files; let i = index; trackBy: trackByUrl"
+      [class.active]="i === selectedIndex"
+      (click)="select(i)"
+    >
+      <span class="ico">{{ iconOf(f) }}</span>
+      <span class="lbl">{{ labelOf(f, i) }}</span>
+    </button>
+  </div>
+
+  <!-- Cadre stable 16:9 -->
+  <div class="player-shell">
+    <!-- Vidéo (contrôles natifs masqués, on pilote via nos boutons) -->
+    <video
+      #videoEl
+      playsinline
+      class="media-video"
+      preload="metadata"
+      disablepictureinpicture
+    ></video>
+
+    <div
+      class="lightbox-backdrop"
+      *ngIf="lightboxOpen"
+      (click)="closeLightbox()"
+      tabindex="0"
+      (keydown)="onLightboxKeydown($event)"
+      (mousemove)="onLightboxMouseMove($event)"
+      (mouseup)="onLightboxMouseUp()"
+      (wheel)="onLightboxWheel($event)"
+    >
+      <div class="lightbox-inner" (click)="$event.stopPropagation()">
+        <img
+          class="lightbox-img"
+          [src]="selected?.url || ''"
+          [alt]="selected ? labelOf(selected, selectedIndex) : ''"
+          [style.transform]="
+            'translate(' +
+            lightboxTranslate.x +
+            'px,' +
+            lightboxTranslate.y +
+            'px) scale(' +
+            lightboxZoom +
+            ')'
+          "
+          (mousedown)="onLightboxMouseDown($event)"
+          draggable="false"
+        />
+        <div class="lightbox-toolbar">
+          <button class="btn" (click)="lightboxPrev()" title="Précédent">
+            ⟨
+          </button>
+          <button class="btn" (click)="lightboxNext()" title="Suivant">
+            ⟩
+          </button>
+          <div class="spacer"></div>
+          <button class="btn" (click)="lightboxZoomOut()" title="Zoom -">
+            −
+          </button>
+          <button class="btn" (click)="lightboxReset()" title="Réinitialiser">
+            ⤾
+          </button>
+          <button class="btn" (click)="lightboxZoomIn()" title="Zoom +">
+            +
+          </button>
+          <button class="btn" (click)="closeLightbox()" title="Fermer">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio (caché, piloté par nos contrôles) -->
+    <audio #audioEl preload="metadata"></audio>
+
+    <!-- Image (overlay dans le cadre) -->
+    <div class="image-frame" *ngIf="selected && typeOf(selected) === 'image'">
+      <img
+        [src]="selected.url"
+        [alt]="labelOf(selected, selectedIndex)"
+        (click)="openLightbox()"
+        class="clickable"
+      />
+    </div>
+
+    <!-- Barre de contrôle custom -->
+    <div class="controls" *ngIf="selected && typeOf(selected) !== 'image'">
+      <button class="btn" (click)="togglePlay()">
+        {{ isPlaying ? "⏸" : "▶️" }}
+      </button>
+      <div class="time">{{ fmtTime(currentTime) }}</div>
+
+      <input
+        type="range"
+        class="seek"
+        min="0"
+        max="1000"
+        [value]="duration ? (currentTime / duration) * 1000 : 0"
+        (input)="seekTo($any($event.target).value / 1000)"
+      />
+
+      <div class="time">{{ fmtTime(duration) }}</div>
+
+      <button class="btn" (click)="toggleMute()">
+        {{ muted ? "🔇" : "🔊" }}
+      </button>
+      <input
+        type="range"
+        class="vol"
+        min="0"
+        max="100"
+        [value]="getVolume(volume)"
+        (input)="setVolume($any($event.target).value / 100)"
+      />
+
+      <div class="spacer"></div>
+
+      <button class="btn" (click)="prev()">⟨</button>
+      <button class="btn" (click)="next()">⟩</button>
+    </div>
+
+    <!-- Pour les images: petite barre titre + nav pour garder le cadre homogène -->
+    <div
+      class="controls img-controls"
+      *ngIf="selected && typeOf(selected) === 'image'"
+    >
+      <div class="title">{{ labelOf(selected, selectedIndex) }}</div>
+      <div class="spacer"></div>
+      <button class="btn" (click)="prev()">⟨</button>
+      <button class="btn" (click)="next()">⟩</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #empty>
+  <div class="text-muted">Aucun fichier associé.</div>
+</ng-template>

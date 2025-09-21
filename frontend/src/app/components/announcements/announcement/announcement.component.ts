@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, Subscription } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
+import { TruncatePipe } from '../../../shared/pipes/truncate.pipe';
 
 interface ServiceTypeDto {
   id: number;
@@ -13,7 +14,7 @@ interface ServiceTypeDto {
 
 @Component({
   selector: 'app-announcement',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TruncatePipe],
   templateUrl: './announcement.component.html',
   styleUrl: './announcement.component.css',
 })
@@ -32,6 +33,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   page = 1;
   limit = 20;
   loading = false;
+  query: string | null = null;
 
   private sub?: Subscription;
 
@@ -57,6 +59,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe((qp) => {
       this.page = +(qp['page'] ?? 1);
       this.limit = +(qp['limit'] ?? this.limit);
+      this.query = qp['q'] ?? null;
 
       const patch: any = {};
       if ('serviceTypeId' in qp)
@@ -179,6 +182,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   private loadResults() {
     this.loading = true;
     const filters = this.buildFilters();
+    filters['q'] = this.query || null;
 
     this.api
       .listAnnouncements({

@@ -28,7 +28,8 @@ export class AppComponent {
       currentRoute.startsWith('/annonces') ||
       currentRoute.startsWith('/favorites') ||
       currentRoute.startsWith('/searches') ||
-      currentRoute.startsWith('/home')
+      currentRoute.startsWith('/home') ||
+      currentRoute.startsWith('/profile')
     );
   }
 

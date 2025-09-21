@@ -2,9 +2,9 @@
   <!-- Fil d'ariane -->
   <nav aria-label="breadcrumb" class="mb-4 bg-light">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Annonces</a></li>
+      <li class="breadcrumb-item"><a href="#">Accueil</a></li>
       <li class="breadcrumb-item active" aria-current="page">
-        {{ slug }}
+        {{ slug | titlecase }}
       </li>
     </ol>
   </nav>
@@ -80,11 +80,7 @@
     <div class="table-responsive">
       <table class="table table-light table-hover">
         <thead>
-          <tr>
-            <th>Annonce</th>
-            <th>Lieu</th>
-            <th>Date</th>
-          </tr>
+          <tr></tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of rows">
@@ -99,11 +95,12 @@
                 />
                 <div>
                   <a class="fw-semibold">{{ item.title }}</a>
-                  <div class="text-muted small">{{ item.description }}</div>
+                  <div class="text-muted small">
+                    {{ query ? (item.description | truncate) : item.location }}
+                  </div>
                 </div>
               </div>
             </td>
-            <td>{{ item.location }}</td>
             <td>{{ item.createdAt | date }}</td>
           </tr>
         </tbody>

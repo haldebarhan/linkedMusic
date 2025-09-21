@@ -18,7 +18,15 @@ export class UserController {
     return await this.announcementController.update(req, res);
   }
 
+  async findAnnouncements(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.findAnnouncements(req, res);
+  }
+
   async removeAnnouncement(req: AuthenticatedRequest, res: Response) {
     return await this.announcementController.remove(req, res);
+  }
+
+  async findAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.findOne(req, res);
   }
 }

@@ -18,6 +18,16 @@ router.use(UserAndProviderMiddleware);
 
 // Announcements
 
+router.get("/announcements", async (req: AuthenticatedRequest, res: Response) =>
+  userController.findAnnouncements(req, res)
+);
+
+router.get(
+  "/announcements/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.findAnnouncement(req, res)
+);
+
 router.post(
   "/announcements",
   uploads.array("fichiers", 5),

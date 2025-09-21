@@ -4,28 +4,40 @@
     <div class="row align-items-center">
       <!-- Barre de recherche (Desktop et Mobile) -->
       <div class="col-lg-6 col-12">
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Que recherchez-vous ?"
-          />
-          <select class="form-select" style="max-width: 130px">
-            <option>Immobilier</option>
-            <option>Automobile</option>
-            <option>Emploi</option>
-            <option>Services</option>
-          </select>
-          <button class="btn btn-primary" type="button">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
+        <form [formGroup]="form">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Recherchez ?"
+              formControlName="query"
+            />
+            <select
+              class="form-select"
+              style="max-width: 130px"
+              formControlName="category"
+            >
+              <option
+                *ngFor="let category of categories"
+                [value]="category.slug"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+            <button class="btn btn-primary" type="button" (click)="onSubmit()">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
       </div>
 
       <!-- Navigation secondaire (Desktop uniquement) -->
       <div class="col-lg-6 d-none d-lg-block">
         <div class="d-flex justify-content-end gap-3">
-          <a href="#" class="text-decoration-none text-dark">
+          <a
+            routerLink="profile/announcements"
+            class="text-decoration-none text-dark"
+          >
             <i class="fas fa-list me-1"></i> Mes annonces
           </a>
           <a href="#" class="text-decoration-none text-dark">
