@@ -217,3 +217,23 @@
 .lightbox-toolbar .spacer {
   flex: 1;
 }
+
+.track {
+  position: relative;
+}
+.btn-del {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border-radius: 0.35rem;
+  padding: 0 0.4rem;
+  line-height: 1.4;
+  display: none;
+}
+.track:hover .btn-del {
+  display: inline-block;
+}

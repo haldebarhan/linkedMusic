@@ -69,6 +69,10 @@ export class UserAnnouncementsDetailsComponent implements OnInit {
     this.router.navigate(['/profile/announcements']);
   }
 
+  editAnnouncement(announcementid: number) {
+    this.router.navigate(['/announcemnts/edit', announcementid]);
+  }
+
   styles(): string[] {
     return (this.announcement.styles as string[]) || [];
   }

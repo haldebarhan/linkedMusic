@@ -49,7 +49,6 @@ export class ServiceViewComponent implements OnInit {
     this.api.findAdminResource('service-types', this.serviceId!).subscribe({
       next: (res) => {
         const response = res.data;
-        console.log(response);
         this.service = res.data;
         const attached = Array.isArray(response.categories)
           ? response.categories
