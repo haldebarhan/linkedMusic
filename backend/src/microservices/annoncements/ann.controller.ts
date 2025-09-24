@@ -96,17 +96,21 @@ export class AnnouncementController {
       );
 
       const files = (req.files as Express.Multer.File[]) ?? [];
-      const results = await saveFilesToBucket("announcements", files);
-      const images = results.map((result) => {
-        return result.objectName;
-      });
-      //   const updated = await this.annService.update(
-      //     +id,
-      //     user.id,
-      //     annData,
-      //     images
-      //   );
-      const response = formatResponse(200, "updated");
+      const filenames: { name: string; objectName: string }[] | null =
+        files && files.length
+          ? await saveFilesToBucket("announcements", files)
+          : null;
+
+      const images: string[] = filenames
+        ? filenames.map((file) => file.objectName)
+        : [];
+      const updated = await this.annService.update(
+        +id,
+        user.id,
+        annData,
+        images
+      );
+      const response = formatResponse(200, updated);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

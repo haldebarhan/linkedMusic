@@ -8,7 +8,7 @@ export const saveFileToBucket = async (
   file: Express.Multer.File
 ) => {
   const bucketName = ENV.MINIO_BUCKET_NAME;
-  const objectName = `zikdev/${path}/${Date.now() + file.originalname}`;
+  const objectName = `zikdev/${path}/${file.originalname}`;
   const metaData = {
     "Content-Type": file.mimetype,
   };
@@ -24,7 +24,7 @@ export const saveFilesToBucket = async (
   const bucketName = ENV.MINIO_BUCKET_NAME;
   const uploadedFiles = await Promise.all(
     files.map(async (file) => {
-      const objectName = `zikdev/${path}/${Date.now() + file.originalname}`;
+      const objectName = `zikdev/${path}/${file.originalname}`;
       const metaData = {
         "Content-Type": file.mimetype,
       };

@@ -96,7 +96,6 @@ export class CatalogueService {
   // Services Types
   async createServiceType(data: CreateServiceTypeDTO) {
     try {
-      console.log("data ", data);
       const { name, slug, categoryIds } = data;
       const where: any = { name, slug };
       await this.checkServiceType(where);

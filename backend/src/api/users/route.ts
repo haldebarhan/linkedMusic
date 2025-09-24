@@ -38,6 +38,7 @@ router.post(
 
 router.put(
   "/announcements/:id",
+  uploads.array("fichiers", 5),
   ValidateDtoMiddleware(UpdateAnnouncementDto),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.updateAnnouncement(req, res)

@@ -13,11 +13,6 @@ import {
   MinLength,
 } from "class-validator";
 
-/**
- * CREATE
- * - Requiert au moins 1 catégorie (categoryIds)
- * - serviceTypeId obligatoire
- */
 export class CreateAnnouncementDto {
   @IsString()
   @MinLength(3)
@@ -45,10 +40,6 @@ export class CreateAnnouncementDto {
   @IsString()
   location?: string;
 
-  /**
-   * Valeurs dynamiques (EAV) mappées par key de Field
-   * La validation fine (selon Field.inputType) se fait côté service.
-   */
   @Type(() => Object)
   @IsOptional()
   @Transform(({ value }) => parseMaybeJSON(value))
@@ -67,28 +58,10 @@ export class UpdateAnnouncementDto {
   @MinLength(10)
   description?: string;
 
-  // A) Remplacement complet
   @IsOptional()
-  @IsArray()
-  @ArrayUnique()
   @Type(() => Number)
-  @IsInt({ each: true })
-  categoryIds?: number[];
-
-  // B) Modification incrémentale
-  @IsOptional()
-  @IsArray()
-  @ArrayUnique()
-  @Type(() => Number)
-  @IsInt({ each: true })
-  categoryIdsAdd?: number[];
-
-  @IsOptional()
-  @IsArray()
-  @ArrayUnique()
-  @Type(() => Number)
-  @IsInt({ each: true })
-  categoryIdsRemove?: number[];
+  @IsInt()
+  categoryId?: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -106,6 +79,15 @@ export class UpdateAnnouncementDto {
   location?: string;
 
   @IsOptional()
+  @Type(() => Object)
+  @Transform(({ value }) => parseMaybeJSON(value))
   @IsObject()
   values?: Record<string, any>;
+
+  @IsOptional()
+  @Transform(({ value }) => parseMaybeJSON(value))
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayUnique()
+  removedFiles?: string[];
 }
