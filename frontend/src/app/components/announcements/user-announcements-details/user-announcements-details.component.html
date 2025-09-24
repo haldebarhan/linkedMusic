@@ -52,7 +52,10 @@
           <!-- place un bouton "Actualiser" si besoin -->
         </div>
 
-        <button class="btn btn-secondary w-100 mb-2">
+        <button
+          class="btn btn-secondary w-100 mb-2"
+          (click)="editAnnouncement(announcement.id)"
+        >
           Modifier mon annonce
         </button>
         <button

@@ -6,6 +6,8 @@ import {
   AfterViewInit,
   OnDestroy,
   SimpleChanges,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { baseName, pathPart } from '../../../helpers/path-part';
@@ -46,6 +48,8 @@ export class MediaGalleryComponent implements AfterViewInit, OnDestroy {
   /** Normalisation */
   private _files: MediaFile[] = [];
   @Input() autoplay = { audio: true, video: false };
+  @Input() deletable = false;
+  @Output() remove = new EventEmitter<string>();
   @Input() set files(value: RawMedia[]) {
     const arr = Array.isArray(value) ? value : [];
     this._files = arr
@@ -106,6 +110,11 @@ export class MediaGalleryComponent implements AfterViewInit, OnDestroy {
     queueMicrotask(() => this.loadSelected());
   }
 
+  onRemove(f: MediaFile, ev?: Event) {
+    ev?.stopPropagation();
+    this.remove.emit(f.key || f.url);
+  }
+
   // utils
   typeOf(f: MediaFile | null): 'image' | 'audio' | 'video' | 'other' {
     if (!f) return 'other';
@@ -155,6 +164,11 @@ export class MediaGalleryComponent implements AfterViewInit, OnDestroy {
         (this.selectedIndex - 1 + this.files.length) % this.files.length;
       this.loadSelected();
     }
+  }
+
+  getVolume(v: number | undefined): number {
+    const n = typeof v === 'number' && isFinite(v) ? v : 1;
+    return Math.round(n * 100);
   }
 
   // chargement du média courant
@@ -288,10 +302,6 @@ export class MediaGalleryComponent implements AfterViewInit, OnDestroy {
     const mm = m.toString().padStart(2, '0');
     const ss = s.toString().padStart(2, '0');
     return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
-  }
-
-  getVolume(volume: number) {
-    return Math.round(volume * 100);
   }
 
   openLightbox() {

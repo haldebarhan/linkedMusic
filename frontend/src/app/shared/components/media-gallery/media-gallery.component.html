@@ -10,6 +10,15 @@
     >
       <span class="ico">{{ iconOf(f) }}</span>
       <span class="lbl">{{ labelOf(f, i) }}</span>
+      <button
+        *ngIf="deletable"
+        type="button"
+        class="btn-del"
+        title="Supprimer"
+        (click)="onRemove(f, $event)"
+      >
+        ✕
+      </button>
     </button>
   </div>
 
@@ -52,23 +61,53 @@
           draggable="false"
         />
         <div class="lightbox-toolbar">
-          <button class="btn" (click)="lightboxPrev()" title="Précédent">
+          <button
+            type="button"
+            class="btn"
+            (click)="lightboxPrev()"
+            title="Précédent"
+          >
             ⟨
           </button>
-          <button class="btn" (click)="lightboxNext()" title="Suivant">
+          <button
+            type="button"
+            class="btn"
+            (click)="lightboxNext()"
+            title="Suivant"
+          >
             ⟩
           </button>
           <div class="spacer"></div>
-          <button class="btn" (click)="lightboxZoomOut()" title="Zoom -">
+          <button
+            type="button"
+            class="btn"
+            (click)="lightboxZoomOut()"
+            title="Zoom -"
+          >
             −
           </button>
-          <button class="btn" (click)="lightboxReset()" title="Réinitialiser">
+          <button
+            type="button"
+            class="btn"
+            (click)="lightboxReset()"
+            title="Réinitialiser"
+          >
             ⤾
           </button>
-          <button class="btn" (click)="lightboxZoomIn()" title="Zoom +">
+          <button
+            type="button"
+            class="btn"
+            (click)="lightboxZoomIn()"
+            title="Zoom +"
+          >
             +
           </button>
-          <button class="btn" (click)="closeLightbox()" title="Fermer">
+          <button
+            type="button"
+            class="btn"
+            (click)="closeLightbox()"
+            title="Fermer"
+          >
             ✕
           </button>
         </div>
@@ -90,7 +129,7 @@
 
     <!-- Barre de contrôle custom -->
     <div class="controls" *ngIf="selected && typeOf(selected) !== 'image'">
-      <button class="btn" (click)="togglePlay()">
+      <button type="button" class="btn" (click)="togglePlay()">
         {{ isPlaying ? "⏸" : "▶️" }}
       </button>
       <div class="time">{{ fmtTime(currentTime) }}</div>
@@ -106,7 +145,7 @@
 
       <div class="time">{{ fmtTime(duration) }}</div>
 
-      <button class="btn" (click)="toggleMute()">
+      <button type="button" class="btn" (click)="toggleMute()">
         {{ muted ? "🔇" : "🔊" }}
       </button>
       <input
@@ -120,8 +159,8 @@
 
       <div class="spacer"></div>
 
-      <button class="btn" (click)="prev()">⟨</button>
-      <button class="btn" (click)="next()">⟩</button>
+      <button type="button" class="btn" (click)="prev()">⟨</button>
+      <button type="button" class="btn" (click)="next()">⟩</button>
     </div>
 
     <!-- Pour les images: petite barre titre + nav pour garder le cadre homogène -->
@@ -131,8 +170,8 @@
     >
       <div class="title">{{ labelOf(selected, selectedIndex) }}</div>
       <div class="spacer"></div>
-      <button class="btn" (click)="prev()">⟨</button>
-      <button class="btn" (click)="next()">⟩</button>
+      <button type="button" class="btn" (click)="prev()">⟨</button>
+      <button type="button" class="btn" (click)="next()">⟩</button>
     </div>
   </div>
 </div>
