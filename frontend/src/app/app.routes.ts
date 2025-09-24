@@ -29,6 +29,16 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'announcemnts/edit/:id',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/post-form/post-form.component').then(
+        (m) => m.PostFormComponent
+      ),
+  },
+  {
     path: 'home',
     loadComponent: () =>
       import('./components/home/home.component').then((m) => m.HomeComponent),

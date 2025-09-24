@@ -15,6 +15,7 @@ import { buildMeiliFilter } from "./meili-filters";
 import { Order } from "@/utils/enums/order.enum";
 import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
+import { buildUpdateDTO } from "@/utils/helpers/build-ann-update-dto";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: MinioService = MinioService.getInstance();
@@ -31,8 +32,8 @@ export class AnnouncementService {
     let specialValues: Record<string, string> = {};
     try {
       const [serviceType, category] = await Promise.all([
-        await this.getServiceType(data.serviceTypeId),
-        await this.findCategory(data.categoryId),
+        this.getServiceType(data.serviceTypeId),
+        this.findCategory(data.categoryId),
       ]);
       const annData = this.buildAnnDTO(userId, serviceType, data, files);
       const fieldsByKey = new Map(
@@ -89,7 +90,7 @@ export class AnnouncementService {
     ]);
     if (userId && announcement.ownerId !== userId)
       throw createError(403, "Forbidden");
-    const files = document.fichiers;
+    const files = announcement.images;
     const urls =
       files && Array.isArray(files) && files.length > 0
         ? await Promise.all(
@@ -185,75 +186,79 @@ export class AnnouncementService {
     return deleted;
   }
 
-  //   async update(
-  //     announcementId: number,
-  //     userId: number,
-  //     dto: UpdateAnnouncementDto,
-  //     files: string[]
-  //   ) {
-  //     const announcement = await this.findOne(announcementId);
-  //     if (announcement.ownerId !== userId) throw createError(403, "Forbidden");
-  //     const categories = await this.findCategory(announcement);
-  //     const serviceType = await this.catalogueRepository.findOneServiceType({
-  //       id: announcement.serviceTypeId,
-  //     });
+  async update(
+    announcementId: number,
+    userId: number,
+    dto: UpdateAnnouncementDto,
+    files: string[] = []
+  ) {
+    try {
+      let specialValues: Record<string, string> = {};
+      const announcement = await this.findOne(announcementId);
+      if (announcement.ownerId !== userId) throw createError(403, "Forbidden");
+      const category = await this.findCategory(dto.categoryId!);
 
-  //     if (!serviceType) throw createError(404, "service type not found");
-  //     const fieldsByKey = new Map(
-  //       category.CategoryField.map((cf) => [
-  //         cf.field.key,
-  //         { sf: cf, field: cf.field },
-  //       ])
-  //     );
-
-  //     const missingRequired: string[] = [];
-  //     for (const { sf, field } of fieldsByKey.values()) {
-  //       if (
-  //         sf.required &&
-  //         hasOwn(dto.values, field.key) &&
-  //         isEmptyValue(dto.values![field.key])
-  //       ) {
-  //         missingRequired.push(field.key);
-  //       }
-  //     }
-  //     if (missingRequired.length)
-  //       throw new Error(
-  //         `Missing required dynamic fields: ${missingRequired.join(", ")}`
-  //       );
-
-  //     return await prisma.$transaction(async (tx) => {
-  //       // champs "plats"
-  //       const updated = await tx.announcement.update({
-  //         where: { id: announcementId },
-  //         data: {
-  //           title: dto.title ?? undefined,
-  //           description: dto.description ?? undefined,
-  //           images: files ?? undefined,
-  //           price: dto.price ?? undefined,
-  //           location: dto.location ?? undefined,
-  //         },
-  //       });
-
-  //       // valeurs dynamiques : on remplace uniquement les clés présentes
-  //       if (dto.values && Object.keys(dto.values).length) {
-  //         await applyDynamicValues({
-  //           tx,
-  //           announcementId,
-  //           values: dto.values,
-  //           fieldsByKey,
-  //           mode: "replace-keys", // supprime la/les clé(s) ciblées et réécrit
-  //         });
-  //       }
-  //       try {
-  //         const doc = await buildDocForIndex(announcementId);
-  //         await SearchService.addOrUpdate(doc); // update = upsert chez Meili
-  //       } catch (e) {
-  //         console.error("[meili] update failed", e);
-  //       }
-
-  //       return updated;
-  //     });
-  //   }
+      const updateDTO = await buildUpdateDTO({
+        tx: prisma,
+        annId: announcementId,
+        base: dto,
+        newFiles: files,
+        fileToRemove: dto.removedFiles ?? [],
+      });
+      const fieldsByKey = new Map(
+        category.CategoryField.map((cf) => [
+          cf.field.key,
+          { sf: cf, field: cf.field },
+        ])
+      );
+      this.checkRequiredFields(fieldsByKey, dto.values);
+      const { id: annId } = await prisma.$transaction(async (tx) => {
+        const updated = await tx.announcement.update({
+          where: { id: announcementId },
+          data: {
+            ...updateDTO,
+          },
+          include: {
+            serviceType: {
+              select: {
+                slug: true,
+                categories: {
+                  select: { category: { select: { slug: true } } },
+                },
+              },
+            },
+            AnnValues: {
+              include: { field: true, options: { include: { option: true } } },
+            },
+          },
+        });
+        specialValues = await applyDynamicValues({
+          tx,
+          announcementId: updated.id,
+          values: dto.values ?? {},
+          fieldsByKey,
+          mode: "replace-keys",
+        });
+        return { id: updated.id };
+      });
+      try {
+        const doc = await buildDocForIndex(annId, specialValues);
+        await SearchService.deleteById(doc.id);
+        await SearchService.addOrUpdate(doc);
+        if (dto.removedFiles)
+          await Promise.all(
+            dto.removedFiles.map((rf) =>
+              minioService.deleteFile(ENV.MINIO_BUCKET_NAME, rf)
+            )
+          );
+      } catch (e) {
+        console.error("[meili] addOrUpdate failed", e);
+      }
+    } catch (error) {
+      const status = error.status ?? 500;
+      throw createError(status, error.message);
+    }
+  }
 
   private async getServiceType(id: number) {
     const serviceType = await this.catalogueRepository.findServiceType(id);
