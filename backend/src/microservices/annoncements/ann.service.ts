@@ -83,13 +83,11 @@ export class AnnouncementService {
     return announcement;
   }
 
-  async findAnnouncement(id: number, userId?: number) {
+  async findAnnouncement(id: number) {
     const [announcement, document] = await Promise.all([
       this.findOne(id),
       SearchService.getDocument(id),
     ]);
-    if (userId && announcement.ownerId !== userId)
-      throw createError(403, "Forbidden");
     const files = announcement.images;
     const urls =
       files && Array.isArray(files) && files.length > 0
@@ -99,7 +97,24 @@ export class AnnouncementService {
             )
           )
         : [];
-    return { ...document, fichiers: urls };
+    const profileImage = await minioService.generatePresignedUrl(
+      ENV.MINIO_BUCKET_NAME,
+      announcement.user.profileImage
+    );
+    const [annTotalView] = await Promise.all([
+      SearchService.incrementViews(announcement.id),
+      this.annRepository.incrementViews(announcement.id),
+    ]);
+    return {
+      ...document,
+      views: annTotalView,
+      fichiers: urls,
+      user: {
+        ...announcement.user,
+        profileImage,
+        totalAnn: announcement.user._count,
+      },
+    };
   }
 
   async findAnnouncements(params: {

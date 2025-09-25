@@ -94,7 +94,9 @@
                   height="60"
                 />
                 <div>
-                  <a class="fw-semibold">{{ item.title }}</a>
+                  <a class="fw-semibold" (click)="goToDetails(item.id)">{{
+                    item.title
+                  }}</a>
                   <div class="text-muted small">
                     {{ query ? (item.description | truncate) : item.location }}
                   </div>

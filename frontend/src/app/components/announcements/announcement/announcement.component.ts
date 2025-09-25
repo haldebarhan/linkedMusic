@@ -140,6 +140,10 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     return theme;
   }
 
+  goToDetails(announcementId: number) {
+    this.router.navigate(['/announcemnts/details/', announcementId]);
+  }
+
   private async loadServicesOfCategory(slug: string) {
     if (!slug) return;
     this.loading = true;

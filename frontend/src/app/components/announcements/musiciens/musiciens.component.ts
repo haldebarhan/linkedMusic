@@ -223,4 +223,8 @@ export class MusiciensComponent implements OnInit {
     }
     return '';
   }
+
+  goToDetails(announcementId: number) {
+    this.router.navigate(['/announcemnts/details/', announcementId]);
+  }
 }

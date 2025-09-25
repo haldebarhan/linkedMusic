@@ -201,4 +201,20 @@ export class SearchService {
   static async clearDoc() {
     await waitTask(await index.deleteAllDocuments());
   }
+
+  static async incrementViews(announcementId: number) {
+    try {
+      const currentDoc = await index.getDocument(announcementId);
+      const updatedDoc = {
+        ...currentDoc,
+        views: Number(currentDoc.views || 0) + 1,
+      };
+      const task = await index.updateDocuments([updatedDoc]);
+      await waitTask(task);
+      return updatedDoc.views;
+    } catch (error) {
+      const status = error.code ?? 500;
+      throw createError(status, "Erreur lors de l'incrémentation des vues:");
+    }
+  }
 }

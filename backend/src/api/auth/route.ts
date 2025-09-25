@@ -27,7 +27,7 @@ router.get("/announcements/:category", async (req: Request, res: Response) =>
   authController.listByCategory(req, res)
 );
 
-router.get("/announcements/:id", async (req: Request, res: Response) =>
+router.get("/announcements/details/:id", async (req: Request, res: Response) =>
   authController.findAnnouncement(req, res)
 );
 

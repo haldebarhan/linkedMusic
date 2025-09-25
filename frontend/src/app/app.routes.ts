@@ -64,6 +64,16 @@ export const routes: Routes = [
       ).then((m) => m.AnnouncementComponent),
   },
   {
+    path: 'announcemnts/details/:id',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements/announcement-detail/announcement-detail.component'
+      ).then((m) => m.AnnouncementDetailComponent),
+  },
+  {
     path: 'login',
     canMatch: [guestCanMatch],
     canActivate: [guestCanActivate],
