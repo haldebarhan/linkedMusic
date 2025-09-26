@@ -31,6 +31,16 @@ export class AnnouncementRepository {
         AnnValues: {
           include: { field: true, options: { include: { option: true } } },
         },
+        user: {
+          include: {
+            Profile: true,
+            _count: {
+              select: {
+                announcements: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -66,5 +76,16 @@ export class AnnouncementRepository {
 
   async count(where?: any) {
     return await prisma.announcement.count({ where });
+  }
+
+  async incrementViews(id: number) {
+    return await prisma.announcement.update({
+      where: { id },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
   }
 }

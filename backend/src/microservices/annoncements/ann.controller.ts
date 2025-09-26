@@ -74,11 +74,10 @@ export class AnnouncementController {
     }
   }
 
-  async findOne(req: AuthenticatedRequest, res: Response) {
+  async findOne(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { user } = req;
-      const announcement = await this.annService.findAnnouncement(+id, user.id);
+      const announcement = await this.annService.findAnnouncement(+id);
       const response = formatResponse(200, announcement);
       res.status(200).json(response);
     } catch (error) {

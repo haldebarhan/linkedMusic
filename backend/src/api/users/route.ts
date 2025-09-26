@@ -10,6 +10,7 @@ import {
   UpdateAnnouncementDto,
 } from "@/microservices/annoncements/ann.dto";
 import uploads from "@/multer-config";
+import { CreateMessageDTO } from "@/microservices/messages/message.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -48,6 +49,19 @@ router.delete(
   "/announcements/:id",
   async (req: AuthenticatedRequest, res: Response) =>
     userController.removeAnnouncement(req, res)
+);
+
+router.get(
+  "/matching/eligibility",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.eligibility(req, res)
+);
+
+router.post(
+  "/messages",
+  ValidateDtoMiddleware(CreateMessageDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.createMessage(req, res)
 );
 
 export default router;

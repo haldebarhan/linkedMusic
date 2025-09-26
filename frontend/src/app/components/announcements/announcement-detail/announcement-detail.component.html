@@ -1,0 +1,120 @@
+<ng-template #loadingTpl>
+  <div class="container py-5 text-center text-muted">Chargement…</div>
+</ng-template>
+<div class="container py-3" *ngIf="!loading && announcement; else loadingTpl">
+  <div class="row g-4">
+    <!-- Main -->
+    <div class="col-lg-8">
+      <div class="card bg-light text-dark p-3">
+        <h1 class="h4 mb-2">{{ announcement.title }}</h1>
+        <div class="row small text-muted">
+          <div class="col-4">Publié le</div>
+          <div class="col-8">
+            {{ announcement.createdAt | date : "d MMMM y" }}
+          </div>
+          <div class="col-4">Lieu</div>
+          <div class="col-8">{{ announcement.location || "—" }}</div>
+          <ng-container *ngIf="announcement.styles?.length">
+            <div class="col-4">Styles</div>
+            <div class="col-8">{{ announcement.styles.join(", ") }}</div>
+          </ng-container>
+          <div class="col-12 mt-2" *ngIf="announcement.tag">
+            <strong>{{ announcement.tag }}</strong>
+          </div>
+        </div>
+
+        <hr class="my-3" />
+        <p style="white-space: pre-line">{{ announcement.description }}</p>
+        <!-- Media -->
+        <app-media-gallery
+          [files]="announcement.fichiers || []"
+        ></app-media-gallery>
+        <div
+          class="text-end text-muted small"
+          *ngIf="announcement.views != null"
+        >
+          Cette annonce a &eacute;t&eacute; vue {{ announcement.views }} fois
+        </div>
+      </div>
+    </div>
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card bg-dark text-light p-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div>
+            <div class="fw-semibold">
+              {{ advertiser.Profile?.displayName || "—" }}
+            </div>
+            <div class="small text-light">
+              {{ advertiser._count.announcements ?? 0 }} annonce{{
+                (advertiser._count.announcements ?? 0) === 1 ? "" : "s"
+              }}
+            </div>
+          </div>
+          <img
+            *ngIf="advertiser.profileImage"
+            [src]="advertiser.profileImage"
+            class="rounded-circle"
+            width="48"
+            height="48"
+            alt=""
+          />
+        </div>
+        <!-- Bouton répondre -->
+        <button
+          class="btn w-100 mb-2"
+          *ngIf="isLoggedIn$ | async as isLoggedIn; else loggedOutBtn"
+          [ngClass]="{
+            'btn-secondary': isLoggedIn && isLocked(),
+            'btn-primary': isLoggedIn && canContact()
+          }"
+          (click)="onClickReply()"
+          [disabled]="isLoggedIn && eligibility?.isOwner"
+        >
+          <ng-container *ngIf="isLocked(); else unlockedTpl">
+            <i class="fa-solid fa-lock"></i>
+            Répondre à cette annonce
+          </ng-container>
+          <ng-template #unlockedTpl>Répondre à cette annonce</ng-template>
+        </button>
+
+        <ng-template #loggedOutBtn>
+          <button
+            class="btn btn-outline-primary w-100 mb-2"
+            (click)="goToLogin()"
+          >
+            <i class="fa-solid fa-lock"></i>
+            Répondre à cette annonce
+          </button>
+        </ng-template>
+        <!-- Formulaire de contact (déverrouillé) -->
+        <div
+          *ngIf="showContactForm && canContact()"
+          class="card bg-secondary-subtle text-dark p-3 mt-2"
+        >
+          <label class="form-label">Votre message</label>
+          <form (ngSubmit)="submitMessage()" [formGroup]="form">
+            <textarea
+              class="form-control mb-2"
+              rows="5"
+              formControlName="content"
+              placeholder="Bonjour…"
+            ></textarea>
+            <div class="d-flex justify-content-end">
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="form.invalid || sending"
+              >
+                {{ sending ? "Envoi…" : "Envoyer" }}
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="small text-muted mt-2" *ngIf="eligibility?.isOwner">
+          Vous êtes le propriétaire de cette annonce.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

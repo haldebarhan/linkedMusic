@@ -88,4 +88,15 @@ export class ApiService<T> {
       params,
     });
   }
+
+  getEligibility(announcementId: number) {
+    const endpoint = 'users/matching/eligibility';
+    return this.http.get<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, {
+      params: { id: announcementId },
+    });
+  }
+
+  sendMessage(data: any) {
+    return this.create('users/messages', data);
+  }
 }

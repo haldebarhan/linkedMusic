@@ -224,7 +224,11 @@
                 height="60"
               />
               <div>
-                <a href="#" class="listing-title">
+                <a
+                  (click)="goToDetails(item.id)"
+                  class="listing-title"
+                  style="cursor: pointer"
+                >
                   {{ item.title }}
                   <span *ngIf="item.isHighlighted" class="badge-pro">PRO</span>
                 </a>
