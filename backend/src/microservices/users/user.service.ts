@@ -209,6 +209,13 @@ export class UserService {
       // Force un token fraîchement signé
       const accessToken = await userCredential.user.getIdToken(true);
 
+      user.profileImage = user.profileImage
+        ? await minioService.generatePresignedUrl(
+            ENV.MINIO_BUCKET_NAME,
+            user.profileImage
+          )
+        : "";
+
       // Normalise le retour pour le front
       return { accessToken, user };
     } catch (error: any) {

@@ -137,6 +137,16 @@ export const routes: Routes = [
       ).then((m) => m.UserAnnouncementsDetailsComponent),
   },
   {
+    path: 'profile/messages',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/messages/user-messages/user-messages.component'
+      ).then((m) => m.UserMessagesComponent),
+  },
+  {
     path: 'admin',
     canActivate: [RoleGuard],
     data: { roles: ['ADMIN'] },

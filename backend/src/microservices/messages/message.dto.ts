@@ -7,3 +7,8 @@ export class CreateMessageDTO {
   @IsNumber({}, { message: "announcementId is required" })
   announcementId: number;
 }
+
+export class ReplyMessageDTO {
+  @IsString({ message: "content is required" })
+  content: string;
+}

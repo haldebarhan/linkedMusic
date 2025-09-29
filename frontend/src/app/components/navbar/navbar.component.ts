@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { AuthUser } from '../../shared/interfaces/auth';
 import { AuthService } from '../../auth/auth.service';
+import { SocketService } from '../../shared/services/socket.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,13 +12,29 @@ import { AuthService } from '../../auth/auth.service';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   user$: Observable<AuthUser | null>;
   isLoggedIn$: Observable<boolean>;
+  unread = 0;
+  private sub?: Subscription;
 
-  constructor(private router: Router, private auth: AuthService) {
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private socketService: SocketService
+  ) {
     this.user$ = this.auth.user$;
     this.isLoggedIn$ = this.auth.isLoggedIn$;
+  }
+
+  ngOnInit(): void {
+    this.sub = this.socketService.unreadCount$().subscribe((n) => {
+      this.unread = n;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   goToLogin() {
@@ -30,7 +47,11 @@ export class NavbarComponent {
 
   displayName(u: AuthUser | null): string {
     if (!u) return '';
-    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+    const name = u.Profile.displayName
+      ? u.Profile.displayName
+      : [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+
+    return name;
   }
 
   initials(u: AuthUser | null): string {

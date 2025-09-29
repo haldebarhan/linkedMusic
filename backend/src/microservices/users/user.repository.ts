@@ -33,11 +33,18 @@ export class UserRepository extends BaseRepository<
     });
   }
 
-  async update(id: number, data: Partial<UpdateUserDTO>): Promise<User & { Profile: Profile | null }> {
+  async findByParams(where: any) {
+    return prisma.user.findUnique({ where, include: { Profile: true } });
+  }
+
+  async update(
+    id: number,
+    data: Partial<UpdateUserDTO>
+  ): Promise<User & { Profile: Profile | null }> {
     return prisma.user.update({
       where: { id },
       data,
-      include: { Profile: true }
+      include: { Profile: true },
     });
   }
 }

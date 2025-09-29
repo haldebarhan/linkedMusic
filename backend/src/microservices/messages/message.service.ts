@@ -3,12 +3,20 @@ import { MatchingService } from "../matching/matching.service";
 import createError from "http-errors";
 import { PrismaClient } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
+import { Order } from "@/utils/enums/order.enum";
+import { MessageRepository } from "./message.repository";
+import { MinioService } from "@/utils/services/minio.service";
+import { ENV } from "@/config/env";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
+const minioService: MinioService = MinioService.getInstance();
 
 @injectable()
 export class MessageService {
-  constructor(private readonly matching: MatchingService) {}
+  constructor(
+    private readonly matching: MatchingService,
+    private readonly messageRepository: MessageRepository
+  ) {}
 
   async createMessage(userId: number, announcementId: number, content: string) {
     const { paidMatching, hasActivePass, alreadyPaid, isOwner } =
@@ -42,8 +50,214 @@ export class MessageService {
       },
     });
 
-    return prisma.message.create({
+    const message = await prisma.message.create({
       data: { conversationId: conversation.id, senderId: userId, content },
+      include: { conversation: true },
     });
+    return message;
+  }
+
+  async getMessages(params: {
+    limit: number;
+    page: number;
+    order: Order;
+    where?: any;
+  }) {
+    const { limit, page, order, where } = params;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.messageRepository.getUserMessages({
+        where,
+        take: limit,
+        skip,
+        order,
+      }),
+      this.messageRepository.count(where),
+    ]);
+    const threadRow = await this.buildThreadRow(data);
+    return {
+      data: threadRow,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
+  }
+
+  async replyToConversation(
+    conversationId: number,
+    userId: number,
+    content: string
+  ) {
+    const conversation = await this.getConversation(conversationId, userId);
+    const message = await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        senderId: userId,
+        content,
+      },
+    });
+
+    return message;
+  }
+
+  async getConversation(conversationId: number, userId: number) {
+    const conversation = await this.messageRepository.getConversation(
+      conversationId
+    );
+    if (!conversation) throw createError(404, "Conversation not found");
+    if (conversation.receiverId !== userId && conversation.senderId !== userId)
+      throw createError(403, "Forbidden");
+    return conversation;
+  }
+
+  async markConversationAsRead(conversationId: number, userId: number) {
+    const conversation = await this.getConversation(conversationId, userId);
+    const marked = await this.messageRepository.markConversationAsRead(
+      conversation.id,
+      userId
+    );
+    return marked;
+  }
+
+  async listThreadsForUser(userId: number, page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const [rows, total] = await Promise.all([
+      this.messageRepository.listThreadsForUser(userId, limit, skip),
+      this.messageRepository.countListThread(userId),
+    ]);
+
+    const threadRow = await this.buildThreadRows(rows, userId);
+    return {
+      data: threadRow,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
+  }
+
+  //   private async emitToUser(conversation: any, message: any, userId: number) {
+  //     const peerId =
+  //       conversation.senderId === userId
+  //         ? conversation.receiverId
+  //         : conversation.senderId;
+  //     const io = getIo();
+
+  //     io.to(rooms.userRoom(peerId)).emit("message:new", {
+  //       id: message.id,
+  //       threadId: conversation.id,
+  //       senderId: userId,
+  //       content: message.content,
+  //       createdAt: message.createdAt.toISOString(),
+  //     });
+
+  //     // 2) push "thread:updated" chez les 2 (aperçu liste de gauche)
+  //     const snippet = (message.content || "").replace(/\s+/g, " ").slice(0, 120);
+  //     io.to([rooms.userRoom(peerId), rooms.userRoom(userId)]).emit(
+  //       "thread:updated",
+  //       {
+  //         threadId: conversation.id,
+  //         lastSnippet: snippet,
+  //         lastAt: message.createdAt.toISOString(),
+  //       }
+  //     );
+
+  //     const unread = await this.messageRepository.computeUnread(peerId);
+  //     io.to(rooms.userRoom(peerId)).emit("notif:unread", { total: unread });
+  //   }
+
+  private async buildThreadRows(data: any[], userId: number) {
+    const threadRow = await Promise.all(
+      data.map(async (c) => {
+        const id = c.id;
+        const last = c.Messages[0];
+        const peer = c.senderId === userId ? c.receiver : c.sender;
+        const peerName = peer?.Profile?.displayName ?? `User ${peer?.id}`;
+        const peerAvatar = peer.profileImage
+          ? await minioService.generatePresignedUrl(
+              ENV.MINIO_BUCKET_NAME,
+              peer.profileImage
+            )
+          : "";
+        const count = c._count.Messages ?? 0;
+
+        return {
+          id,
+          peerName,
+          peerId: peer.id,
+          threadId: id,
+          peerAvatar,
+          unreadCount: count,
+          lastSnippet: last.content,
+          lastAt: last.createdAt,
+        };
+      })
+    );
+    return threadRow;
+  }
+
+  private async buildThreadRow(data: any[]) {
+    const threadRow = await Promise.all(
+      data.map(async (item) => {
+        try {
+          const id = item.id;
+          const firstMessage = item.Messages?.[0];
+          if (!firstMessage) {
+            return {
+              id,
+              peerName: "Inconnu",
+              threadId: id,
+              peerAvatar: "",
+              unreadCount: 0,
+              lastMessage: "",
+              lastMessageAt: null,
+            };
+          }
+          const peerName =
+            firstMessage.sender?.Profile?.displayName || "Inconnu";
+          let peerAvatar = "";
+          if (firstMessage.sender?.profileImage) {
+            try {
+              peerAvatar = await minioService.generatePresignedUrl(
+                ENV.MINIO_BUCKET_NAME,
+                firstMessage.sender.profileImage
+              );
+            } catch (error) {
+              console.error("Erreur génération URL avatar:", error);
+            }
+          }
+          const unreadCount = item.Messages.filter(
+            (message: any) => message.readAt === null
+          ).length;
+
+          return {
+            id,
+            peerName,
+            threadId: id,
+            peerAvatar,
+            unreadCount,
+            lastSnippet: firstMessage.content || "",
+            lastAt: firstMessage.createdAt,
+            messageCount: item.Messages.length,
+          };
+        } catch (error) {
+          console.error(`Erreur traitement thread ${item.id}:`, error);
+          return {
+            id: item.id,
+            threadId: item.id,
+            peerName: "Erreur",
+            peerAvatar: "",
+            unreadCount: 0,
+            lastSnippet: "",
+            lastAt: null,
+          };
+        }
+      })
+    );
+    return threadRow;
   }
 }

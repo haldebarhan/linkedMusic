@@ -10,6 +10,7 @@ import { swaggerOptions } from "./swagger-config";
 import swaggerUi from "swagger-ui-express";
 import { createServer, Server as HTTPServer } from "http";
 import { Server as IOServer } from "socket.io";
+import { setIo } from "./sockets/io-singleton";
 
 // ROUTES
 import authRoutes from "./api/auth/route";
@@ -18,9 +19,14 @@ import userRoutes from "./api/users/route";
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
 import { SearchService } from "./utils/services/search.service";
+import { getAllowedOrigins } from "./utils/functions/allowed-origins";
 // import { ConfigService } from "./utils/services/configuration.service";
 
-const skipOptions = (req: Request) => req.method === "OPTIONS";
+const allowed = getAllowedOrigins();
+const wsAllowed = [...allowed, "ws:", "wss:"];
+
+const skipForRateLImiter = (req: Request) =>
+  req.method === "OPTIONS" || req.path.startsWith("/socket.io");
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -32,7 +38,7 @@ const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipOptions,
+  skip: skipForRateLImiter,
 });
 
 // Rate limiting spécifique pour l'authentification
@@ -44,7 +50,7 @@ const authLimiter = rateLimit({
     retryAfter: 15 * 60,
   },
   skipSuccessfulRequests: true,
-  skip: skipOptions,
+  skip: skipForRateLImiter,
 });
 
 // Rate limiting pour les routes admin
@@ -55,7 +61,7 @@ const adminLimiter = rateLimit({
     error: "Limite de requêtes admin atteinte",
     retryAfter: 60,
   },
-  skip: skipOptions,
+  skip: skipForRateLImiter,
 });
 
 class Server {
@@ -74,7 +80,7 @@ class Server {
     // CORS sécurisé
 
     const corsConfig: cors.CorsOptions = {
-      origin: this.getAllowedOrigins(),
+      origin: getAllowedOrigins(),
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     };
@@ -99,7 +105,7 @@ class Server {
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             scriptSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", ...wsAllowed, ...allowed],
           },
         },
         crossOriginEmbedderPolicy: false, // Pour Swagger UI
@@ -170,76 +176,69 @@ class Server {
     this.app.use(
       (err: Error, req: Request, res: Response, next: NextFunction) => {
         logger.error("Erreur serveur:", {
-          error: err.message,
-          stack: err.stack,
+          error: err?.message ?? String(err),
+          stack: err?.stack,
           url: req.url,
           method: req.method,
           ip: req.ip,
         });
 
-        // Ne pas exposer les détails d'erreur en production
-        if (ENV.NODE_ENV === "production") {
-          res.status(500).json({
-            error: "Erreur interne du serveur",
-            timestamp: new Date().toISOString(),
-          });
-        } else {
-          res.status(500).json({
-            error: err.message,
-            stack: err.stack,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        const payload =
+          ENV.NODE_ENV === "production"
+            ? {
+                error: "Erreur interne du serveur",
+                timestamp: new Date().toISOString(),
+              }
+            : {
+                error: err?.message,
+                stack: err?.stack,
+                timestamp: new Date().toISOString(),
+              };
+        res.status(500).json(payload);
       }
     );
-
-    // Gestion des promesses non catchées
-    process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
-      logger.error("Promesse non gérée:", { reason, promise });
-      // Ne pas arrêter le serveur en production, mais logger l'erreur
-      if (ENV.NODE_ENV !== "production") {
-        process.exit(1);
-      }
+    // Do **not** kill the server in dev for unhandled promise rejections
+    const shouldExit = ENV.NODE_ENV === "production";
+    process.on("unhandledRejection", (reason: any, p) => {
+      const msg = reason instanceof Error ? reason.message : String(reason);
+      const stack = reason instanceof Error ? reason.stack : undefined;
+      logger.error("[unhandledRejection]", { msg, stack, promise: p });
+      if (shouldExit) process.exit(1);
     });
 
-    // Gestion des exceptions non catchées
     process.on("uncaughtException", (error: Error) => {
-      logger.error("Exception non gérée:", error);
-      process.exit(1);
+      logger.error("[uncaughtException]", {
+        error: error.message,
+        stack: error.stack,
+      });
+      if (shouldExit) process.exit(1);
     });
   }
 
   private socketConfig() {
     this.httpServer = createServer(this.app);
     this.io = new IOServer(this.httpServer, {
+      path: "/socket.io",
       cors: {
-        origin: this.getAllowedOrigins(),
+        origin: getAllowedOrigins(),
         methods: ["GET", "POST"],
         credentials: true,
       },
+      transports: ["websocket", "polling"],
     });
-    this.io.use(authSocketMiddleware);
+    this.io.use(async (socket, next) => {
+      try {
+        await authSocketMiddleware(socket, next);
+      } catch (err: any) {
+        logger.warn("[socket auth] error", err?.message || err);
+        next(new Error("unauthorized"));
+      }
+    });
+    setIo(this.io);
     setupSocket(this.io);
   }
-
-  private getAllowedOrigins(): string[] {
-    const origins = [];
-
-    if (ENV.NODE_ENV === "development") {
-      origins.push("http://localhost:3000", "http://localhost:3001");
-    }
-
-    if (ENV.FRONTEND_URL) {
-      origins.push(ENV.FRONTEND_URL);
-    }
-
-    if (ENV.ADMIN_URL) {
-      origins.push(ENV.ADMIN_URL);
-    }
-
-    return origins;
-  }
 }
+
 (async () => {
   // await ConfigService.loadConfigs();
   await SearchService.initAndConfigure();

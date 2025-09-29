@@ -1,0 +1,118 @@
+<div class="container-fluid py-3" style="min-height: 85vh">
+  <div class="row g-0 h-100 messages-shell">
+    <!-- COLONNE GAUCHE — Threads -->
+    <div class="col-12 col-md-4 border-end d-flex flex-column">
+      <div class="settings-tray">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold">Messages</span>
+          </div>
+          <div class="settings-tray--right">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des threads (scroll) -->
+      <div class="threads-scroll">
+        <ng-container *ngIf="threads?.length; else noThreadsTpl">
+          <ng-container *ngFor="let t of threads">
+            <div
+              class="friend-drawer friend-drawer--onhover"
+              [class.active]="t.id === activeThreadId"
+              (click)="selectThread(t.id)"
+            >
+              <img
+                class="profile-image"
+                [src]="t.peerAvatar || 'https://placehold.co/60x60'"
+                alt="avatar"
+              />
+              <div class="text">
+                <div class="d-flex align-items-center justify-content-between">
+                  <h6 class="mb-0">{{ t.peerName }}</h6>
+                  <span class="time text-muted small" *ngIf="t.lastAt">{{
+                    t.lastAt | date : "HH:mm"
+                  }}</span>
+                </div>
+                <p class="text-muted mb-0">{{ t.lastSnippet || "—" }}</p>
+              </div>
+              <span
+                *ngIf="t.unreadCount"
+                class="badge rounded-pill bg-primary ms-auto"
+                >{{ t.unreadCount }}</span
+              >
+            </div>
+            <hr class="my-1" />
+          </ng-container>
+        </ng-container>
+
+        <ng-template #noThreadsTpl>
+          <div class="text-center text-muted py-5">Aucune conversation.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE — Conversation -->
+    <div class="col-12 col-md-8 d-flex flex-column">
+      <div class="settings-tray">
+        <div class="friend-drawer no-gutters friend-drawer--grey">
+          <img
+            class="profile-image"
+            [src]="peerAvatar || 'https://placehold.co/60x60'"
+            alt="peer"
+          />
+          <div class="text">
+            <h6 class="mb-0">{{ peerName || "—" }}</h6>
+            <p class="text-muted mb-0"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversation (scroll) -->
+      <div class="chat-panel chat-scroll" #chatScroll>
+        <ng-container *ngIf="messages?.length; else emptyConvTpl">
+          <div
+            class="message-row"
+            *ngFor="let m of messages"
+            [class.mine]="isMine(m)"
+          >
+            <div
+              class="chat-bubble"
+              [class.chat-bubble--right]="isMine(m)"
+              [class.chat-bubble--left]="!isMine(m)"
+            >
+              <div>{{ m.content }}</div>
+              <div class="small text-muted mb-1">
+                {{ m.createdAt | date : "HH:mm" }}
+              </div>
+            </div>
+          </div>
+          <div #scrollBottom></div>
+        </ng-container>
+        <ng-template #emptyConvTpl>
+          <div class="text-center text-muted py-5">Aucun message.</div>
+        </ng-template>
+      </div>
+
+      <!-- Barre d’envoi -->
+      <div class="chat-box-tray">
+        <form class="d-flex w-100" [formGroup]="form" (ngSubmit)="send()">
+          <input
+            type="text"
+            formControlName="content"
+            class="form-control"
+            placeholder="Écrire un message…"
+          />
+          <button
+            class="btn btn-primary ms-2"
+            type="submit"
+            [disabled]="form.invalid || sending || !activeThreadId"
+            title="Envoyer"
+          >
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
