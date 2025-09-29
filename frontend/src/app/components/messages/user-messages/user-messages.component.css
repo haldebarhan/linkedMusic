@@ -1,0 +1,199 @@
+:root {
+  --blue: #74b9ff;
+}
+
+/* Container principal avec hauteur FIXE */
+.container-fluid {
+  height: 85vh; /* Hauteur fixe au lieu de min-height */
+}
+
+/* Coquille responsive avec hauteur FIXE */
+.messages-shell {
+  height: 100%; /* Prend toute la hauteur du container */
+}
+
+/* Colonne gauche — threads avec flexbox */
+.messages-shell .col-md-4 {
+  height: 100%; /* Hauteur fixe */
+}
+
+/* Colonne droite — conversation avec flexbox */
+.messages-shell .col-md-8 {
+  height: 100%; /* Hauteur fixe */
+}
+
+/* Zone de scroll des threads - hauteur calculée automatiquement */
+.threads-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 0; /* Prend tout l'espace disponible */
+  min-height: 0; /* Important pour que flex + overflow fonctionnent */
+  padding: 6px 0;
+  max-height: calc(85vh - 6rem); /* header + marges */
+}
+
+/* Zone de scroll de la conversation - hauteur calculée automatiquement */
+.chat-scroll {
+  /* overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 0; 
+  min-height: 0; 
+  padding: 6px 0; */
+
+  flex: 1 1 auto;
+  overflow: auto;
+  max-height: calc(85vh - 10.5rem); /* header + input + marges */
+  padding: 0.5rem 0.75rem;
+}
+
+/* Entêtes - hauteur fixe */
+.settings-tray {
+  background: #eee;
+  padding: 10px 15px;
+  border-radius: 7px;
+  flex-shrink: 0; /* Empêche la compression */
+}
+
+/* Barre d'envoi - hauteur fixe */
+.chat-box-tray {
+  background: #eee;
+  padding: 10px 15px;
+  border-radius: 7px;
+  margin-top: 10px;
+  flex-shrink: 0; /* Empêche la compression */
+}
+
+.settings-tray--right i {
+  margin-top: 6px;
+  font-size: 22px;
+  color: grey;
+  margin-left: 12px;
+  transition: 0.25s;
+  cursor: pointer;
+}
+.settings-tray--right i:hover {
+  color: var(--blue);
+}
+
+/* Thread item */
+.friend-drawer {
+  padding: 10px 15px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  transition: 0.25s ease;
+  border-radius: 6px;
+  flex-shrink: 0; /* Empêche la compression des items */
+}
+.friend-drawer--grey {
+  background: #eee;
+}
+.friend-drawer .text {
+  flex: 1 1 auto;
+}
+.friend-drawer h6,
+.friend-drawer p {
+  margin: 0;
+}
+.friend-drawer .time {
+  color: grey;
+}
+.friend-drawer--onhover:hover,
+.friend-drawer.active {
+  background: var(--blue) !important;
+}
+.friend-drawer--onhover:hover h6,
+.friend-drawer--onhover:hover p,
+.friend-drawer--onhover:hover .time,
+.friend-drawer.active h6,
+.friend-drawer.active p,
+.friend-drawer.active .time {
+  color: #131313 !important;
+}
+
+hr {
+  margin: 6px auto;
+  width: 86%;
+  flex-shrink: 0;
+}
+
+/* Avatars */
+.profile-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 40px;
+  object-fit: cover;
+}
+
+/* Messages */
+.message-row {
+  display: flex;
+  padding: 0 8px;
+  flex-shrink: 0; /* Empêche la compression des messages */
+}
+.message-row.mine {
+  justify-content: flex-end;
+} /* MES messages à droite */
+
+.chat-bubble {
+  padding: 10px 14px;
+  background: #eee;
+  margin: 8px 6px;
+  border-radius: 9px;
+  position: relative;
+  animation: fadeIn 0.6s ease-in;
+  word-break: break-word;
+  max-width: 80%;
+}
+.chat-bubble:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 14px solid transparent;
+  border-bottom: 0;
+  margin-top: -7px;
+}
+.chat-bubble--left:after {
+  left: 0;
+  border-right-color: #eee;
+  border-left: 0;
+  margin-left: -14px;
+}
+.chat-bubble--right {
+  background: #0be83b;
+  color: #fff;
+}
+.chat-bubble--right:after {
+  right: 0;
+  border-left-color: #0be83b;
+  border-right: 0;
+  margin-right: -14px;
+}
+
+/* Anim */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile - ajustements pour petits écrans */
+@media (max-width: 767.98px) {
+  .settings-tray--right .small {
+    display: none;
+  }
+
+  /* Réduire la hauteur sur mobile si nécessaire */
+  .messages-shell,
+  .messages-shell .col-12 {
+    height: 80vh;
+  }
+}

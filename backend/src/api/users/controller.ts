@@ -45,4 +45,18 @@ export class UserController {
   async createMessage(req: AuthenticatedRequest, res: Response) {
     return await this.messageController.create(req, res);
   }
+  async getMessages(req: AuthenticatedRequest, res: Response) {
+    return await this.messageController.getUserMessages(req, res);
+  }
+
+  async getConversationMessages(req: AuthenticatedRequest, res: Response) {
+    return await this.messageController.getConversation(req, res);
+  }
+
+  async markConversationAsRead(req: AuthenticatedRequest, res: Response) {
+    return await this.messageController.markConversationAsRead(req, res);
+  }
+  async replyToConversation(req: AuthenticatedRequest, res: Response) {
+    return await this.messageController.replyToConversation(req, res);
+  }
 }

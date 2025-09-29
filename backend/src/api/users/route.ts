@@ -10,7 +10,10 @@ import {
   UpdateAnnouncementDto,
 } from "@/microservices/annoncements/ann.dto";
 import uploads from "@/multer-config";
-import { CreateMessageDTO } from "@/microservices/messages/message.dto";
+import {
+  CreateMessageDTO,
+  ReplyMessageDTO,
+} from "@/microservices/messages/message.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -55,6 +58,28 @@ router.get(
   "/matching/eligibility",
   async (req: AuthenticatedRequest, res: Response) =>
     userController.eligibility(req, res)
+);
+
+router.get("/messages", async (req: AuthenticatedRequest, res: Response) =>
+  userController.getMessages(req, res)
+);
+
+router.put(
+  "/messages/conversation/read/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.markConversationAsRead(req, res)
+);
+router.post(
+  "/messages/conversation/reply/:id",
+  ValidateDtoMiddleware(ReplyMessageDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.replyToConversation(req, res)
+);
+
+router.get(
+  "/messages/conversation/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.getConversationMessages(req, res)
 );
 
 router.post(

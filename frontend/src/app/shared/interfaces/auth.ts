@@ -1,4 +1,11 @@
 export type UserRole = 'ADMIN' | 'USER' | 'PROVIDER';
+export type Profile = {
+  id: number;
+  displayName: string;
+  bio: string;
+  location: string;
+  [key: string]: any;
+};
 
 export interface AuthUser {
   id: number;
@@ -7,6 +14,7 @@ export interface AuthUser {
   lastName: string;
   role: UserRole;
   profileImage: string;
+  Profile: Profile;
 }
 
 export interface AuthState {
