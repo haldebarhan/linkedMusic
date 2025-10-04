@@ -167,6 +167,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
 
   selectThread(threadId: number) {
     if (this.activeThreadId === threadId) {
+      this.socket.emit(EV.CONVO_LOAD, { threadId, page: 1, limit: 200 });
       return;
     }
     this.activeThreadId = threadId;

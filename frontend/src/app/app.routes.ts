@@ -117,6 +117,16 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'pack/pricing-plan',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/pricing-plan/pricing-plan.component').then(
+        (m) => m.PricingPlanComponent
+      ),
+  },
+  {
     path: 'profile/announcements',
     canMatch: [authCanMatch],
     canActivate: [authCanActivate],
