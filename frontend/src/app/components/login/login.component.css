@@ -1,1 +1,125 @@
+.auth-shell {
+  min-height: 85vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  color: #e9e7ee;
+}
 
+.auth-card {
+  width: min(1120px, 100%);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #272233, #1d1a23);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  overflow: hidden;
+}
+
+@media (max-width: 991.98px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Visuel gauche */
+.auth-visual {
+  position: relative;
+  background: url("https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop")
+    center/cover no-repeat;
+  min-height: 520px;
+  padding: 1.25rem;
+}
+.btn-glass {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e9e7ee;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+}
+.visual-caption {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  color: #fff;
+}
+
+/* Panneau droit */
+.auth-panel {
+  background: #ffffff;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* Champs */
+.input-wrap {
+  position: relative;
+}
+.input-dark.form-control {
+  background: #fdfdfe;
+  border: 1px solid #3a3445;
+  color: #000000;
+  padding-left: 2.6rem; /* pour l’icône */
+}
+.input-dark.form-control::placeholder {
+  color: #020202;
+}
+.input-dark.form-control:focus {
+  border-color: #0b0b0b;
+  box-shadow: 0 0 0 0.25rem rgba(122, 90, 248, 0.15);
+  background: #ffffff;
+  color: #4103de;
+}
+.input-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4c02ee;
+}
+
+.btn-social {
+  background: transparent;
+  border-color: #3a3445;
+  color: #090909;
+}
+.btn-social:hover {
+  background: #5205cd;
+  color: #fff;
+}
+
+/* Divider */
+.divider {
+  position: relative;
+  text-align: center;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: #3a3445;
+  position: absolute;
+  top: 50%;
+  width: 40%;
+}
+.divider::before {
+  left: 0;
+}
+.divider::after {
+  right: 0;
+}
+.divider > span {
+  padding: 0 0.75rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  background: #0a0a0a;
+}
+
+/* Liens */
+.link-muted {
+  color: #0303f0;
+  text-decoration: none;
+}
+.link-muted:hover {
+  color: #4805f4;
+  text-decoration: underline;
+}

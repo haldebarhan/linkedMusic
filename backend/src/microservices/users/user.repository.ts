@@ -1,7 +1,7 @@
 import { BaseRepository } from "@/utils/classes/base.repoository";
 import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
-import { PrismaClient, Profile, Status, User } from "@prisma/client";
+import { PrismaClient, Status, User } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
@@ -9,7 +9,7 @@ const prisma: PrismaClient = DatabaseService.getPrismaClient();
 @injectable()
 export class UserRepository extends BaseRepository<
   User,
-  Omit<CreateUserDTO, "password" | "displayName">,
+  Omit<CreateUserDTO, "password" | "pseudo">,
   UpdateUserDTO & { profileImage?: string }
 > {
   constructor() {
@@ -29,22 +29,17 @@ export class UserRepository extends BaseRepository<
   async findOne(id: number): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { id },
-      include: { Profile: true },
     });
   }
 
   async findByParams(where: any) {
-    return prisma.user.findUnique({ where, include: { Profile: true } });
+    return prisma.user.findUnique({ where });
   }
 
-  async update(
-    id: number,
-    data: Partial<UpdateUserDTO>
-  ): Promise<User & { Profile: Profile | null }> {
+  async update(id: number, data: Partial<UpdateUserDTO>): Promise<User> {
     return prisma.user.update({
       where: { id },
       data,
-      include: { Profile: true },
     });
   }
 }

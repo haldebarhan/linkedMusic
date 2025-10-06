@@ -3,15 +3,12 @@ import { UserService } from "./user.service";
 import { formatResponse } from "@/utils/helpers/response-formatter";
 import { Request, Response } from "express";
 import { handleError } from "@/utils/helpers/handle-error";
-import { MinioService } from "@/utils/services/minio.service";
 import { Order } from "@/utils/enums/order.enum";
 import { paginatedResponse } from "@/utils/helpers/paginated-response";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import createError from "http-errors";
 import { saveFileToBucket } from "@/utils/functions/save-file";
 import { UpdateUserDTO } from "./user.dto";
-
-const minioService: MinioService = MinioService.getInstance();
 
 @injectable()
 export class UserController {
@@ -214,6 +211,49 @@ export class UserController {
       const response = formatResponse(200, {
         message: "Account closed successfully",
       });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async socialVerify(req: AuthenticatedRequest, res: Response) {
+    const user = req.user;
+    const accessToken = req.token;
+    const userAgent = req.get("user-agent");
+    const ip = req.ip;
+    if (!userAgent || !ip) throw createError(400, "Unknown user agent or IP");
+    try {
+      const authUser = await this.userService.loginWithGoogle(user, {
+        userAgent,
+        ip,
+      });
+
+      res.cookie("access_token", accessToken, {
+        httpOnly: true,
+      });
+      const response = formatResponse(200, { accessToken, user: authUser });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async registerWithGoogle(req: AuthenticatedRequest, res: Response) {
+    try {
+      const user = req.user;
+      const accessToken = req.token;
+      const userAgent = req.get("user-agent");
+      const ip = req.ip;
+      if (!userAgent || !ip) throw createError(400, "Unknown user agent or IP");
+      const created = await this.userService.registerWithGoogle(user, {
+        userAgent,
+        ip,
+      });
+      res.cookie("access_token", accessToken, {
+        httpOnly: true,
+      });
+      const response = formatResponse(200, { accessToken, user: created });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

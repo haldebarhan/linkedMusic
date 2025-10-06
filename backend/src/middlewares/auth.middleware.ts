@@ -57,7 +57,6 @@ const authMiddleware = async (
 
     const user = await prisma.user.findUnique({
       where: { uid: decodedToken.uid },
-      include: { Profile: true },
     });
 
     if (!user) {

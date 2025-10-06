@@ -59,7 +59,6 @@ const UserAndProviderMiddleware = async (
 
     const user = await prisma.user.findFirst({
       where: { uid: decodedToken.uid },
-      include: { Profile: true },
     });
 
     if (!user) {

@@ -24,8 +24,8 @@ export class MessageRepository {
           include: {
             sender: {
               select: {
-                Profile: { select: { displayName: true } },
                 profileImage: true,
+                displayName: true,
               },
             },
           },
@@ -89,14 +89,14 @@ export class MessageRepository {
         sender: {
           select: {
             id: true,
-            Profile: { select: { displayName: true } },
             profileImage: true,
+            displayName: true,
           },
         },
         receiver: {
           select: {
             id: true,
-            Profile: { select: { displayName: true } },
+            displayName: true,
             profileImage: true,
           },
         },

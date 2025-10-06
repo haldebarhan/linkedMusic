@@ -1,169 +1,165 @@
-<div
-  class="container-fluid d-flex justify-content-center align-items-center"
-  style="min-height: 85vh"
->
-  <div class="p-4 shadow rounded" style="max-width: 500px; width: 100%">
-    <h2 class="text-center mb-3">Inscription</h2>
-    <p class="text-center text-muted mb-4">
-      Créez un compte pour rejoindre la plateforme
-    </p>
-
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
-      <!-- Nom -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-user"></i></span>
-          <input
-            type="text"
-            formControlName="lastName"
-            class="form-control"
-            placeholder="Nom"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('lastName')?.touched || submitted) &&
-                signupForm.get('lastName')?.invalid
-            }"
-          />
-          <div class="invalid-feedback">Le nom est requis.</div>
-        </div>
-      </div>
-
-      <!-- Prénoms -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-          <input
-            type="text"
-            formControlName="firstName"
-            class="form-control"
-            placeholder="Prénoms"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('firstName')?.touched || submitted) &&
-                signupForm.get('firstName')?.invalid
-            }"
-          />
-          <div class="invalid-feedback">Les prénoms sont requis.</div>
-        </div>
-      </div>
-
-      <!-- Téléphone -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-phone"></i></span>
-          <input
-            type="tel"
-            formControlName="phone"
-            class="form-control"
-            placeholder="N° de téléphone"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('phone')?.touched || submitted) &&
-                signupForm.get('phone')?.invalid
-            }"
-          />
-          <div class="invalid-feedback">
-            Numéro de téléphone requis (ex: 0102030405).
-          </div>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-          <input
-            type="email"
-            formControlName="email"
-            class="form-control"
-            placeholder="Email"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('email')?.touched || submitted) &&
-                signupForm.get('email')?.invalid
-            }"
-          />
-          <div class="invalid-feedback">
-            Entrez un email valide (ex: usermail.com).
-          </div>
-        </div>
-      </div>
-
-      <!-- Mot de passe -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          <input
-            type="password"
-            formControlName="password"
-            class="form-control"
-            placeholder="Mot de passe"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('password')?.touched || submitted) &&
-                signupForm.get('password')?.invalid
-            }"
-          />
-          <div class="invalid-feedback">
-            Le mot de passe doit contenir au moins 6 caractères.
-          </div>
-        </div>
-      </div>
-
-      <!-- Photo -->
-      <div class="mb-4">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text"><i class="fas fa-image"></i></span>
-          <input
-            type="file"
-            formControlName="photo"
-            class="form-control"
-            accept="image/*"
-            [ngClass]="{
-              'is-invalid':
-                (signupForm.get('photo')?.touched || submitted) &&
-                signupForm.get('photo')?.invalid
-            }"
-            (change)="onFileSelected($event)"
-          />
-          <div class="invalid-feedback">La photo est requise.</div>
-        </div>
-      </div>
-
-      <!-- Bouton -->
-      <button
-        type="submit"
-        class="btn btn-primary btn-lg w-100"
-        [disabled]="!signupForm.valid"
-        *ngIf="!submitted"
-      >
-        Inscription
-      </button>
-      <button
-        class="btn btn-primary btn-lg w-100"
-        type="button"
-        disabled
-        *ngIf="submitted"
-      >
-        <span
-          class="spinner-border spinner-border-sm"
-          aria-hidden="true"
-        ></span>
-        <span role="status">Patientez...</span>
-      </button>
-    </form>
-
-    <!-- Lien vers connexion -->
-    <div class="text-center mt-3">
-      <small class="text-muted">
+<div class="auth-shell">
+  <div class="auth-card shadow-lg">
+    <!-- Formulaire (gauche) -->
+    <section class="auth-panel">
+      <h1 class="display-6 fw-bold mb-2 text-dark">Créer un compte</h1>
+      <p class="text-muted mb-4">
         Déjà un compte ?
-        <a
-          (click)="goToLogin()"
-          class="text-decoration-none"
-          style="cursor: pointer"
+        <a class="link-muted" (click)="goToLogin()" style="cursor: pointer"
           >Se connecter</a
         >
-      </small>
-    </div>
+      </p>
+
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Prénom + Nom en ligne -->
+        <div class="row g-3">
+          <div class="col-12 col-md-12">
+            <div class="input-wrap">
+              <i class="fas fa-user input-icon"></i>
+              <input
+                type="text"
+                formControlName="pseudo"
+                class="form-control form-control-lg input-dark"
+                placeholder="pseudo"
+                [ngClass]="{
+                  'is-invalid':
+                    (signupForm.get('pseudo')?.touched || submitted) &&
+                    signupForm.get('pseudo')?.invalid
+                }"
+              />
+              <div class="invalid-feedback">Le pseudo est requis.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mt-3">
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input
+              type="email"
+              formControlName="email"
+              class="form-control form-control-lg input-dark"
+              placeholder="Email"
+              autocomplete="email"
+              [ngClass]="{
+                'is-invalid':
+                  (signupForm.get('email')?.touched || submitted) &&
+                  signupForm.get('email')?.invalid
+              }"
+            />
+            <div class="invalid-feedback">Entrez un email valide</div>
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="mt-3">
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input
+              type="password"
+              formControlName="password"
+              class="form-control form-control-lg input-dark pe-5"
+              placeholder="Mot de passe"
+              autocomplete="new-password"
+              [ngClass]="{
+                'is-invalid':
+                  (signupForm.get('password')?.touched || submitted) &&
+                  signupForm.get('password')?.invalid
+              }"
+            />
+            <div class="invalid-feedback">
+              Le mot de passe doit contenir au moins 6 caractères.
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo -->
+        <div class="mt-3">
+          <div class="input-wrap">
+            <!-- input file réel mais caché -->
+            <input
+              type="file"
+              id="photo"
+              formControlName="photo"
+              class="visually-hidden"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+            />
+
+            <!-- bouton custom qui ouvre le sélecteur -->
+            <label for="photo" class="btn btn-outline-light w-100 btn-file">
+              <i class="fas fa-image me-2"></i> Choisir une photo de profile
+            </label>
+
+            <!-- affichage du nom du fichier choisi -->
+            <small class="text-muted d-block mt-2">
+              {{ fileName || "Aucun fichier sélectionné" }}
+            </small>
+
+            <!-- feedback erreurs -->
+            <div
+              class="invalid-feedback d-block"
+              *ngIf="
+                (signupForm.get('photo')?.touched || submitted) &&
+                signupForm.get('photo')?.invalid
+              "
+            >
+              La photo est requise.
+            </div>
+          </div>
+        </div>
+        <!-- CTA -->
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg w-100 btn-cta mt-4"
+          [disabled]="!signupForm.valid || submitted"
+          *ngIf="!submitted"
+        >
+          Créer le compte
+        </button>
+        <button
+          class="btn btn-primary btn-lg w-100 btn-cta"
+          type="button"
+          disabled
+          *ngIf="submitted"
+        >
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            aria-hidden="true"
+          ></span>
+          Patientez...
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="divider my-4"><span>ou s’inscrire avec</span></div>
+
+      <!-- Social -->
+      <div class="d-flex gap-3">
+        <button
+          type="button"
+          class="btn btn-outline-light flex-fill btn-social"
+          (click)="registerWithGoogle()"
+        >
+          <i class="fab fa-google me-2"></i> Google
+        </button>
+      </div>
+    </section>
+
+    <!-- Panneau visuel (droite) -->
+    <aside class="auth-visual auth-visual-right d-none d-md-block">
+      <button
+        class="btn btn-sm btn-glass rounded-pill px-3"
+        (click)="goToHome()"
+      >
+        <i class="fas fa-arrow-left me-2"></i> Back to website
+      </button>
+
+      <div class="visual-caption">
+        <h5 class="fw-semibold mb-1">Capturing Moments,</h5>
+        <p class="mb-0 opacity-75">Creating Memories</p>
+      </div>
+    </aside>
   </div>
 </div>

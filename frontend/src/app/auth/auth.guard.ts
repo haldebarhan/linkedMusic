@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
+import { fbAuth } from '../core/firebase';
 
 type GuestPolicy = 'allow' | 'redirectIfAuth' | 'logoutThenAllow';
 
@@ -37,7 +38,7 @@ const decideForRoute = (
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  const isAuth = auth.snapshot.isAuthenticated;
+  const isAuth = auth.snapshot.isAuthenticated || !!fbAuth.currentUser;
   const policy: GuestPolicy = (data?.['guestPolicy'] ?? 'allow') as GuestPolicy;
   const redirectTo: string = data?.['redirectTo'] ?? '/';
 

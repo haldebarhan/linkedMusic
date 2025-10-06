@@ -9,20 +9,13 @@ import {
   MinLength,
   ValidateNested,
 } from "class-validator";
-import { UpdateProfileDTO } from "../profiles/profile.dto";
 
 export class CreateUserDTO {
-  @IsEmail()
+  @IsEmail({}, { message: "pseudo is required" })
   email: string;
 
-  @IsString({ message: "phone is required" })
-  phone: string;
-
-  @IsString({ message: "lastName is required" })
-  lastName: string;
-
-  @IsString({ message: "firstName is required" })
-  firstName: string;
+  @IsString({ message: "pseudo is required" })
+  pseudo: string;
 
   @IsOptional()
   @IsEnum(Role, {
@@ -92,9 +85,9 @@ export class ChangePasswordDTO {
   password: string;
 }
 
-export class UpdateUserWithProfileDTO extends UpdateUserDTO {
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => UpdateProfileDTO)
-  profile?: UpdateProfileDTO;
-}
+// export class UpdateUserWithProfileDTO extends UpdateUserDTO {
+//   @IsOptional()
+//   @ValidateNested()
+//   @Type(() => UpdateProfileDTO)
+//   profile?: UpdateProfileDTO;
+// }

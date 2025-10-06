@@ -8,18 +8,14 @@ import logger from "@/config/logger";
 
 interface RegisterToken {
   hashEmail: string;
-  phone: string;
-  lastName: string;
-  firstName: string;
+  pseudo: string;
   password: string;
   profileImage: string;
   role: Role;
 }
 
 interface TempUser {
-  phone: string;
-  lastName: string;
-  firstName: string;
+  pseudo: string;
   password: string;
   profileImage: string;
   role: Role;
@@ -30,15 +26,12 @@ export class TokenService {
   async generateAndStoreToken(
     data: CreateUserDTO & { profileImage: string }
   ): Promise<string> {
-    const { email, password, phone, firstName, lastName, role, profileImage } =
-      data;
+    const { email, password, pseudo, role, profileImage } = data;
     const hashEmail = await bcrypt.hash(email, 10);
     const payload: RegisterToken = {
       hashEmail,
-      phone,
-      lastName,
-      firstName,
       password,
+      pseudo,
       role,
       profileImage,
     };
@@ -51,24 +44,14 @@ export class TokenService {
   ): Promise<{ isValid: boolean; tempUser?: TempUser }> {
     try {
       const decoded = jwt.verify(token, ENV.TOKEN_SECRET) as RegisterToken;
-      const {
-        hashEmail,
-        lastName,
-        password,
-        firstName,
-        phone,
-        role,
-        profileImage,
-      } = decoded;
+      const { hashEmail, password, pseudo, role, profileImage } = decoded;
       const isMatch = await bcrypt.compare(email, hashEmail);
       if (!isMatch) return { isValid: false };
       const user: TempUser = {
         password,
-        lastName,
-        phone,
-        firstName,
         role,
         profileImage,
+        pseudo,
       };
       return { isValid: true, tempUser: user };
     } catch (error) {

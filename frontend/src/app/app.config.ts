@@ -6,9 +6,14 @@ import {
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  provideHttpClient,
+  withInterceptors,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { AuthService } from './auth/auth.service';
-import { authInterceptor } from './auth/auth.interceptor';
+import { AuthInterceptor } from './auth/auth.interceptor';
 import { RefreshTokenService } from './auth/refresh-token.service';
 
 function initAuth(auth: AuthService, refresher: RefreshTokenService) {
@@ -21,7 +26,12 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
     {
       provide: APP_INITIALIZER,
       useFactory: initAuth,

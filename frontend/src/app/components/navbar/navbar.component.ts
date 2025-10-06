@@ -47,8 +47,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   displayName(u: AuthUser | null): string {
     if (!u) return '';
-    const name = u.Profile.displayName
-      ? u.Profile.displayName
+    const name = u.displayName
+      ? u.displayName
       : [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
 
     return name;

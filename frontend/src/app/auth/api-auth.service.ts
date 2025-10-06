@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AuthService } from './auth.service';
 import { AuthUser } from '../shared/interfaces/auth';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,27 +8,30 @@ import { environment } from '../../environments/environment';
 export class ApiAuthService {
   private API_URL = environment.apiUrl;
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private http: HttpClient) {}
 
-  login(payload: { email: string; password: string }) {
-    return this.http
-      .post<{
-        statusCode: number;
-        timestamp: string;
-        data: { accessToken: string; user: AuthUser };
-      }>(`${this.API_URL}/auth/login`, payload)
-      .pipe(
-        tap((res) => this.auth.setLogin(res.data.accessToken, res.data.user))
-      );
+  loginWithPassword(payload: { email: string; password: string }) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: { accessToken: string; user: AuthUser };
+    }>(`${this.API_URL}/auth/login`, payload);
   }
 
   register(formData: FormData) {
-    return this.http
-      .post<{ token: string; user: AuthUser }>(
-        `${this.API_URL}/auth/register`,
-        formData
-      )
-      .pipe(tap((res) => this.auth.setLogin(res.token, res.user)));
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${this.API_URL}/auth/register`, formData);
+  }
+
+  activateAccount(payload: { email: string; token: string }) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: { accessToken: string; user: AuthUser };
+    }>(`${this.API_URL}/auth/activate`, payload);
   }
 
   refreshToken(): Observable<{ token: string }> {
@@ -37,6 +39,30 @@ export class ApiAuthService {
     return this.http.post<{ token: string }>(
       `${this.API_URL}/auth/refresh`,
       {}
+    );
+  }
+
+  socialVerify(idToken: string) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: { accessToken: string; user: AuthUser };
+    }>(
+      `${environment.apiUrl}/auth/social/verify`,
+      {},
+      { headers: { Authorization: `Bearer ${idToken}` } }
+    );
+  }
+
+  registerWithGoogle(idToken: string) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: { accessToken: string; user: AuthUser };
+    }>(
+      `${environment.apiUrl}/auth/register/social`,
+      {},
+      { headers: { Authorization: `Bearer ${idToken}` } }
     );
   }
 }

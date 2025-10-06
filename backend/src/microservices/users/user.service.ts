@@ -22,8 +22,6 @@ import { Role } from "@/utils/enums/role.enum";
 import { Order } from "@/utils/enums/order.enum";
 import { MinioService } from "@/utils/services/minio.service";
 import { invalideCache } from "@/utils/functions/invalidate-cache";
-import { ProfileRepository } from "../profiles/profile.repository";
-import { UpdateProfileDTO } from "../profiles/profile.dto";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: MinioService = MinioService.getInstance();
@@ -33,26 +31,23 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly tokenService: TokenService,
-    private readonly mailService: BrevoMailService,
-    private readonly profileRepository: ProfileRepository
+    private readonly mailService: BrevoMailService
   ) {}
 
   async createUser(data: CreateUserDTO, profileImage: string) {
-    const { email, password, firstName, lastName, role, phone } = data;
-    await this.checkUserExistence(email, phone);
+    const { email, password, role, pseudo } = data;
+    await this.checkUserExistence(email);
     const token = await this.tokenService.generateAndStoreToken({
       email,
       password,
-      firstName,
-      lastName,
-      phone,
       role,
       profileImage,
+      pseudo,
     });
     const link = `${ENV.FRONTEND_URL}/auth/activate-account?token=${token}&email=${email}`;
     return await this.mailService.sendActivateAccountMail({
       to: email,
-      name: `${firstName} ${lastName}`,
+      name: `${pseudo}`,
       link,
     });
   }
@@ -64,39 +59,30 @@ export class UserService {
       throw createError(400, "invalid token");
     }
     const user = decoded.tempUser;
-    const { firstName, lastName, phone, role, password, profileImage } = user;
-    const uid = await createFirebaseUser(
-      email,
-      password,
-      `${firstName} ${lastName}`
-    );
+    const { role, password, profileImage, pseudo } = user;
+    const uid = await createFirebaseUser(email, password, `${pseudo}`);
     try {
-      const createData: Omit<CreateUserDTO, "password" | "displayName"> & {
+      const createData: Omit<CreateUserDTO, "password" | "pseudo"> & {
         uid: string;
         status: Status;
         profileImage: string;
+        displayName: string;
       } = {
         uid,
         email,
-        firstName,
-        lastName,
-        phone,
         profileImage,
         role: (role ?? Role.USER) as Role,
         status: Status.ACTIVATED,
+        displayName: pseudo,
       };
-      const user = await this.userRepository.create(createData);
+      const user = await this.userRepository.create({ ...createData });
       user.profileImage = await minioService.generatePresignedUrl(
         ENV.MINIO_BUCKET_NAME,
         user.profileImage
       );
-      const profile = await this.profileRepository.create({
-        userId: user.id,
-        displayName: `${user.firstName} ${user.lastName}`,
-      });
       const accessToken = await firebaseService.loginWithUid(user.uid);
       await invalideCache("GET:/users*");
-      const userData = { ...user, profile };
+      const userData = { ...user };
       return { user: userData, accessToken };
     } catch (error) {
       if (
@@ -166,11 +152,11 @@ export class UserService {
     const updateUserPromise = this.userRepository.update(user.id, userData);
     let updateProfilePromise: Promise<any> = Promise.resolve();
     if (displayName || location || bio) {
-      updateProfilePromise = this.profileRepository.updateByUserId(user.id, {
-        ...(displayName && { displayName }),
-        ...(location && { location }),
-        ...(bio && { bio }),
-      });
+      //   updateProfilePromise = this.profileRepository.updateByUserId(user.id, {
+      //     ...(displayName && { displayName }),
+      //     ...(location && { location }),
+      //     ...(bio && { bio }),
+      //   });
     }
     const [updatedUser] = await Promise.all([
       updateUserPromise,
@@ -241,6 +227,52 @@ export class UserService {
     }
   }
 
+  async loginWithGoogle(user: any, claims: { userAgent: string; ip: string }) {
+    const authUser = await this.userRepository.findByParams({
+      email: user.email,
+    });
+    if (!authUser) throw createError(404, "user not found");
+
+    await firebaseService.setCustomUserClaims(user.uid, claims);
+    authUser.profileImage = user.picture
+      ? user.picture
+      : await minioService.generatePresignedUrl(
+          ENV.MINIO_BUCKET_NAME,
+          authUser.profileImage
+        );
+    return authUser;
+  }
+
+  async registerWithGoogle(
+    user: any,
+    claims: { userAgent: string; ip: string }
+  ) {
+    try {
+      const exists = await this.userRepository.findByParams({
+        email: user.email,
+      });
+      await firebaseService.setCustomUserClaims(user.uid, claims);
+      const createData: Omit<CreateUserDTO, "password" | "pseudo"> & {
+        uid: string;
+        status: Status;
+        profileImage: string;
+        displayName: string;
+      } = {
+        uid: user.uid,
+        email: user.email,
+        profileImage: user.picture,
+        role: Role.USER as Role,
+        status: Status.ACTIVATED,
+        displayName: user.name,
+      };
+      if (exists) throw createError(409, "User with email already exist");
+      const createdUser = await this.userRepository.create({ ...createData });
+      return createdUser;
+    } catch (error) {
+      throw createError(500, `Failed to create user: ${error.message}`);
+    }
+  }
+
   async forgotPassword(email: string): Promise<void> {
     const user = await this.userRepository.findByParams({ email });
     if (!user) throw createError(404, "User not found");
@@ -306,32 +338,22 @@ export class UserService {
 
   private validateUserNotExists(
     fbUser: UserRecord | undefined,
-    dbUserWithEmail: User | null,
-    dbUserWithPhone: User | null
+    dbUserWithEmail: User | null
   ): void {
-    if (!fbUser && !dbUserWithEmail && !dbUserWithPhone) return;
+    if (!fbUser && !dbUserWithEmail) return;
 
     const conflicts: string[] = [];
     if (fbUser || dbUserWithEmail) conflicts.push("email");
-    if (dbUserWithPhone) conflicts.push("phone number");
 
     throw createError(409, `Already in use: ${conflicts.join(" and ")}`);
   }
 
-  private async checkUserExistence(
-    email: string,
-    phone: string
-  ): Promise<void> {
-    const [firebaseUser, userWithEmail, userWithPhone] = await Promise.all([
+  private async checkUserExistence(email: string): Promise<void> {
+    const [firebaseUser, userWithEmail] = await Promise.all([
       firebaseService.findUserByEmail(email),
       this.userRepository.findByParams({ email }),
-      this.userRepository.findByParams({ phone }),
     ]);
 
-    this.validateUserNotExists(
-      firebaseUser?.user,
-      userWithEmail,
-      userWithPhone
-    );
+    this.validateUserNotExists(firebaseUser?.user, userWithEmail);
   }
 }

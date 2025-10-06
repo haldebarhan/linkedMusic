@@ -17,6 +17,7 @@ import authMiddleware from "@/middlewares/auth.middleware";
 import refreshTokenMiddleware from "@/middlewares/refresh-token";
 import uploads from "@/multer-config";
 import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
+import { firebaseMiddleware } from "@/middlewares/firebase.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
@@ -45,14 +46,6 @@ router.post(
 
 router.post("/auth/logout", async (req: AuthenticatedRequest, res: Response) =>
   authController.logout(req, res)
-);
-
-router.post(
-  "/auth/me/approval-request",
-  UserAndProviderMiddleware,
-  uploads.array("files", 5),
-  async (req: AuthenticatedRequest, res: Response) =>
-    authController.approvalRequest(req, res)
 );
 
 router.put(
@@ -104,6 +97,21 @@ router.post(
   ValidateDtoMiddleware(CreateUserDTO),
   async (req: Request, res: Response) => authController.signUp(req, res)
 );
+
+router.post(
+  "/auth/register/social",
+  firebaseMiddleware,
+  async (req: AuthenticatedRequest, res: Response) =>
+    authController.registerWithGoogle(req, res)
+);
+
+router.post(
+  "/auth/social/verify",
+  firebaseMiddleware,
+  async (req: AuthenticatedRequest, res: Response) =>
+    authController.socialLogin(req, res)
+);
+
 router.get(
   "/auth/me",
   authMiddleware,
