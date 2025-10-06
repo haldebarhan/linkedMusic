@@ -106,10 +106,7 @@ export class AnnouncementDetailComponent implements OnInit {
 
   onClickReply(): void {
     if (this.isLocked()) {
-      // redirection checkout (à implémenter côté routes/PSP)
-      const url = `/checkout?purpose=matching&announcementId=${this.announcementId}`;
-      window.location.href = url;
-      return;
+      this.router.navigate(['/pack/pricing-plan']);
     }
     if (this.canContact()) {
       this.showContactForm = true;

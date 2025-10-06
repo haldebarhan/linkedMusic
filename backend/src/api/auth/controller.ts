@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { UserController } from "@/microservices/users/user.controller";
-import { ProfileController } from "@/microservices/profiles/profile.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 
@@ -10,7 +9,6 @@ import { AnnouncementController } from "@/microservices/annoncements/ann.control
 export class AuthController {
   constructor(
     private readonly userController: UserController,
-    private readonly profileController: ProfileController,
     private readonly catalogController: CatalogueController,
     private readonly announcementController: AnnouncementController
   ) {}
@@ -59,8 +57,12 @@ export class AuthController {
     return await this.userController.closeAccount(req, res);
   }
 
-  async approvalRequest(req: AuthenticatedRequest, res: Response) {
-    return await this.profileController.approvalRequest(req, res);
+  async socialLogin(req: AuthenticatedRequest, res: Response) {
+    return await this.userController.socialVerify(req, res);
+  }
+
+  async registerWithGoogle(req: AuthenticatedRequest, res: Response) {
+    return await this.userController.registerWithGoogle(req, res);
   }
 
   // Catalogs

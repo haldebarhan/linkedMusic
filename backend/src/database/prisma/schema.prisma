@@ -25,6 +25,8 @@ enum Status {
     SUSPENDED
     REMOVED
     CLOSED
+    VERIFIED
+    UNVERIFIED
 }
 
 enum ProfileStatus {
@@ -57,6 +59,11 @@ enum FieldInputType {
     MULTISELECT
     TOGGLE
     RANGE
+}
+
+enum AuthProvider {
+    CREDENTIALS
+    GOOGLE
 }
 
 enum SubscriptionStatus {
@@ -108,16 +115,18 @@ model User {
     id                    Int              @id @default(autoincrement())
     uid                   String           @unique
     email                 String           @unique
-    phone                 String           @unique
-    firstName             String           @map("first_name")
-    lastName              String           @map("last_name")
+    phone                 String?          @unique
+    displayName           String?          @map("display_name")
+    firstName             String?          @map("first_name")
+    lastName              String?          @map("last_name")
     role                  Role             @default(USER)
     status                Status           @default(ACTIVATED)
     profileImage          String           @map("profile_image")
     comments              String?
+    location              String?
     createdAt             DateTime         @default(now()) @map("created_at")
     updatedAt             DateTime         @updatedAt @map("updated_at")
-    Profile               Profile?
+    files                 File[]
     Favorite              Favorite[]
     Message               Message[]
     sentConversations     Conversation[]   @relation("ConversationSender")
@@ -139,29 +148,27 @@ model User {
     @@map("users")
 }
 
-model Profile {
-    id          Int           @id @default(autoincrement())
-    displayName String?       @map("display_name")
-    bio         String?
-    location    String?
-    userId      Int           @unique @map("user_id")
-    status      ProfileStatus @default(UNVERIFIED)
-    type        ProfileType   @default(STANDARD)
-    user        User          @relation(fields: [userId], references: [id])
-    File        File[]
-    createdAt   DateTime      @default(now()) @map("created_at")
-    updatedAt   DateTime      @updatedAt @map("updated_at")
+model ExternalAccount {
+    id             Int          @id @default(autoincrement())
+    userId         Int
+    provider       AuthProvider
+    providerUserId String
 
-    @@map("profiles")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([provider, providerUserId])
+    @@index([userId])
+    @@map("external_accounts")
 }
 
 model File {
     id         Int      @id @default(autoincrement()) @map("id")
     name       String   @map("name")
     fileUrl    String   @map("file_url")
-    profileId  Int      @map("profile_id")
-    profile    Profile  @relation(fields: [profileId], references: [id])
+    userId     Int      @map("user_id")
     uploadedAt DateTime @default(now()) @map("uploaded_at")
+    User       User     @relation(fields: [userId], references: [id])
 
     @@map("files")
 }
@@ -200,15 +207,13 @@ model ServiceType {
 }
 
 model CategoryServiceType {
-    categoryId    Int @map("category_id")
-    serviceTypeId Int @map("service_type_id")
-
-    category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    serviceType ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
-
-    isDefault Boolean  @default(false)
-    order     Int      @default(0)
-    createdAt DateTime @default(now())
+    categoryId    Int         @map("category_id")
+    serviceTypeId Int         @map("service_type_id")
+    category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+    isDefault     Boolean     @default(false)
+    order         Int         @default(0)
+    createdAt     DateTime    @default(now())
 
     @@id([categoryId, serviceTypeId])
     @@index([serviceTypeId])
@@ -218,9 +223,8 @@ model CategoryServiceType {
 model AnnouncementCategory {
     announcementId Int
     categoryId     Int
-
-    announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-    category     Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+    category       Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
     @@id([announcementId, categoryId])
     @@index([categoryId])
@@ -228,17 +232,15 @@ model AnnouncementCategory {
 }
 
 model Field {
-    id          Int            @id @default(autoincrement()) @map("id")
-    key         String         @unique
-    label       String
-    inputType   FieldInputType
-    placeholder String?
-    unit        String?
-    searchable  Boolean        @default(true)
-    filterable  Boolean        @default(true)
-
-    options FieldOption[]
-
+    id            Int             @id @default(autoincrement()) @map("id")
+    key           String          @unique
+    label         String
+    inputType     FieldInputType
+    placeholder   String?
+    unit          String?
+    searchable    Boolean         @default(true)
+    filterable    Boolean         @default(true)
+    options       FieldOption[]
     createdAt     DateTime        @default(now())
     updatedAt     DateTime        @updatedAt
     AnnFieldValue AnnFieldValue[]
@@ -279,8 +281,7 @@ model Announcement {
     ownerId       Int
     images        String[]
     serviceTypeId Int
-    // NEW: pour requêtes rapides par catégorie
-    categoryId    Int? // temporairement nullable, on backfill puis NOT NULL
+    categoryId    Int?
     price         Int?
     location      String?
     status        AnnouncementStatus @default(PENDING_APPROVAL)
@@ -323,18 +324,15 @@ model CategoryField {
 }
 
 model AnnFieldValue {
-    id             BigInt @id @default(autoincrement())
+    id             BigInt                @id @default(autoincrement())
     announcementId Int
     fieldId        Int
-
-    announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-    field        Field        @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-
-    valueText    String?
-    valueNumber  Float?
-    valueBoolean Boolean?
-
-    options AnnFieldValueOption[]
+    announcement   Announcement          @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+    field          Field                 @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+    valueText      String?
+    valueNumber    Float?
+    valueBoolean   Boolean?
+    options        AnnFieldValueOption[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -347,12 +345,11 @@ model AnnFieldValue {
 }
 
 model AnnFieldValueOption {
-    id              BigInt @id @default(autoincrement())
+    id              BigInt        @id @default(autoincrement())
     annFieldValueId BigInt
     optionId        Int
-
-    annFieldValue AnnFieldValue @relation(fields: [annFieldValueId], references: [id], onDelete: Cascade)
-    option        FieldOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+    annFieldValue   AnnFieldValue @relation(fields: [annFieldValueId], references: [id], onDelete: Cascade)
+    option          FieldOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
     @@unique([annFieldValueId, optionId])
     @@index([optionId])

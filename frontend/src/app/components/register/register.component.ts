@@ -9,6 +9,8 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiAuthService } from '../../auth/api-auth.service';
+import { AuthService } from '../../auth/auth.service';
+import { Toast } from '../../helpers/sweet-alert';
 
 @Component({
   selector: 'app-register',
@@ -20,32 +22,29 @@ export class RegisterComponent {
   signupForm: FormGroup;
   submitted: boolean = false;
   selectedFile: File | null = null;
+  fileName = '';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: ApiAuthService
+    private authService: ApiAuthService,
+    private auth: AuthService
   ) {
     this.signupForm = this.fb.group({
-      lastName: ['', Validators.required],
-      firstName: ['', [Validators.required]],
+      pseudo: ['', Validators.required],
       password: ['', Validators.required],
-      phone: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      photo: [null, Validators.required],
+      photo: [null],
     });
   }
 
   onSubmit() {
     this.submitted = true;
-    const { lastName, firstName, password, phone, email } =
-      this.signupForm.value;
+    const { pseudo, password, email } = this.signupForm.value;
     const formData = new FormData();
-    formData.append('lastName', lastName);
-    formData.append('firstName', firstName);
-    formData.append('password', password);
-    formData.append('phone', phone);
+    formData.append('pseudo', pseudo);
     formData.append('email', email);
+    formData.append('password', password);
 
     if (this.selectedFile) {
       formData.append(
@@ -56,11 +55,17 @@ export class RegisterComponent {
     }
     this.authService.register(formData).subscribe({
       next: () => {
-        this.router.navigate(['/verify'], {
-          queryParams: { email },
+        Toast.fire({
+          title: 'Inscription terminée',
+          icon: 'success',
+          didClose: () => {
+            this.router.navigate(['/verify'], {
+              queryParams: { email },
+            });
+            this.signupForm.reset();
+            this.submitted = false;
+          },
         });
-        this.signupForm.reset();
-        this.submitted = false;
       },
       error: (err) => console.error('Registration failed', err),
     });
@@ -69,11 +74,30 @@ export class RegisterComponent {
   goToLogin() {
     this.router.navigate(['/login']);
   }
+  goToHome() {
+    this.router.navigate(['/home']);
+  }
 
   onFileSelected(e: Event) {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length) {
       this.selectedFile = input.files[0];
+    }
+    this.fileName = this.selectedFile?.name ?? '';
+  }
+
+  async registerWithGoogle() {
+    try {
+      await this.auth.registerWithGoogle();
+      Toast.fire({
+        title: 'Inscription terminée',
+        icon: 'success',
+        didClose: () => {
+          this.router.navigate(['/home']);
+        },
+      });
+    } catch (error) {
+      console.log(error);
     }
   }
 }

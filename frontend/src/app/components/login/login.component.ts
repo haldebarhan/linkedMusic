@@ -8,8 +8,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiAuthService } from '../../auth/api-auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../../auth/auth.service';
+import { Toast } from '../../helpers/sweet-alert';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +25,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: ApiAuthService
+    private auth: AuthService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -32,25 +33,41 @@ export class LoginComponent {
     });
   }
 
-  onSubmit() {
+  async onSubmit() {
     this.submitted = true;
     const { email, password } = this.loginForm.value;
-    this.authService.login({ email, password }).subscribe({
-      next: () => {
-        this.router.navigate(['/home']);
-        this.submitted = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        const msg = this.extractError(err);
-        console.error('Login failed', msg);
-        this.loginForm.reset();
-      },
-    });
-    this.submitted = false;
+    try {
+      await this.auth.loginWithPassword(email, password);
+      this.router.navigate(['/home']);
+      this.submitted = false;
+    } catch (error: any) {
+      const msg = this.extractError(error);
+      Toast.fire({
+        title: msg,
+        icon: 'error',
+        didClose: () => {
+          this.loginForm.reset();
+          this.submitted = false;
+        },
+      });
+    }
+  }
+
+  async loginWithGoogle() {
+    try {
+      await this.auth.loginWithGoogle();
+      this.router.navigate(['/home']);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   goToRegister() {
     this.router.navigate(['/register']);
+  }
+
+  goToHome() {
+    this.router.navigate(['/home']);
   }
 
   private extractError(err: HttpErrorResponse): string {

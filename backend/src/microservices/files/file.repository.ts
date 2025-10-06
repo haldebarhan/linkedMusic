@@ -7,7 +7,7 @@ const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
 export class FileRepository {
-  async createFile(data: CreateFileDTO & { profileId: number }) {
+  async createFile(data: CreateFileDTO & { userId: number; profile: any }) {
     return prisma.file.create({
       data,
     });

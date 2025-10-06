@@ -33,7 +33,6 @@ export class AnnouncementRepository {
         },
         user: {
           include: {
-            Profile: true,
             _count: {
               select: {
                 announcements: true,

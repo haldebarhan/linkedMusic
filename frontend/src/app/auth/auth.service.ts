@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map } from 'rxjs';
 import { AuthState, AuthUser } from '../shared/interfaces/auth';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+} from 'firebase/auth';
+import { fbAuth } from '../core/firebase';
+import { ApiAuthService } from './api-auth.service';
 
 const STORAGE_KEY = 'app_auth_state_v1';
 @Injectable({
@@ -11,46 +19,60 @@ export class AuthService {
     isAuthenticated: false,
     user: null,
     accessToken: null,
+    source: null,
   });
 
-  /** Flux public à utiliser avec l'async pipe */
-  readonly auth$ = this._auth$.asObservable();
+  constructor(private api: ApiAuthService) {
+    // si tu veux gérer le flow redirect (iOS/Safari)
+    getRedirectResult(fbAuth).catch(() => {});
+  }
 
+  /** Flux public à utiliser avec l'async pipe */
+  auth$ = this._auth$.asObservable();
   readonly user$ = this.auth$.pipe(map((s) => s.user));
   readonly isLoggedIn$ = this.auth$.pipe(map((s) => s.isAuthenticated));
 
-  /** Snapshot courant (utile ponctuellement) */
-  get snapshot(): AuthState {
-    return this._auth$.value;
-  }
-
-  /** Token courant (pour l'interceptor) */
   get token(): string | null {
     return this._auth$.value.accessToken;
   }
 
-  /** Initialisation au démarrage (restauration storage) */
   init(): void {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const restored = JSON.parse(raw) as AuthState;
-      // sécurité minimale: token + user -> connecté
-      if (restored?.accessToken && restored?.user) {
-        this._auth$.next({
-          isAuthenticated: true,
-          user: restored.user,
-          accessToken: restored.accessToken,
-        });
-      }
-    } catch {}
+    if (raw) {
+      try {
+        this._auth$.next(JSON.parse(raw));
+      } catch {}
+    }
   }
 
-  /** Connexion réussie (depuis ton API) */
-  setLogin(accessToken: string, user: AuthUser): void {
-    const next: AuthState = { isAuthenticated: true, accessToken, user };
-    this._auth$.next(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  get snapshot() {
+    return this._auth$.value;
+  }
+
+  async loginWithPassword(email: string, password: string): Promise<void> {
+    const res = await firstValueFrom(
+      this.api.loginWithPassword({ email, password })
+    );
+    const state: AuthState = {
+      isAuthenticated: true,
+      user: res.data.user as AuthUser,
+      accessToken: res.data.accessToken,
+      source: 'password',
+    };
+    this.persist(state);
+  }
+
+  async activateAccount(email: string, token: string): Promise<void> {
+    const res = await firstValueFrom(
+      this.api.activateAccount({ email, token })
+    );
+    const state: AuthState = {
+      isAuthenticated: true,
+      user: res.data.user as AuthUser,
+      accessToken: res.data.accessToken,
+      source: 'password',
+    };
+    this.persist(state);
   }
 
   /** Mise à jour du profil en mémoire (ex: après édition) */
@@ -75,12 +97,76 @@ export class AuthService {
       isAuthenticated: !!accessToken && !!cur.user,
     };
     this._auth$.next(next);
-    localStorage.setItem('app_auth_state_v1', JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+
+  // ====== 2) Login Google via Firebase ======
+  async loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(fbAuth, provider);
+
+    const idToken = await fbAuth.currentUser!.getIdToken();
+    const res = await firstValueFrom(this.api.socialVerify(idToken));
+
+    const state: AuthState = {
+      isAuthenticated: true,
+      user: res.data.user as AuthUser,
+      accessToken: res.data.accessToken ?? null,
+      source: 'google',
+    };
+    this.persist(state);
+  }
+
+  async registerWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(fbAuth, provider);
+    const idToken = await fbAuth.currentUser!.getIdToken();
+    const res = await firstValueFrom(this.api.registerWithGoogle(idToken));
+    const state: AuthState = {
+      isAuthenticated: true,
+      user: res.data.user as AuthUser,
+      accessToken: res.data.accessToken ?? null,
+      source: 'google',
+    };
+    this.persist(state);
   }
 
   /** Déconnexion */
-  logout(): void {
-    this._auth$.next({ isAuthenticated: false, user: null, accessToken: null });
+  async logout(): Promise<void> {
+    try {
+      await fbAuth.signOut();
+    } catch {}
+    this.persist({
+      isAuthenticated: false,
+      user: null,
+      accessToken: null,
+      source: null,
+    });
     localStorage.removeItem(STORAGE_KEY);
+  }
+
+  // === Optionnel: version redirect (utile pour iOS/Safari) ===
+  async loginWithGoogleRedirect(): Promise<void> {
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(fbAuth, provider);
+    // après redirection, getRedirectResult() se fera dans le ctor
+    // et tu peux déclencher _completeSocialLogin() si besoin.
+  }
+
+  /** Met à jour le token backend (ex: après refresh) */
+  setAccessToken(accessToken: string | null) {
+    const cur = this._auth$.value;
+    const next = {
+      ...cur,
+      accessToken,
+      isAuthenticated: !!accessToken && !!cur.user,
+    };
+    this._auth$.next(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+
+  private persist(state: AuthState) {
+    this._auth$.next(state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 }

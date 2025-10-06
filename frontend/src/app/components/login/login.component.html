@@ -1,119 +1,142 @@
-<div
-  class="container-fluid d-flex justify-content-center align-items-center"
-  style="min-height: 85vh"
->
-  <div class="p-4 shadow rounded" style="max-width: 420px; width: 100%">
-    <h2 class="text-center mb-2">Connexion</h2>
-    <p class="text-center text-muted mb-4">
-      Connectez-vous pour accéder à votre compte.
-    </p>
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-      <!-- Email -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text">
-            <i class="fas fa-envelope"></i>
-          </span>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-control"
-            [ngClass]="{
-              'is-invalid':
-                (loginForm.get('email')?.touched || submitted) &&
-                loginForm.get('email')?.invalid,
-              'is-valid':
-                (loginForm.get('email')?.touched || submitted) &&
-                loginForm.get('email')?.valid
-            }"
-            placeholder="Votre email"
-          />
-          <!-- ⚠️ feedback DANS l’input-group -->
-          <div class="invalid-feedback">
-            <span *ngIf="loginForm.get('email')?.errors?.['required']">
-              L’email est requis.
-            </span>
-            <span *ngIf="loginForm.get('email')?.errors?.['email']">
-              Format d’email invalide.
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Password -->
-      <div class="mb-3">
-        <div class="input-group input-group-lg has-validation">
-          <span class="input-group-text">
-            <i class="fas fa-lock"></i>
-          </span>
-          <input
-            type="password"
-            id="password"
-            formControlName="password"
-            class="form-control"
-            [ngClass]="{
-              'is-invalid':
-                (loginForm.get('password')?.touched || submitted) &&
-                loginForm.get('password')?.invalid,
-              'is-valid':
-                (loginForm.get('password')?.touched || submitted) &&
-                loginForm.get('password')?.valid
-            }"
-            placeholder="Mot de passe"
-          />
-          <!-- ⚠️ feedback DANS l’input-group -->
-          <div class="invalid-feedback">
-            <span *ngIf="loginForm.get('password')?.errors?.['required']">
-              Le mot de passe est requis.
-            </span>
-            <span *ngIf="loginForm.get('password')?.errors?.['minlength']">
-              Minimum
-              {{
-                loginForm.get('password')?.errors?.['minlength']?.requiredLength
-              }}
-              caractères.
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bouton -->
+<div class="auth-shell">
+  <div class="auth-card shadow-lg">
+    <!-- Panneau visuel (gauche) -->
+    <aside class="auth-visual d-none d-md-block">
       <button
-        type="submit"
-        class="btn btn-primary btn-lg w-100"
-        [disabled]="!loginForm.valid"
-        *ngIf="!submitted"
+        class="btn btn-sm btn-glass rounded-pill px-3"
+        (click)="goToHome()"
       >
-        Connexion
+        <i class="fas fa-arrow-left me-2"></i> Back to website
       </button>
 
-      <button
-        class="btn btn-primary btn-lg w-100"
-        type="button"
-        disabled
-        *ngIf="submitted"
-      >
-        <span
-          class="spinner-border spinner-border-sm"
-          aria-hidden="true"
-        ></span>
-        <span role="status">Patientez...</span>
-      </button>
-    </form>
+      <div class="visual-caption">
+        <h5 class="fw-semibold mb-1">Capturing Moments,</h5>
+        <p class="mb-0 opacity-75">Creating Memories</p>
+      </div>
+    </aside>
 
-    <!-- Lien -->
-    <div class="text-center mt-3">
-      <small class="text-muted">
-        Vous n'avez pas de compte ?
-        <a
-          class="text-decoration-none"
-          (click)="goToRegister()"
-          style="cursor: pointer"
-          >Inscrivez-vous</a
+    <!-- Formulaire (droite) -->
+    <section class="auth-panel">
+      <h1 class="display-6 fw-bold mb-2 text-dark">Connexion</h1>
+      <p class="text-muted mb-4">
+        Vous avez déjà un compte ? Connectez-vous pour continuer.
+      </p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Email -->
+        <div class="mb-3">
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control form-control-lg input-dark"
+              [ngClass]="{
+                'is-invalid':
+                  (loginForm.get('email')?.touched || submitted) &&
+                  loginForm.get('email')?.invalid,
+                'is-valid':
+                  (loginForm.get('email')?.touched || submitted) &&
+                  loginForm.get('email')?.valid
+              }"
+              placeholder="Email"
+              autocomplete="email"
+            />
+            <div class="invalid-feedback">
+              <span *ngIf="loginForm.get('email')?.errors?.['required']">
+                L’email est requis.
+              </span>
+              <span *ngIf="loginForm.get('email')?.errors?.['email']">
+                Format d’email invalide.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-control form-control-lg input-dark pe-5"
+              [ngClass]="{
+                'is-invalid':
+                  (loginForm.get('password')?.touched || submitted) &&
+                  loginForm.get('password')?.invalid,
+                'is-valid':
+                  (loginForm.get('password')?.touched || submitted) &&
+                  loginForm.get('password')?.valid
+              }"
+              placeholder="Mot de passe"
+              autocomplete="current-password"
+            />
+
+            <div class="invalid-feedback">
+              <span *ngIf="loginForm.get('password')?.errors?.['required']">
+                Le mot de passe est requis.
+              </span>
+              <span *ngIf="loginForm.get('password')?.errors?.['minlength']">
+                Minimum
+                {{
+                  loginForm.get('password')?.errors?.['minlength']?.requiredLength
+                }}
+                caractères.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg w-100 btn-cta"
+          [disabled]="!loginForm.valid || submitted"
+          *ngIf="!submitted"
         >
-      </small>
-    </div>
+          Se connecter
+        </button>
+
+        <button
+          class="btn btn-primary btn-lg w-100 btn-cta"
+          type="button"
+          disabled
+          *ngIf="submitted"
+        >
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            aria-hidden="true"
+          ></span>
+          Patientez...
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="divider my-4"><span>ou continuer avec</span></div>
+
+      <!-- Social -->
+      <div class="d-flex gap-3">
+        <button
+          type="button"
+          class="btn btn-outline-light flex-fill btn-social"
+          (click)="loginWithGoogle()"
+        >
+          <i class="fab fa-google me-2"></i> Google
+        </button>
+      </div>
+
+      <!-- Lien d'inscription -->
+      <div class="text-center mt-4">
+        <small class="text-muted">
+          Vous n’avez pas de compte ?
+          <a class="link-muted" (click)="goToRegister()" style="cursor: pointer"
+            >Créer un compte</a
+          >
+        </small>
+      </div>
+    </section>
   </div>
 </div>

@@ -24,7 +24,6 @@ export const authSocketMiddleware = async (
     if (!decodedToken.uid) return next(new Error("AUTH_TOKEN_EXPIRED"));
     const user = await prisma.user.findUnique({
       where: { uid: decodedToken.uid },
-      include: { Profile: true },
     });
     if (!user) return next(new Error("AUTH_TOKEN_EXPIRED"));
     if (user.status !== Status.ACTIVATED)
