@@ -1,0 +1,56 @@
+<section class="card-block">
+  <div class="card-head">
+    <h5 class="mb-0">Informations personnelles</h5>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-5">
+      <label class="form-label">Email</label>
+      <div class="position-relative">
+        <div class="field-view pe-5">
+          {{ data && displayValue(data.email) }}
+        </div>
+        <span class="badge-verified">Vérifié</span>
+      </div>
+    </div>
+    <div class="col-5">
+      <label class="form-label">Pseudo</label>
+      <div class="position-relative">
+        <div class="field-view pe-5">
+          {{ data && displayValue(data.displayName) }}
+        </div>
+      </div>
+    </div>
+    <div class="col-5 col-md-5">
+      <label class="form-label">Telephone</label>
+      <div class="position-relative">
+        <div class="field-view pe-5">
+          {{ data && displayValue(data.phone) }}
+        </div>
+        <span class="badge-verified" *ngIf="data && data.phone">Vérifié</span>
+      </div>
+    </div>
+    <div class="col-5 col-md-5">
+      <label class="form-label">Addresse</label>
+      <div class="position-relative">
+        <div class="field-view pe-5">
+          {{ data && displayValue(data.location) }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Nom</label>
+      <div class="field-view">{{ data && displayValue(data.lastName) }}</div>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Prenoms</label>
+      <div class="field-view">{{ data && displayValue(data.firstName) }}</div>
+    </div>
+
+    <div>
+      <button class="btn btn-primary" (click)="goToEdit()">
+        {{ completed ? "Modifier" : "Completeter mon profile" }}
+      </button>
+    </div>
+  </div>
+</section>

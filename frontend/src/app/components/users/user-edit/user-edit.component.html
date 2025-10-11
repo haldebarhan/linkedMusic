@@ -1,0 +1,134 @@
+<section class="card-block">
+  <div class="card-head d-flex align-items-center justify-content-between mb-3">
+    <h5 class="mb-0">Informations personnelles</h5>
+  </div>
+
+  <form [formGroup]="form" class="row g-3" (ngSubmit)="save()">
+    <!-- Email (lecture seule) -->
+    <div class="col-3">
+      <label class="form-label">Email </label>
+      <div class="position-relative">
+        <input
+          class="form-control input-soft pe-5"
+          type="email"
+          formControlName="email"
+          readonly
+        />
+        <span class="badge-verified">Vérifié</span>
+      </div>
+      <small class="text-muted">L’adresse email est non modifiable ici.</small>
+    </div>
+
+    <!-- Pseudo -->
+    <div class="col-3">
+      <label class="form-label">Pseudo</label>
+      <input
+        class="form-control input-soft"
+        formControlName="displayName"
+        [class.is-invalid]="hasError('displayName')"
+        placeholder="Votre pseudo"
+      />
+      <div class="invalid-feedback" *ngIf="hasError('displayName')">
+        Le pseudo doit faire 2 caractères minimum.
+      </div>
+    </div>
+
+    <!-- Téléphone -->
+    <div class="col-5">
+      <label class="form-label">Téléphone</label>
+      <div class="position-relative">
+        <input
+          #phoneInput
+          type="tel"
+          class="form-control input-soft"
+          [class.is-invalid]="hasError('phone')"
+          placeholder="Ex: 0102030405"
+        />
+        <input type="hidden" formControlName="phone" />
+      </div>
+      <div
+        class="invalid-feedback d-block"
+        *ngIf="form.get('phone')?.touched && form.get('phone')?.errors as e"
+      >
+        <span *ngIf="e['required']">Le numéro de téléphone est requis.</span>
+        <span *ngIf="e['invalidPhone']"
+          >Le numéro de téléphone n'est pas valide.</span
+        >
+      </div>
+    </div>
+
+    <!-- Nom -->
+    <div class="col-md-5">
+      <label class="form-label">Nom</label>
+      <input
+        class="form-control input-soft"
+        formControlName="lastName"
+        [class.is-invalid]="hasError('lastName')"
+        placeholder="Nom"
+      />
+      <div class="invalid-feedback" *ngIf="hasError('lastName')">
+        Le nom est requis.
+      </div>
+    </div>
+
+    <!-- Prénoms -->
+    <div class="col-md-5">
+      <label class="form-label">Prénoms</label>
+      <input
+        class="form-control input-soft"
+        formControlName="firstName"
+        [class.is-invalid]="hasError('firstName')"
+        placeholder="Prénoms"
+      />
+      <div class="invalid-feedback" *ngIf="hasError('firstName')">
+        Les prénoms sont requis.
+      </div>
+    </div>
+
+    <!-- Adresse -->
+    <div class="col-4 col-md-4">
+      <label class="form-label">Adresse</label>
+      <input
+        class="form-control input-soft"
+        placeholder="Ex: Rue des Jardins"
+        formControlName="address"
+      />
+    </div>
+    <div class="col-4 col-md-4">
+      <label class="form-label">Ville</label>
+      <input
+        class="form-control input-soft"
+        placeholder="Ex: Abidjan"
+        formControlName="city"
+      />
+    </div>
+    <div class="col-4 col-md-4">
+      <label class="form-label">Pays</label>
+      <select class="form-control input-soft" formControlName="country">
+        <option value="">Choisir votre pays</option>
+        <option *ngFor="let country of countries" [value]="country.name">
+          {{ country.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="text-left mt-3">
+      <button
+        class="btn btn-primary btn-sm"
+        [disabled]="!form.valid || form.pristine || saving"
+      >
+        <span *ngIf="!saving">Enregistrer</span>
+        <span *ngIf="saving">
+          <span
+            class="spinner-border spinner-border-sm me-1"
+            aria-hidden="true"
+          ></span>
+          Enregistrement...
+        </span>
+      </button>
+      <button type="button" class="btn btn-light btn-sm" (click)="reset()">
+        Annuler
+      </button>
+    </div>
+  </form>
+</section>

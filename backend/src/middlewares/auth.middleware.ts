@@ -95,7 +95,7 @@ const authMiddleware = async (
       });
       return res.status(403).json(response);
     }
-    req.user = user;
+    req.user = { ...user, provider: decodedToken.firebase.sign_in_provider };
     req.token = token;
     next();
   } catch (error) {

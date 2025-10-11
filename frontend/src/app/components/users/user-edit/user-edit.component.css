@@ -1,0 +1,23 @@
+.badge-verified {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  background: #eef7f0;
+  color: #2aae53;
+  border: 1px solid #cfead6;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+}
+
+.input-soft {
+  background: #fafbff;
+  border: 1px solid #ececf0;
+  color: #2b2b37;
+  border-radius: 0.5rem;
+}
+.input-soft:focus {
+  border-color: #7a5af8;
+  box-shadow: 0 0 0 0.2rem rgba(122, 90, 248, 0.12);
+}

@@ -29,22 +29,23 @@ export class CreateUserDTO {
 }
 
 export class UpdateUserDTO {
-  @IsOptional()
-  @IsString({ message: "lastName is required" })
-  lastName?: string;
+  @IsString()
+  lastName: string;
 
-  @IsOptional()
-  @IsString({ message: "firstName is required" })
-  firstName?: string;
+  @IsString()
+  firstName: string;
 
-  @IsOptional()
-  displayName?: string;
+  @IsString()
+  displayName: string;
 
-  @IsOptional()
-  bio?: string;
+  @IsString()
+  phone: string;
 
-  @IsOptional()
-  location?: string;
+  @IsString()
+  location: string;
+
+  @IsString()
+  country: string;
 }
 
 export class VerifyToken {
@@ -84,10 +85,3 @@ export class ChangePasswordDTO {
   @IsString({ message: "password must be valid string" })
   password: string;
 }
-
-// export class UpdateUserWithProfileDTO extends UpdateUserDTO {
-//   @IsOptional()
-//   @ValidateNested()
-//   @Type(() => UpdateProfileDTO)
-//   profile?: UpdateProfileDTO;
-// }

@@ -3,6 +3,7 @@ import { UserRepository } from "./user.repository";
 import { TokenService } from "@/utils/services/token.service";
 import { BrevoMailService } from "@/utils/services/brevo-mail.service";
 import {
+  ChangePasswordDTO,
   CreateUserDTO,
   LoginDTO,
   UpdateUserDTO,
@@ -146,22 +147,12 @@ export class UserService {
     const deleteOldImagePromise = profileImage
       ? minioService.deleteFile(ENV.MINIO_BUCKET_NAME, user.profileImage)
       : Promise.resolve();
+    await this.checkPhoneOrUsernameConflicts(data.phone, data.displayName, id);
+    const updateUserPromise = this.userRepository.update(user.id, data);
 
-    const { displayName, location, bio, ...userData } = data;
-
-    const updateUserPromise = this.userRepository.update(user.id, userData);
-    let updateProfilePromise: Promise<any> = Promise.resolve();
-    if (displayName || location || bio) {
-      //   updateProfilePromise = this.profileRepository.updateByUserId(user.id, {
-      //     ...(displayName && { displayName }),
-      //     ...(location && { location }),
-      //     ...(bio && { bio }),
-      //   });
-    }
     const [updatedUser] = await Promise.all([
       updateUserPromise,
       deleteOldImagePromise,
-      updateProfilePromise,
       invalideCache("GET:/users*"),
     ]);
     return this.attachProfileImageUrl(updatedUser);
@@ -195,6 +186,8 @@ export class UserService {
       // Force un token fraîchement signé
       const accessToken = await userCredential.user.getIdToken(true);
 
+      const provider =
+        userCredential.user.reloadUserInfo.providerUserInfo[0].providerId;
       user.profileImage = user.profileImage
         ? await minioService.generatePresignedUrl(
             ENV.MINIO_BUCKET_NAME,
@@ -203,7 +196,7 @@ export class UserService {
         : "";
 
       // Normalise le retour pour le front
-      return { accessToken, user };
+      return { accessToken, user: { ...user, provider } };
     } catch (error: any) {
       // Mapping propre des erreurs Firebase -> 401
       const fbCode = error?.code as string | undefined;
@@ -310,9 +303,9 @@ export class UserService {
     return { message: "Password reset successfully" };
   }
 
-  async changePassword(user: any, password: string) {
-    await changeFirebaseUserPassword(user.uid, password);
-    return { message: "Password changed successfully" };
+  async changePassword(user: any, data: ChangePasswordDTO) {
+    const { password } = data;
+    return await changeFirebaseUserPassword(user.uid, password);
   }
 
   async logout() {
@@ -355,5 +348,28 @@ export class UserService {
     ]);
 
     this.validateUserNotExists(firebaseUser?.user, userWithEmail);
+  }
+
+  private async checkPhoneOrUsernameConflicts(
+    phone: string,
+    displayName: string,
+    userId: number
+  ): Promise<void> {
+    if (!phone && !displayName) return;
+
+    const [userWithPhone, userWithUsername] = await Promise.all([
+      phone ? this.userRepository.findByPhone(phone, userId) : null,
+      displayName
+        ? this.userRepository.findByDisplayName(displayName, userId)
+        : null,
+    ]);
+
+    if (!userWithPhone && !userWithUsername) return;
+
+    const conflicts: string[] = [];
+    if (userWithPhone) conflicts.push("Phone number");
+    if (userWithUsername) conflicts.push("Username");
+
+    throw createError(409, `Already in use: ${conflicts.join(" and ")}`);
   }
 }

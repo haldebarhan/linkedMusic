@@ -36,6 +36,24 @@ export class UserRepository extends BaseRepository<
     return prisma.user.findUnique({ where });
   }
 
+  async findByPhone(phone: string, excludeUserId?: number) {
+    return prisma.user.findFirst({
+      where: {
+        phone,
+        ...(excludeUserId && { id: { not: excludeUserId } }),
+      },
+    });
+  }
+
+  async findByDisplayName(displayName: string, excludeUserId?: number) {
+    return prisma.user.findFirst({
+      where: {
+        displayName,
+        ...(excludeUserId && { id: { not: excludeUserId } }),
+      },
+    });
+  }
+
   async update(id: number, data: Partial<UpdateUserDTO>): Promise<User> {
     return prisma.user.update({
       where: { id },

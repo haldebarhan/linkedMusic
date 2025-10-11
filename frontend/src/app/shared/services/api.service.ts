@@ -99,4 +99,11 @@ export class ApiService<T> {
   sendMessage(data: any) {
     return this.create('users/messages', data);
   }
+
+  updateProfile(
+    endpoint: string,
+    data: Partial<T>
+  ): Observable<ApiResponse<T>> {
+    return this.http.put<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, data);
+  }
 }
