@@ -164,6 +164,14 @@ export const routes: Routes = [
       import('./components/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
   {
+    path: 'users',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadChildren: () =>
+      import('./components/users/user.routes').then((m) => m.USER_ROUTES),
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',

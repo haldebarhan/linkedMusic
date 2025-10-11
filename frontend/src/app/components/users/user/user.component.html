@@ -1,0 +1,68 @@
+<div class="profile-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header mb-2">
+      <div class="sidebar-title">Mon Profile</div>
+    </div>
+
+    <!-- Users (dropdown) -->
+    <div class="sidebar-section">
+      <button
+        class="sidebar-item w-100 d-flex align-items-center justify-content-between"
+        type="button"
+        (click)="usersOpen = !usersOpen"
+      >
+        <span>
+          <i class="fas fa-user me-2"></i>
+        </span>
+        <i
+          class="fas"
+          [class.fa-chevron-down]="!usersOpen"
+          [class.fa-chevron-up]="usersOpen"
+        ></i>
+      </button>
+
+      <div class="submenu" [class.show]="usersOpen">
+        <!-- La liste vient de la partie encadrée : actions user -->
+        <a class="submenu-item" routerLink="profile" routerLinkActive="active">
+          <i class="far fa-id-card me-2"></i> Vue Globale
+        </a>
+        <a
+          class="submenu-item"
+          routerLink="profile/edit"
+          routerLinkActive="active"
+        >
+          <i class="far fa-user-circle me-2"></i> Modifier
+        </a>
+        <a
+          class="submenu-item"
+          routerLink="profile/change-password"
+          routerLinkActive="active"
+          *ngIf="show"
+        >
+          <i class="fas fa-key me-2"></i> Change Password
+        </a>
+        <a class="submenu-item text-warning" (click)="onNavigate('unban')">
+          <i class="fas fa-ban me-2"></i> Unban User
+        </a>
+        <a class="submenu-item text-danger" (click)="onNavigate('delete')">
+          <i class="far fa-trash-alt me-2"></i> Delete User
+        </a>
+      </div>
+    </div>
+
+    <!-- Applications (section simple pour l’instant) -->
+    <div class="sidebar-section mt-3">
+      <div class="sidebar-title">Applications</div>
+      <a class="sidebar-item" (click)="onNavigate('plan-billing')">
+        <i class="far fa-credit-card me-2"></i> Plan & Billing
+      </a>
+      <a class="sidebar-item" (click)="onNavigate('settings')">
+        <i class="fas fa-cog me-2"></i> Settings
+      </a>
+    </div>
+  </aside>
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

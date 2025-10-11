@@ -65,4 +65,20 @@ export class ApiAuthService {
       { headers: { Authorization: `Bearer ${idToken}` } }
     );
   }
+
+  getMe() {
+    return this.http.get<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${environment.apiUrl}/auth/me`);
+  }
+
+  changePassword(password: string) {
+    return this.http.put<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${environment.apiUrl}/auth/me/change-password`, { password });
+  }
 }

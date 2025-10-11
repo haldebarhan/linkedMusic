@@ -8,7 +8,7 @@ import { paginatedResponse } from "@/utils/helpers/paginated-response";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import createError from "http-errors";
 import { saveFileToBucket } from "@/utils/functions/save-file";
-import { UpdateUserDTO } from "./user.dto";
+import { ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 
 @injectable()
 export class UserController {
@@ -178,10 +178,13 @@ export class UserController {
   }
 
   async changePassword(req: AuthenticatedRequest, res: Response) {
-    const { password } = req.body;
+    const data: ChangePasswordDTO = Object.assign(
+      new ChangePasswordDTO(),
+      req.body
+    );
     const user = req.user;
     try {
-      await this.userService.changePassword(user, password);
+      await this.userService.changePassword(user, data);
       const response = formatResponse(200, {
         message: "Password changed successfully",
       });
@@ -232,7 +235,10 @@ export class UserController {
       res.cookie("access_token", accessToken, {
         httpOnly: true,
       });
-      const response = formatResponse(200, { accessToken, user: authUser });
+      const response = formatResponse(200, {
+        accessToken,
+        user: { ...authUser, provider: user.firebase.sign_in_provider },
+      });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -253,7 +259,10 @@ export class UserController {
       res.cookie("access_token", accessToken, {
         httpOnly: true,
       });
-      const response = formatResponse(200, { accessToken, user: created });
+      const response = formatResponse(200, {
+        accessToken,
+        user: { ...created, provider: user.firebase.sign_in_provider },
+      });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

@@ -16,55 +16,59 @@
       <i class="fas fa-rocket text-primary"></i> MonSite
     </a>
 
-    <!-- Bouton de connexion (mobile, à droite) -->
-    <div class="d-lg-none">
-      <!-- Version non connecté -->
-      <button
-        class="btn btn-outline-primary btn-sm"
-        *ngIf="!(isLoggedIn$ | async)"
-        (click)="goToLogin()"
-      >
-        <i class="fas fa-sign-in-alt"></i>
-      </button>
+    <!-- Mobile (actions à droite) : caché sur desktop -->
+    <div class="ms-auto d-lg-none">
+      <ng-container *ngIf="user$ | async as user; else loggedOutMobile">
+        <!-- Connecté (mobile) -->
+        <div class="dropdown">
+          <button
+            class="btn btn-link p-0"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            <img
+              [src]="user.profileImage || 'assets/avatar-default.png'"
+              alt="Profile"
+              class="profile-img"
+            />
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-user me-2"></i>Profil</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-cog me-2"></i>Paramètres</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="profile/messages"
+                ><i class="fas fa-bell me-2"></i>Notifications</a
+              >
+            </li>
+            <li *ngIf="user.role === 'ADMIN'">
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-cog me-2"></i>Administration</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#" (click)="logout()"
+                ><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a
+              >
+            </li>
+          </ul>
+        </div>
+      </ng-container>
 
-      <!-- Version connecté -->
-      <div class="dropdown" *ngIf="user$ | async as user">
-        <button
-          class="btn btn-link p-0"
-          type="button"
-          data-bs-toggle="dropdown"
-        >
-          <img [src]="user.profileImage" alt="Profile" class="profile-img" />
+      <ng-template #loggedOutMobile>
+        <!-- Non connecté (mobile) -->
+        <button class="btn btn-outline-primary btn-sm" (click)="goToLogin()">
+          <i class="fas fa-sign-in-alt"></i>
         </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li>
-            <a class="dropdown-item" href="#"
-              ><i class="fas fa-user me-2"></i>Profil</a
-            >
-          </li>
-          <li>
-            <a class="dropdown-item" href="#"
-              ><i class="fas fa-cog me-2"></i>Paramètres</a
-            >
-          </li>
-          <li>
-            <a class="dropdown-item" routerLink="profile/messages"
-              ><i class="fas fa-bell me-2"></i>Notifications</a
-            >
-          </li>
-          <li *ngIf="user.role === 'ADMIN'">
-            <a class="dropdown-item" href="#"
-              ><i class="fas fa-cog me-2"></i>Administration</a
-            >
-          </li>
-          <li><hr class="dropdown-divider" /></li>
-          <li>
-            <a class="dropdown-item" href="#" (click)="logout()">
-              <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
-            </a>
-          </li>
-        </ul>
-      </div>
+      </ng-template>
     </div>
 
     <!-- Contenu collapsible -->
@@ -81,64 +85,67 @@
 
       <!-- Desktop -->
       <div class="d-none d-lg-block">
-        <!-- Non connecté -->
-        <div *ngIf="!(isLoggedIn$ | async)">
-          <button class="btn btn-primary" (click)="goToLogin()">
-            Se connecter
-          </button>
-        </div>
-
-        <!-- Connecté -->
-        <div class="dropdown" *ngIf="user$ | async as user">
-          <button
-            class="btn btn-link p-0 d-flex align-items-center text-decoration-none"
-            type="button"
-            data-bs-toggle="dropdown"
-          >
-            <img
-              [src]="user.profileImage"
-              alt="Profile"
-              class="profile-img me-2"
-            />
-            <span class="text-dark">{{ displayName(user) }}</span>
-            <i class="fas fa-chevron-down ms-2 text-muted"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <h6 class="dropdown-header">{{ user.email }}</h6>
-            </li>
-            <li><hr class="dropdown-divider" /></li>
-            <li>
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-user me-2"></i>Mon profile</a
-              >
-            </li>
-            <li>
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-cog me-2"></i>Paramètres</a
-              >
-            </li>
-            <li>
-              <a class="dropdown-item" routerLink="/profile/messages"
-                ><i class="fas fa-bell me-2"></i>Notifications
-                <span *ngIf="unread > 0" class="badge text-bg-secondary">{{
-                  unread
-                }}</span></a
-              >
-            </li>
-            <li *ngIf="user.role === 'ADMIN'">
-              <a class="dropdown-item" routerLink="/admin"
-                ><i class="fas fa-cog me-2"></i>Administration</a
-              >
-            </li>
-            <li><hr class="dropdown-divider" /></li>
-            <li>
-              <a class="dropdown-item" href="#" (click)="logout()">
-                <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
-              </a>
-            </li>
-          </ul>
-        </div>
+        <ng-container *ngIf="user$ | async as user; else t">
+          <!-- Connecté -->
+          <div class="dropdown">
+            <button
+              class="btn btn-link p-0 d-flex align-items-center text-decoration-none"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              <img
+                [src]="user.profileImage"
+                alt="Profile"
+                class="profile-img me-2"
+              />
+              <span class="text-dark">{{ displayName(user) }}</span>
+              <i class="fas fa-chevron-down ms-2 text-muted"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <h6 class="dropdown-header">{{ user.email }}</h6>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <a class="dropdown-item" routerLink="/users/profile"
+                  ><i class="fas fa-user me-2"></i>Mon profile</a
+                >
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"
+                  ><i class="fas fa-cog me-2"></i>Paramètres</a
+                >
+              </li>
+              <li>
+                <a class="dropdown-item" routerLink="/profile/messages"
+                  ><i class="fas fa-bell me-2"></i>Notifications
+                  <span *ngIf="unread > 0" class="badge text-bg-secondary">{{
+                    unread
+                  }}</span></a
+                >
+              </li>
+              <li *ngIf="user.role === 'ADMIN'">
+                <a class="dropdown-item" routerLink="/admin"
+                  ><i class="fas fa-cog me-2"></i>Administration</a
+                >
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <a class="dropdown-item" href="#" (click)="logout()">
+                  <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
+                </a>
+              </li>
+            </ul>
+          </div>
+        </ng-container>
+        <ng-template #t>
+          <!-- Non connecté -->
+          <div>
+            <button class="btn btn-primary" (click)="goToLogin()">
+              Se connecter
+            </button>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Bouton connexion mobile (dans menu collapsible) - UNIQUEMENT si non connecté -->

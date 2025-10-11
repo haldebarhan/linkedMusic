@@ -131,6 +131,10 @@ export class AuthService {
     this.persist(state);
   }
 
+  async getMe() {
+    return await firstValueFrom(this.api.getMe());
+  }
+
   /** Déconnexion */
   async logout(): Promise<void> {
     try {
