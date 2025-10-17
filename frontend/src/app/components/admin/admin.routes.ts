@@ -8,6 +8,8 @@ import { FieldsComponent } from './pages/fields/fields.component';
 import { FieldFormComponent } from './pages/forms/field-form/field-form.component';
 import { FieldsViewComponent } from './pages/fields-view/fields-view.component';
 import { ServiceViewComponent } from './pages/service-view/service-view.component';
+import { SubscriptionPlansComponent } from './pages/subscription-plans/subscription-plans.component';
+import { SubscriptionFormComponent } from './pages/forms/subscription-form/subscription-form.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -16,47 +18,59 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: 'categories',
-        component: CategoriePageComponent,
+        loadComponent: () => CategoriePageComponent,
       },
       {
         path: 'categories/edit/:id',
-        component: CategorieFormComponent,
+        loadComponent: () => CategorieFormComponent,
       },
       {
         path: 'categories/new',
-        component: CategorieFormComponent,
+        loadComponent: () => CategorieFormComponent,
       },
       {
         path: 'services',
-        component: ServiceTypesComponent,
+        loadComponent: () => ServiceTypesComponent,
       },
       {
         path: 'services/new',
-        component: ServiceFormComponent,
+        loadComponent: () => ServiceFormComponent,
       },
       {
         path: 'services/edit/:id',
-        component: ServiceFormComponent,
+        loadComponent: () => ServiceFormComponent,
       },
       {
         path: 'fields',
-        component: FieldsComponent,
+        loadComponent: () => FieldsComponent,
       },
       {
         path: 'fields/edit/:id',
-        component: FieldFormComponent,
+        loadComponent: () => FieldFormComponent,
       },
       {
         path: 'fields/new',
-        component: FieldFormComponent,
+        loadComponent: () => FieldFormComponent,
       },
       {
         path: 'fields/view/:id',
-        component: FieldsViewComponent,
+        loadComponent: () => FieldsViewComponent,
       },
       {
         path: 'services/view/:id',
-        component: ServiceViewComponent,
+        loadComponent: () => ServiceViewComponent,
+      },
+      {
+        path: 'subscription-plans',
+        loadComponent: () => SubscriptionPlansComponent,
+      },
+      {
+        path: 'subscription-plans/create',
+        loadComponent: () => SubscriptionFormComponent,
+      },
+      {
+        path: 'subscription-plans/edit/:id',
+        loadComponent: () => SubscriptionFormComponent,
       },
     ],
   },

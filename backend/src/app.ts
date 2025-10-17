@@ -20,6 +20,7 @@ import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
 import { SearchService } from "./utils/services/search.service";
 import { getAllowedOrigins } from "./utils/functions/allowed-origins";
+import { startSubscriptionDailyCron } from "./events/schedulers/scheduler";
 // import { ConfigService } from "./utils/services/configuration.service";
 
 const allowed = getAllowedOrigins();
@@ -74,6 +75,7 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
+    startSubscriptionDailyCron();
   }
 
   config() {

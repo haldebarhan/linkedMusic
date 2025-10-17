@@ -1,0 +1,45 @@
+.accordion-table .accordion-row {
+  transition: background-color 0.2s;
+}
+
+.accordion-table .accordion-row:hover {
+  background-color: #f8f9fa;
+}
+
+.accordion-table .accordion-row.expanded {
+  background-color: #e7f3ff;
+}
+
+.accordion-table .accordion-details td {
+  background-color: #f8f9fa;
+  border-top: none !important;
+}
+
+.details-content {
+  padding: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.advantage-item {
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+  border-radius: 5px;
+  border-left: 3px solid #28a745;
+  font-size: 14px;
+}
+
+.accordion-table tbody tr td:first-child {
+  width: 40px;
+}

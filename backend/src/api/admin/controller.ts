@@ -1,5 +1,6 @@
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
+import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
 import { UserController } from "@/microservices/users/user.controller";
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
@@ -9,7 +10,8 @@ export class AdminController {
   constructor(
     private readonly userController: UserController,
     private readonly configController: ConfigurationController,
-    private readonly catalogueController: CatalogueController
+    private readonly catalogueController: CatalogueController,
+    private readonly subscriptionController: SubscriptionController
   ) {}
 
   // Users
@@ -106,5 +108,20 @@ export class AdminController {
 
   async detachField(req: Request, res: Response) {
     return await this.catalogueController.detachField(req, res);
+  }
+
+  async createPlan(req: Request, res: Response) {
+    return await this.subscriptionController.createPlan(req, res);
+  }
+  async updatePlan(req: Request, res: Response) {
+    return await this.subscriptionController.updatePlan(req, res);
+  }
+
+  async listSubscriptionPlans(req: Request, res: Response) {
+    return await this.subscriptionController.findSubscriptionPlans(req, res);
+  }
+
+  async findSubscriptionPlan(req: Request, res: Response) {
+    return await this.subscriptionController.findSubscriptionPlan(req, res);
   }
 }

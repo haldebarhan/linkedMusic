@@ -92,5 +92,49 @@ export class AdminApi {
     );
   }
 
-  private buildEndpoint(ressource?: string, page = 1, limit = 10) {}
+  listData(data: {
+    endpoint: string;
+    page?: number;
+    limit?: number;
+    params?: any;
+  }) {
+    const { page, limit, params, endpoint } = data;
+    const pageQuery = page ?? 1;
+    const limitQuery = limit ?? 10;
+    let httpParams = new HttpParams()
+      .set('page', pageQuery.toString())
+      .set('limit', limitQuery.toString());
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          httpParams = httpParams.set(key, value as string);
+        }
+      });
+    }
+    return this.http.get<ApiListResponse<any>>(
+      `${environment.apiUrl}/admin/${endpoint}`,
+      { params: httpParams }
+    );
+  }
+
+  postData(endpoint: string, payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.apiUrl}/admin/${endpoint}`,
+      payload
+    );
+  }
+
+  updateData(endpoint: string, id: number, body: any) {
+    return this.http.put<ApiResponse<any>>(
+      `${environment.apiUrl}/admin/${endpoint}/${id}`,
+      body
+    );
+  }
+
+  findData(endpoint: string, id: number) {
+    return this.http.get<ApiResponse<any>>(
+      `${environment.apiUrl}/admin/${endpoint}/${id}`
+    );
+  }
 }

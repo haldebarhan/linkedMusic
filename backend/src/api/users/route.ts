@@ -14,6 +14,7 @@ import {
   CreateMessageDTO,
   ReplyMessageDTO,
 } from "@/microservices/messages/message.dto";
+import { SubscribeDTO } from "@/microservices/subscriptions/dto/plan.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -87,6 +88,13 @@ router.post(
   ValidateDtoMiddleware(CreateMessageDTO),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.createMessage(req, res)
+);
+
+router.post(
+  "/subscription-plans/subscribe",
+  ValidateDtoMiddleware(SubscribeDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.subscribe(req, res)
 );
 
 export default router;

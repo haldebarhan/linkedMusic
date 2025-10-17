@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 export function hasOwn(obj: any, k: string) {
   return obj && Object.prototype.hasOwnProperty.call(obj, k);
 }
@@ -21,4 +23,8 @@ export function toArray(v: any): string[] {
 }
 export function toBool(v: any): boolean {
   return v === true || v === 1 || v === "1" || v === "true" || v === "on";
+}
+
+export function generateRandomUUID() {
+  return uuidv4();
 }

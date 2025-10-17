@@ -46,7 +46,6 @@ export class LoginComponent {
         title: msg,
         icon: 'error',
         didClose: () => {
-          this.loginForm.reset();
           this.submitted = false;
         },
       });

@@ -1,0 +1,9 @@
+export enum PlanPeriod {
+  FREE = "FREE",
+  MONTHLY = "MONTHLY",
+  BIMONTHLY = "BIMONTHLY",
+  QUARTERLY = "QUARTERLY",
+  SEMIANNUAL = "SEMIANNUAL",
+  ANNUAL = "ANNUAL",
+  CUSTOM = "CUSTOM",
+}

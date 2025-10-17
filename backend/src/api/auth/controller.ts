@@ -4,13 +4,15 @@ import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-reque
 import { UserController } from "@/microservices/users/user.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
+import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
 
 @injectable()
 export class AuthController {
   constructor(
     private readonly userController: UserController,
     private readonly catalogController: CatalogueController,
-    private readonly announcementController: AnnouncementController
+    private readonly announcementController: AnnouncementController,
+    private readonly subscriptionController: SubscriptionController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -88,5 +90,10 @@ export class AuthController {
 
   async findAnnouncement(req: Request, res: Response) {
     return await this.announcementController.findOne(req, res);
+  }
+
+  // SUBSCRIPTION PLANS
+  async findSubscriptionPlans(req: Request, res: Response) {
+    return await this.subscriptionController.findSubscriptionPlans(req, res);
   }
 }
