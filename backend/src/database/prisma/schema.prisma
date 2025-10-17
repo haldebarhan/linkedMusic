@@ -74,6 +74,16 @@ enum SubscriptionStatus {
     PAST_DUE
 }
 
+enum PlanPeriod {
+    FREE
+    MONTHLY
+    BIMONTHLY
+    QUARTERLY
+    SEMIANNUAL
+    ANNUAL
+    CUSTOM
+}
+
 enum PaymentStatus {
     PENDING
     SUCCEEDED
@@ -112,26 +122,26 @@ enum ConfigType {
 }
 
 model User {
-    id                    Int              @id @default(autoincrement())
-    uid                   String           @unique
-    email                 String           @unique
-    phone                 String?          @unique
-    displayName           String?          @map("display_name")
-    firstName             String?          @map("first_name")
-    lastName              String?          @map("last_name")
-    role                  Role             @default(USER)
-    status                Status           @default(ACTIVATED)
-    profileImage          String           @map("profile_image")
+    id                    Int                @id @default(autoincrement())
+    uid                   String             @unique
+    email                 String             @unique
+    phone                 String?            @unique
+    displayName           String?            @map("display_name")
+    firstName             String?            @map("first_name")
+    lastName              String?            @map("last_name")
+    role                  Role               @default(USER)
+    status                Status             @default(ACTIVATED)
+    profileImage          String             @map("profile_image")
     comments              String?
     location              String?
     country               String?
-    createdAt             DateTime         @default(now()) @map("created_at")
-    updatedAt             DateTime         @updatedAt @map("updated_at")
+    createdAt             DateTime           @default(now()) @map("created_at")
+    updatedAt             DateTime           @updatedAt @map("updated_at")
     files                 File[]
     Favorite              Favorite[]
     Message               Message[]
-    sentConversations     Conversation[]   @relation("ConversationSender")
-    receivedConversations Conversation[]   @relation("ConversationReceiver")
+    sentConversations     Conversation[]     @relation("ConversationSender")
+    receivedConversations Conversation[]     @relation("ConversationReceiver")
     Topic                 Topic[]
     Comment               Comment[]
     Reply                 Reply[]
@@ -142,9 +152,10 @@ model User {
     FavoriteTopic         FavoriteTopic[]
     WatchTopic            WatchTopic[]
     announcements         Announcement[]
-    subscriptions         Subscription[]
     Payment               Payment[]
     MatchingAccess        MatchingAccess[]
+    subscriptions         UserSubscription[]
+    FreeClaim             FreeClaim?
 
     @@map("users")
 }
@@ -558,45 +569,6 @@ model AppConfig {
     @@map("app_configs")
 }
 
-model SubscriptionPlan {
-    id            Int            @id @default(autoincrement())
-    code          String         @unique
-    name          String
-    description   String?
-    priceCents    Int
-    currency      Currency       @default(XOF)
-    interval      String
-    featuresJson  String?
-    isActive      Boolean        @default(true)
-    createdAt     DateTime       @default(now())
-    updatedAt     DateTime       @updatedAt
-    subscriptions Subscription[]
-
-    @@map("subscription_plans")
-}
-
-model Subscription {
-    id                 Int                @id @default(autoincrement())
-    userId             Int
-    planId             Int
-    status             SubscriptionStatus @default(ACTIVE)
-    startDate          DateTime           @default(now())
-    currentPeriodStart DateTime
-    currentPeriodEnd   DateTime
-    cancelAtPeriodEnd  Boolean            @default(false)
-    canceledAt         DateTime?
-    provider           PaymentProvider?
-    providerRef        String?
-    user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-    plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
-    payments           Payment[]
-    createdAt          DateTime           @default(now())
-    updatedAt          DateTime           @updatedAt
-
-    @@index([userId, status, currentPeriodEnd])
-    @@map("subscriptions")
-}
-
 model Payment {
     id             Int              @id @default(autoincrement())
     userId         Int
@@ -609,7 +581,6 @@ model Payment {
     announcementId Int?
     metadata       String?
     user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-    subscription   Subscription?    @relation(fields: [subscriptionId], references: [id])
     announcement   Announcement?    @relation(fields: [announcementId], references: [id])
     createdAt      DateTime         @default(now())
     updatedAt      DateTime         @updatedAt
@@ -634,4 +605,62 @@ model MatchingAccess {
     @@unique([userId, announcementId])
     @@index([announcementId])
     @@map("matching_access")
+}
+
+model Benefit {
+    id          Int           @id @default(autoincrement())
+    code        String        @unique // ex: "MATCHING_LIMIT_5", "FEATURE_X"
+    label       String
+    description String?
+    plans       PlanBenefit[]
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+}
+
+model PlanBenefit {
+    planId    Int
+    benefitId Int
+    inherited Boolean          @default(false)
+    plan      SubscriptionPlan @relation(fields: [planId], references: [id])
+    benefit   Benefit          @relation(fields: [benefitId], references: [id])
+
+    @@id([planId, benefitId])
+}
+
+model SubscriptionPlan {
+    id            Int                @id @default(autoincrement())
+    name          String
+    slug          String             @unique
+    period        PlanPeriod
+    isFree        Boolean            @default(false)
+    priceCents    Int                @default(0)
+    durationDays  Int?
+    active        Boolean            @default(true)
+    parentId      Int?
+    parent        SubscriptionPlan?  @relation("PlanParent", fields: [parentId], references: [id])
+    children      SubscriptionPlan[] @relation("PlanParent")
+    benefits      PlanBenefit[]
+    createdAt     DateTime           @default(now())
+    updatedAt     DateTime           @updatedAt
+    subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+    id        Int                @id @default(autoincrement())
+    userId    Int
+    planId    Int
+    startAt   DateTime           @default(now())
+    endAt     DateTime?
+    status    SubscriptionStatus @default(ACTIVE)
+    autoRenew Boolean            @default(true)
+    user      User               @relation(fields: [userId], references: [id])
+    plan      SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+    @@index([userId, status])
+}
+
+model FreeClaim {
+    userId    Int      @unique
+    claimedAt DateTime @default(now())
+    user      User     @relation(fields: [userId], references: [id])
 }

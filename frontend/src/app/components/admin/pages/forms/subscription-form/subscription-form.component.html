@@ -1,0 +1,210 @@
+<div class="admin-card">
+  <div class="card-head d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">
+        {{ isEdit ? "Modifier un pack" : "Créer un pack" }}
+      </h5>
+      <div class="text-muted small">Gestion des packs et abonnements</div>
+    </div>
+    <div>
+      <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="fas fa-arrow-left me-1"></i>Retour
+      </button>
+    </div>
+  </div>
+
+  <div class="admin-table-wrap">
+    <form [formGroup]="form" (ngSubmit)="save()" class="row g-3">
+      <!-- Nom du pack -->
+      <div class="col-md-6">
+        <label class="form-label"
+          >Nom du pack <span class="text-danger">*</span></label
+        >
+        <input
+          class="form-control"
+          formControlName="name"
+          placeholder="ex: Pack Premium, Plan Business"
+        />
+        <div
+          class="invalid-feedback d-block"
+          *ngIf="form.controls['name'].invalid && (form.touched || submitted)"
+        >
+          Nom requis (≥ 2 caractères).
+        </div>
+      </div>
+
+      <!-- Période -->
+      <div class="col-md-3">
+        <label class="form-label"
+          >Période <span class="text-danger">*</span></label
+        >
+        <select class="form-select" formControlName="period">
+          <option *ngFor="let p of periods" [value]="p">
+            {{ getPeriodLabel(p) }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Statut actif -->
+      <div class="col-md-3 d-flex align-items-center">
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            formControlName="active"
+            id="active"
+          />
+          <label class="form-check-label" for="active"> Pack actif </label>
+        </div>
+      </div>
+
+      <!-- Prix -->
+      <div class="col-md-6" *ngIf="isPricingRequired()">
+        <label class="form-label">Prix<span class="text-danger">*</span></label>
+        <div class="input-group">
+          <input
+            type="number"
+            class="form-control"
+            [value]="getPriceInEuros()"
+            (input)="onPriceEurosChange($event)"
+            placeholder="0.00"
+            min="0"
+          />
+          <span class="input-group-text">FCFA</span>
+        </div>
+        <div
+          class="invalid-feedback d-block"
+          *ngIf="
+            form.controls['priceCents'].invalid && (form.touched || submitted)
+          "
+        >
+          Prix requis pour les packs payants.
+        </div>
+      </div>
+
+      <!-- Pack parent (héritage) -->
+      <div class="col-md-6">
+        <label class="form-label">Hériter d'un pack parent</label>
+        <select class="form-select" formControlName="parentId">
+          <option [value]="null">Aucun (pack indépendant)</option>
+          <option *ngFor="let pack of availablePacks" [value]="pack.id">
+            {{ pack.name }} - {{ getPeriodLabel(pack.period) }}
+          </option>
+        </select>
+        <div class="form-text">
+          Les avantages du pack parent seront automatiquement inclus
+        </div>
+      </div>
+
+      <!-- Avantages -->
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <h6 class="mb-0">Avantages du pack</h6>
+            <small class="text-muted">
+              Ajoutez les avantages spécifiques à ce pack
+            </small>
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            (click)="addBenefit()"
+          >
+            <i class="fas fa-plus me-1"></i>Ajouter un avantage
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 85%">Avantage</th>
+                <th style="width: 15%"></th>
+              </tr>
+            </thead>
+            <tbody formArrayName="benefits">
+              <tr
+                *ngFor="let benefit of benefits.controls; index as i"
+                [formGroupName]="i"
+              >
+                <td data-label="Avantage">
+                  <input
+                    class="form-control form-control-sm"
+                    formControlName="label"
+                    placeholder="ex: Support prioritaire, API illimitée"
+                  />
+                  <div
+                    class="invalid-feedback d-block"
+                    *ngIf="
+                      benefit.get('label')?.invalid &&
+                      (form.touched || submitted)
+                    "
+                  >
+                    Avantage requis (≥ 2 caractères).
+                  </div>
+                </td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="removeBenefit(i)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!benefits.length">
+                <td colspan="2" class="text-center text-muted py-3">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Aucun avantage ajouté. Cliquez sur "Ajouter un avantage" pour
+                  commencer.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="alert alert-warning d-flex align-items-center mt-2"
+          *ngIf="benefits.length === 0 && (form.touched || submitted)"
+        >
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Au moins un avantage est requis pour créer un pack.
+        </div>
+      </div>
+
+      <!-- Informations héritées -->
+      <div class="col-12" *ngIf="form.get('parentId')?.value">
+        <div class="alert alert-info d-flex align-items-start">
+          <i class="fas fa-info-circle me-2 mt-1"></i>
+          <div>
+            <strong>Héritage activé</strong><br />
+            Ce pack héritera automatiquement de tous les avantages du pack
+            parent sélectionné, en plus de ses propres avantages.
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton de soumission -->
+      <div class="col-12 d-flex justify-content-end gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="goBack()"
+          [disabled]="saving"
+        >
+          Annuler
+        </button>
+        <button class="btn btn-primary" [disabled]="saving || !canSubmit()">
+          <span *ngIf="saving">
+            <i class="fas fa-spinner fa-spin me-1"></i>Enregistrement...
+          </span>
+          <span *ngIf="!saving">
+            <i class="fas fa-save me-1"></i>
+            {{ isEdit ? "Mettre à jour" : "Enregistrer" }}
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

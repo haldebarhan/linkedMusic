@@ -32,6 +32,12 @@ router.get("/announcements/details/:id", async (req: Request, res: Response) =>
   authController.findAnnouncement(req, res)
 );
 
+// Subscription plans
+
+router.get("/subscription-plans", async (req: Request, res: Response) =>
+  authController.findSubscriptionPlans(req, res)
+);
+
 router.post(
   "/auth/activate",
   ValidateDtoMiddleware(VerifyToken),

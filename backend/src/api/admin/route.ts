@@ -17,6 +17,10 @@ import {
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
 } from "@/microservices/catalogues/catalogue.dto";
+import {
+  CreatePlanDTO,
+  UpdatePlanDTO,
+} from "@/microservices/subscriptions/dto/plan.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -142,6 +146,26 @@ router.post(
   "/catalog/detach-fields",
   ValidateDtoMiddleware(AttachFieldDTO),
   async (req: Request, res: Response) => adminController.detachField(req, res)
+);
+
+// SUBSCRIPTION PLAN
+router.get("/subscription-plans", async (req: Request, res: Response) =>
+  adminController.listSubscriptionPlans(req, res)
+);
+
+router.post(
+  "/subscription-plans",
+  ValidateDtoMiddleware(CreatePlanDTO),
+  async (req: Request, res: Response) => adminController.createPlan(req, res)
+);
+
+router.get("/subscription-plans/:id", async (req: Request, res: Response) =>
+  adminController.findSubscriptionPlan(req, res)
+);
+router.put(
+  "/subscription-plans/:id",
+  ValidateDtoMiddleware(UpdatePlanDTO),
+  async (req: Request, res: Response) => adminController.updatePlan(req, res)
 );
 
 export default router;

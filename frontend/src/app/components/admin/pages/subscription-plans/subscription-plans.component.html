@@ -1,0 +1,196 @@
+<div class="admin-card">
+  <div class="card-head d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">Subscriptions</h5>
+      <div class="text-muted small">Manager les differents pack</div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <a
+      class="btn btn-sm btn-primary"
+      style="margin-right: 15px"
+      routerLink="create"
+    >
+      <i class="fas fa-plus me-1"></i>Ajouter
+    </a>
+  </div>
+  <div class="admin-table-wrap">
+    <hr />
+
+    <div class="table-responsive">
+      <table class="admin-table accordion-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>#</th>
+            <th>Nom</th>
+            <th>Slug</th>
+            <th>Type</th>
+            <th>Prix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let field of rows; index as i">
+            <!-- Ligne principale cliquable -->
+            <tr
+              class="accordion-row"
+              [class.expanded]="field.expanded"
+              (click)="toggleRow(field)"
+              style="cursor: pointer"
+            >
+              <td class="text-center">
+                <i
+                  class="fas"
+                  [class.fa-chevron-right]="!field.expanded"
+                  [class.fa-chevron-down]="field.expanded"
+                >
+                </i>
+              </td>
+              <td data-label="#" class="text-muted">
+                {{ (page - 1) * limit + i + 1 }}
+              </td>
+              <td data-label="Nom">{{ field.name }}</td>
+              <td data-label="Slug">
+                <code>{{ field.slug }}</code>
+              </td>
+              <td data-label="Type">
+                {{ field.period }}
+              </td>
+              <td data-label="Prix">
+                {{ field.price > 0 ? field.price + " FCFA" : "-" }}
+              </td>
+            </tr>
+
+            <!-- Ligne détails (accordéon) -->
+            <tr *ngIf="field.expanded" class="accordion-details">
+              <td colspan="7">
+                <div class="details-content">
+                  <h6 class="mb-3">
+                    <i class="fas fa-star me-2"></i>Avantages du pack
+                    {{ field.name }}
+                  </h6>
+
+                  <div *ngIf="field.benefits && field.benefits.length > 0">
+                    <div class="row">
+                      <div class="col-md-3">
+                        <div
+                          *ngFor="let advantage of field.benefits.slice(0, 4)"
+                        >
+                          <div class="advantage-item">
+                            <i
+                              class="fas fa-check-circle text-success me-2"
+                            ></i>
+                            {{ advantage }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3" *ngIf="field.benefits.length > 4">
+                        <div
+                          *ngFor="let advantage of field.benefits.slice(4, 8)"
+                        >
+                          <div class="advantage-item">
+                            <i
+                              class="fas fa-check-circle text-success me-2"
+                            ></i>
+                            {{ advantage }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3" *ngIf="field.benefits.length > 8">
+                        <div
+                          *ngFor="let advantage of field.benefits.slice(8, 12)"
+                        >
+                          <div class="advantage-item">
+                            <i
+                              class="fas fa-check-circle text-success me-2"
+                            ></i>
+                            {{ advantage }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3" *ngIf="field.benefits.length > 12">
+                        <div
+                          *ngFor="let advantage of field.benefits.slice(12, 16)"
+                        >
+                          <div class="advantage-item">
+                            <i
+                              class="fas fa-check-circle text-success me-2"
+                            ></i>
+                            {{ advantage }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    *ngIf="!field.benefits || field.benefits.length === 0"
+                    class="text-muted"
+                  >
+                    <i class="fas fa-info-circle me-2"></i>
+                    Aucun avantage défini pour ce pack
+                  </div>
+
+                  <div class="mt-3">
+                    <button
+                      class="btn btn-sm btn-primary me-2"
+                      (click)="edit(field)"
+                    >
+                      <i class="fas fa-edit me-1"></i>
+                      Modifier le pack
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="remove(field)"
+                    >
+                      <i class="fas fa-trash me-1"></i>
+                      Supprimer le pack
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!rows?.length">
+            <td colspan="7" class="text-center text-muted py-4">
+              Aucune donnée enregistrée
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== PAGINATION ===== -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <small class="text-muted">
+        Showing {{ start }} to {{ end }} of {{ total }} entries
+      </small>
+      <nav>
+        <ul class="pagination pagination-sm pagination-pills mb-0">
+          <li class="page-item" [class.disabled]="page === 1">
+            <button class="page-link" (click)="go(page - 1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </li>
+
+          <li
+            class="page-item"
+            *ngFor="let p of pages"
+            [class.active]="p === page"
+          >
+            <button class="page-link" (click)="go(p)">{{ p }}</button>
+          </li>
+
+          <li class="page-item" [class.disabled]="page === totalPage">
+            <button class="page-link" (click)="go(page + 1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <!-- ======================= -->
+  </div>
+</div>
