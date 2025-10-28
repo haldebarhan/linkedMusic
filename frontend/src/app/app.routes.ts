@@ -77,7 +77,7 @@ export const routes: Routes = [
     path: 'login',
     canMatch: [guestCanMatch],
     canActivate: [guestCanActivate],
-    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/home' },
+    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/' },
     loadComponent: () =>
       import('./components/login/login.component').then(
         (m) => m.LoginComponent
@@ -89,7 +89,7 @@ export const routes: Routes = [
     canActivate: [guestCanActivate],
     data: {
       guestPolicy: 'redirectIfAuth',
-      redirectTo: '/home',
+      redirectTo: '/',
     },
     loadComponent: () =>
       import('./components/register/register.component').then(
@@ -127,9 +127,29 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'checkout/:id',
+    canMatch: [authCanMatch],
+    canActivate: [authCanMatch],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/checkout/checkout.component').then(
+        (m) => m.CheckoutComponent
+      ),
+  },
+  {
+    path: 'payments/return',
+    canMatch: [authCanMatch],
+    canActivate: [authCanMatch],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/payment-return/payment-return.component').then(
+        (m) => m.PaymentReturnComponent
+      ),
+  },
+  {
     path: 'profile/announcements',
     canMatch: [authCanMatch],
-    canActivate: [authCanActivate],
+    canActivate: [authCanMatch],
     data: { guestPolicy: 'allow' },
     loadComponent: () =>
       import(

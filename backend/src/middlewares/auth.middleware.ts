@@ -1,6 +1,6 @@
 import DatabaseService from "@/utils/services/database.service";
 import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
-import { PrismaClient, Status } from "@prisma/client";
+import { PrismaClient, Status, SubscriptionStatus } from "@prisma/client";
 import { NextFunction } from "express";
 import { FirebaseService } from "@/utils/services/firebase.service";
 import logger from "@/config/logger";
@@ -57,6 +57,16 @@ const authMiddleware = async (
 
     const user = await prisma.user.findUnique({
       where: { uid: decodedToken.uid },
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
+      },
     });
 
     if (!user) {

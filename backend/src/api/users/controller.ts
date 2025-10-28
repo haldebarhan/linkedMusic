@@ -1,6 +1,7 @@
 import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 import { MatchingController } from "@/microservices/matching/matching.controller";
 import { MessageController } from "@/microservices/messages/message.controller";
+import { PaymentController } from "@/microservices/payments/payment.controller";
 import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import { Response, Request } from "express";
@@ -12,7 +13,8 @@ export class UserController {
     private readonly announcementController: AnnouncementController,
     private readonly matchingController: MatchingController,
     private readonly messageController: MessageController,
-    private readonly subscriptionController: SubscriptionController
+    private readonly subscriptionController: SubscriptionController,
+    private readonly payementController: PaymentController
   ) {}
 
   // Announcements
@@ -66,5 +68,13 @@ export class UserController {
 
   async subscribe(req: AuthenticatedRequest, res: Response) {
     return await this.subscriptionController.subscribe(req, res);
+  }
+
+  // PAIMENTS
+  async makePayment(req: AuthenticatedRequest, res: Response) {
+    return await this.payementController.makePayment(req, res);
+  }
+  async checkReference(req: AuthenticatedRequest, res: Response) {
+    return await this.payementController.checkPaymentStatus(req, res);
   }
 }

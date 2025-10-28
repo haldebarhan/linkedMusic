@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
 import { Toast } from '../../helpers/sweet-alert';
@@ -18,18 +18,26 @@ import { Toast } from '../../helpers/sweet-alert';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   submitted: boolean = false;
+  private redirectUrl: string = '/';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
+    });
+  }
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      this.redirectUrl = params['redirect'] || '/';
     });
   }
 
@@ -38,7 +46,7 @@ export class LoginComponent {
     const { email, password } = this.loginForm.value;
     try {
       await this.auth.loginWithPassword(email, password);
-      this.router.navigate(['/home']);
+      this.router.navigateByUrl(this.redirectUrl);
       this.submitted = false;
     } catch (error: any) {
       const msg = this.extractError(error);
@@ -55,7 +63,7 @@ export class LoginComponent {
   async loginWithGoogle() {
     try {
       await this.auth.loginWithGoogle();
-      this.router.navigate(['/home']);
+      this.router.navigateByUrl(this.redirectUrl);
     } catch (error) {
       console.log(error);
     }

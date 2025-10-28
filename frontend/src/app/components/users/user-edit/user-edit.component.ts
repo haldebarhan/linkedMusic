@@ -63,6 +63,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
       country: [''],
       address: [''],
       city: [''],
+      zipCode: [''],
       lastName: ['', [Validators.required]],
       firstName: ['', [Validators.required]],
     });
@@ -90,6 +91,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
             phone: this.userData.phone || '',
             lastName: this.userData.lastName || '',
             firstName: this.userData.firstName || '',
+            zipCode: this.userData.zipCode || '',
             country: this.userData.country || '',
             address: address ? address.trim() : '',
             city: city ? city.trim() : '',
@@ -119,7 +121,6 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     const ready = this.iti.promise ? this.iti.promise : Promise.resolve();
 
     ready.then(() => {
-      // validateur une seule fois
       const ctrl = this.form.get('phone')!;
       ctrl.setValidators([Validators.required, this.phoneValidator.bind(this)]);
       ctrl.updateValueAndValidity({ emitEvent: false });
@@ -143,14 +144,9 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
           const e164 = utils
             ? this.iti.getNumber(utils.numberFormat.E164)
             : input.value;
-          // ⬇️ on stocke uniquement dans le FormControl (caché)
           ctrl.setValue(e164, { emitEvent: false });
         } catch {}
         ctrl.updateValueAndValidity({ onlySelf: true, emitEvent: false });
-        // const sel = this.iti.getSelectedCountryData();
-        // this.form
-        //   .get('country')
-        //   ?.setValue(sel?.name ?? '', { emitEvent: false });
       };
       input.addEventListener('input', revalidate);
       input.addEventListener('countrychange', revalidate);
@@ -183,15 +179,24 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
   save() {
     if (!this.form.valid) return;
     this.saving = true;
-    const { phone, city, country, address, lastName, firstName, displayName } =
-      this.form.value;
+    const {
+      phone,
+      city,
+      country,
+      address,
+      lastName,
+      zipCode,
+      firstName,
+      displayName,
+    } = this.form.value;
     const fullNumber = this.iti ? this.iti.getNumber() : phone;
     const payload = {
       phone: fullNumber,
       lastName,
       firstName,
       displayName,
-      location: `${address}, ${city}`,
+      zipCode,
+      location: `${address} : ${city}`,
       country,
     };
 

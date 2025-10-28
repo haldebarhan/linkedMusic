@@ -1,0 +1,292 @@
+<div class="container py-3">
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des informations...</p>
+  </div>
+  <!-- Error state -->
+  <div *ngIf="error && !loading" class="error-card">
+    <svg
+      class="error-icon"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      ></path>
+    </svg>
+    <h3>Une erreur est survenue</h3>
+    <p>{{ error }}</p>
+    <button (click)="cancel()" class="btn-back">Retour aux plans</button>
+  </div>
+  <!-- Main checkout content -->
+  <div *ngIf="!loading && !error && plan" class="checkout-wrapper">
+    <!-- Header -->
+    <div class="checkout-header">
+      <button (click)="cancel()" class="back-button">
+        <svg
+          width="20"
+          height="20"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+        Retour
+      </button>
+      <h1 class="page-title">Finaliser votre abonnement</h1>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="checkout-grid">
+      <!-- Left Column - Plan Details -->
+      <div class="left-column">
+        <div class="plan-card">
+          <div class="plan-header">
+            <div class="plan-title-row">
+              <h2 class="plan-title">{{ plan.name }}</h2>
+              <span *ngIf="plan.period === 'BIMONTHLY'" class="badge-popular"
+                >Populaire</span
+              >
+              <span *ngIf="plan.period === 'FREE'" class="badge-free"
+                >Gratuit</span
+              >
+            </div>
+          </div>
+
+          <div class="price-section">
+            <div class="price-display">
+              <span class="currency">XOF</span>
+              <span class="amount">{{ plan.price | number : "1.0-0" }}</span>
+              <span class="period"
+                >/ {{ getPeriodLabel(plan.period).toLowerCase() }}</span
+              >
+            </div>
+          </div>
+
+          <div class="features-section">
+            <h3 class="features-title">Ce qui est inclus</h3>
+            <ul class="features-list">
+              <li *ngFor="let feature of plan.benefits" class="feature-item">
+                <svg
+                  class="check-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span>{{ feature }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="billing-info">
+            <div class="info-icon">
+              <svg
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </div>
+            <p>
+              Votre abonnement sera renouvelé automatiquement. Vous pouvez
+              l'annuler à tout moment depuis votre compte.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Payment & Account Info -->
+      <div class="right-column">
+        <!-- Account Section -->
+        <div class="account-section" *ngIf="user$ | async as user">
+          <h3 class="section-title">Informations du compte</h3>
+          <div class="account-card">
+            <div class="user-avatar">
+              <svg
+                width="24"
+                height="24"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </div>
+            <div class="user-info">
+              <p class="user-name">{{ user.displayName }}</p>
+              <p class="user-email">{{ user.email }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method Section -->
+        <div class="payment-section">
+          <h3 class="section-title">Adresse de facturation</h3>
+
+          <!-- On réutilise .payment-methods pour conserver la même largeur/rythme -->
+          <div class="payment-methods">
+            <!-- Adresse -->
+            <div class="payment-method">
+              <div class="method-details" style="width: 100%">
+                <form [formGroup]="form">
+                  <div class="mb-3">
+                    <input
+                      type="text"
+                      class="form-control form-control-lg"
+                      aria-describedby="zipCode"
+                      placeholder="Code Postal:"
+                      formControlName="zipCode"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <input
+                      type="text"
+                      class="form-control form-control-lg"
+                      aria-describedby="addresse"
+                      placeholder="Addresse: (ex: Rue du gue)"
+                      formControlName="address"
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <input
+                      #phoneInput
+                      type="tel"
+                      class="form-control input-soft"
+                      placeholder="Ex: 0102030405"
+                    />
+                    <input type="hidden" formControlName="phone" />
+                  </div>
+
+                  <div class="mb-3">
+                    <input
+                      type="text"
+                      class="form-control form-control-lg"
+                      aria-describedby="city"
+                      placeholder="Ville:"
+                      formControlName="city"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <select
+                      class="form-control form-control-lg"
+                      aria-describedby="country"
+                      formControlName="country"
+                      (change)="countryChange($event)"
+                    >
+                      <option value="">Choisir votre pays</option>
+                      <option
+                        *ngFor="let country of countries"
+                        [value]="country.name"
+                      >
+                        {{ country.name }}
+                      </option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="summary-section">
+          <h3 class="section-title">Récapitulatif</h3>
+          <div class="summary-card">
+            <div class="summary-row">
+              <span class="summary-label">{{ plan.name }}</span>
+              <span class="summary-value">{{ formatPrice(plan.price) }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Période de facturation</span>
+              <span class="summary-value">{{
+                getPeriodLabel(plan.period)
+              }}</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row total-row">
+              <span class="summary-label">Total à payer aujourd'hui</span>
+              <span class="summary-value total">{{
+                formatPrice(plan.price)
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <div class="terms-section">
+          <label class="checkbox-label">
+            <input type="checkbox" checked />
+            <span class="checkmark"></span>
+            <span class="terms-text">
+              J'accepte les
+              <a href="/terms" target="_blank">conditions d'utilisation</a> et
+              la
+              <a href="/privacy" target="_blank"
+                >politique de confidentialité</a
+              >
+            </span>
+          </label>
+        </div>
+
+        <!-- Action Button -->
+        <button
+          [disabled]="processing || !form.valid"
+          class="btn-proceed"
+          (click)="checkout()"
+        >
+          <span *ngIf="!processing">
+            {{
+              plan.period === "FREE"
+                ? "Commencer gratuitement"
+                : "Proceder au paiement"
+            }}
+          </span>
+          <span *ngIf="processing" class="processing-text">
+            <span class="spinner-small"></span>
+            Traitement en cours...
+          </span>
+        </button>
+
+        <!-- Security Badge -->
+        <div class="security-badge">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          <span>Paiement sécurisé et chiffré</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

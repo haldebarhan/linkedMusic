@@ -26,14 +26,40 @@ export const authCanActivate: CanActivateFn = (_route, state) => {
 export const authCanMatch: CanMatchFn = (_route, segments) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const url = '/' + segments.map((s) => s.path).join('/');
+  let redirectUrl = '/';
+  if (Array.isArray(segments)) {
+    redirectUrl =
+      '/' +
+      segments
+        .map((s: UrlSegment) => s.path)
+        .filter(Boolean)
+        .join('/');
+  } else if (
+    (segments as any)?.segments &&
+    Array.isArray((segments as any).segments)
+  ) {
+    const segs = (segments as any).segments as UrlSegment[];
+    redirectUrl =
+      '/' +
+      segs
+        .map((s) => s.path)
+        .filter(Boolean)
+        .join('/');
+  } else {
+    const nav = router.getCurrentNavigation();
+    redirectUrl =
+      nav?.finalUrl?.toString() ?? nav?.initialUrl?.toString() ?? '/';
+  }
   return auth.snapshot.isAuthenticated
     ? true
-    : router.createUrlTree(['/login'], { queryParams: { redirect: url } });
+    : router.createUrlTree(['/login'], {
+        queryParams: { redirect: redirectUrl },
+      });
 };
 
 const decideForRoute = (
-  data: { [k: string]: any } | undefined
+  data: { [k: string]: any } | undefined,
+  state?: { url: string }
 ): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -47,7 +73,14 @@ const decideForRoute = (
       return true;
 
     case 'redirectIfAuth':
-      return isAuth ? router.createUrlTree([redirectTo]) : true;
+      if (isAuth) {
+        const redirect = state?.url || redirectTo;
+        if (redirect === '/login' || redirect === '/register') {
+          return router.createUrlTree([redirectTo]);
+        }
+        return router.createUrlTree([redirect]);
+      }
+      return true;
 
     case 'logoutThenAllow':
       if (isAuth) auth.logout();

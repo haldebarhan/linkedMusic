@@ -56,6 +56,9 @@ importers:
       install:
         specifier: ^0.13.0
         version: 0.13.0
+      intl-tel-input:
+        specifier: ^25.12.1
+        version: 25.12.1
       ioredis:
         specifier: ^5.8.1
         version: 5.8.1
@@ -1259,6 +1262,9 @@ packages:
   install@0.13.0:
     resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
     engines: {node: '>= 0.10'}
+
+  intl-tel-input@25.12.1:
+    resolution: {integrity: sha512-h601pJO3eRomhVC63vRRWL4Zs2xKbs3el4zTHiDXnpji9YqkRWPcTt43oCkK4XiJZMi9Aayw8p6hN/yMBJVhyw==}
 
   ioredis@5.8.1:
     resolution: {integrity: sha512-Qho8TgIamqEPdgiMadJwzRMW3TudIg6vpg4YONokGDudy4eqRIJtDbVX72pfLBcWxvbn3qm/40TyGUObdW4tLQ==}
@@ -3427,6 +3433,8 @@ snapshots:
   inherits@2.0.4: {}
 
   install@0.13.0: {}
+
+  intl-tel-input@25.12.1: {}
 
   ioredis@5.8.1:
     dependencies:

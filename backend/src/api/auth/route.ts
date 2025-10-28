@@ -38,6 +38,10 @@ router.get("/subscription-plans", async (req: Request, res: Response) =>
   authController.findSubscriptionPlans(req, res)
 );
 
+router.get("/subscription-plans/:id", async (req: Request, res: Response) =>
+  authController.getSubscriptionPlan(req, res)
+);
+
 router.post(
   "/auth/activate",
   ValidateDtoMiddleware(VerifyToken),

@@ -62,6 +62,7 @@
     "firebase-admin": "^13.4.0",
     "helmet": "^8.1.0",
     "install": "^0.13.0",
+    "intl-tel-input": "^25.12.1",
     "ioredis": "^5.8.1",
     "meilisearch": "^0.52.0",
     "minio": "^8.0.5",

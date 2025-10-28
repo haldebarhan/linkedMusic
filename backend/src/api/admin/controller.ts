@@ -124,4 +124,7 @@ export class AdminController {
   async findSubscriptionPlan(req: Request, res: Response) {
     return await this.subscriptionController.findSubscriptionPlan(req, res);
   }
+  async removePlan(req: Request, res: Response) {
+    return await this.subscriptionController.removePlan(req, res);
+  }
 }

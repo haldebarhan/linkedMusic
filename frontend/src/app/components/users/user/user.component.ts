@@ -21,7 +21,9 @@ export class UserComponent implements OnInit {
   }
   ngOnInit(): void {
     this.user$.subscribe({
-      next: (usr: any) => (this.show = usr.provider === 'password'),
+      next: (usr: any) => {
+        this.show = usr.provider === 'password';
+      },
     });
   }
 

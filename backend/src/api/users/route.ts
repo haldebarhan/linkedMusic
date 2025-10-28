@@ -15,6 +15,7 @@ import {
   ReplyMessageDTO,
 } from "@/microservices/messages/message.dto";
 import { SubscribeDTO } from "@/microservices/subscriptions/dto/plan.dto";
+import { PaymentDTO } from "@/microservices/payments/payment.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -88,6 +89,18 @@ router.post(
   ValidateDtoMiddleware(CreateMessageDTO),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.createMessage(req, res)
+);
+
+router.post(
+  "/payments",
+  ValidateDtoMiddleware(PaymentDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.makePayment(req, res)
+);
+router.get(
+  "/payments/:reference",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.checkReference(req, res)
 );
 
 router.post(

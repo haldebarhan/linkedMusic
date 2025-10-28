@@ -74,6 +74,12 @@ enum SubscriptionStatus {
     PAST_DUE
 }
 
+enum PlanStatus {
+    ACTIVE
+    REMOVED
+    PENDING_REMOVAL
+}
+
 enum PlanPeriod {
     FREE
     MONTHLY
@@ -129,6 +135,7 @@ model User {
     displayName           String?            @map("display_name")
     firstName             String?            @map("first_name")
     lastName              String?            @map("last_name")
+    zipCode               String?            @map("zip_code")
     role                  Role               @default(USER)
     status                Status             @default(ACTIVATED)
     profileImage          String             @map("profile_image")
@@ -311,7 +318,6 @@ model Announcement {
     Conversation   Conversation[]
     CustomField    CustomField[]
     categories     AnnouncementCategory[]
-    payments       Payment[]
     matchingAccess MatchingAccess[]
 
     @@index([serviceTypeId])
@@ -572,23 +578,21 @@ model AppConfig {
 model Payment {
     id             Int              @id @default(autoincrement())
     userId         Int
-    subscriptionId Int?
-    currency       Currency         @default(EUR)
+    reference      String           @unique
+    amount         Int
+    planId         Int
+    currency       Currency         @default(XOF)
     status         PaymentStatus    @default(PENDING)
     provider       PaymentProvider
-    providerRef    String?
-    purpose        PaymentPurpose   @default(OTHER)
-    announcementId Int?
-    metadata       String?
+    purpose        PaymentPurpose   @default(SUBSCRIPTION)
+    plan           SubscriptionPlan @relation(fields: [planId], references: [id])
     user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-    announcement   Announcement?    @relation(fields: [announcementId], references: [id])
     createdAt      DateTime         @default(now())
     updatedAt      DateTime         @updatedAt
     matchingAccess MatchingAccess[]
 
     @@index([userId, status, purpose])
-    @@index([announcementId, purpose, status])
-    @@index([subscriptionId])
+    @@index([purpose, status])
     @@map("payments")
 }
 
@@ -635,6 +639,7 @@ model SubscriptionPlan {
     isFree        Boolean            @default(false)
     priceCents    Int                @default(0)
     durationDays  Int?
+    status        PlanStatus         @default(ACTIVE)
     active        Boolean            @default(true)
     parentId      Int?
     parent        SubscriptionPlan?  @relation("PlanParent", fields: [parentId], references: [id])
@@ -643,6 +648,7 @@ model SubscriptionPlan {
     createdAt     DateTime           @default(now())
     updatedAt     DateTime           @updatedAt
     subscriptions UserSubscription[]
+    payments      Payment[]
 }
 
 model UserSubscription {

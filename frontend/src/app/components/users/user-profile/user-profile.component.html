@@ -34,7 +34,7 @@
       <label class="form-label">Addresse</label>
       <div class="position-relative">
         <div class="field-view pe-5">
-          {{ data && displayValue(data.location) }}
+          {{ data && fullLocation(data.zipCode, data.location) }}
         </div>
       </div>
     </div>

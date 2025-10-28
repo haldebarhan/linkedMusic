@@ -137,4 +137,10 @@ export class AdminApi {
       `${environment.apiUrl}/admin/${endpoint}/${id}`
     );
   }
+
+  removeData(endpoint: string, id: number) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.apiUrl}/admin/${endpoint}/${id}`
+    );
+  }
 }

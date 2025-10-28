@@ -1,0 +1,256 @@
+<div class="container py-3">
+  <!-- Success -->
+  <div
+    *ngIf="transaction?.status === 'SUCCEEDED'"
+    class="confirmation-card success"
+  >
+    <div class="icon-wrapper success-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+
+    <h1 class="title">Paiement réussi !</h1>
+    <p class="subtitle">Votre transaction a été effectuée avec succès</p>
+
+    <div class="details-card">
+      <div class="detail-row">
+        <span class="label">Référence de transaction</span>
+        <span class="value">{{ transaction?.reference }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Montant payé</span>
+        <span class="value amount"
+          >{{ transaction?.amount | number : "1.0-0" }}
+          {{ transaction?.currency }}</span
+        >
+      </div>
+
+      <div class="detail-row" *ngIf="transaction?.createdAt">
+        <span class="label">Date</span>
+        <span class="value">{{
+          transaction?.createdAt | date : "dd/MM/yyyy à HH:mm"
+        }}</span>
+      </div>
+    </div>
+
+    <div class="info-message">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <span>Un email de confirmation vous a été envoyé</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="goToHome()">Continuer</button>
+    </div>
+  </div>
+
+  <!-- Pending -->
+  <div
+    *ngIf="transaction?.status === 'PENDING'"
+    class="confirmation-card pending"
+  >
+    <div class="icon-wrapper pending-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+    </div>
+
+    <h1 class="title">Paiement en cours...</h1>
+    <p class="subtitle">Votre transaction est en cours de traitement</p>
+
+    <div class="details-card">
+      <div class="detail-row">
+        <span class="label">Référence de transaction</span>
+        <span class="value">{{ transaction?.reference }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Montant</span>
+        <span class="value amount"
+          >{{ transaction?.amount | number : "1.0-0" }}
+          {{ transaction?.currency }}</span
+        >
+      </div>
+    </div>
+
+    <div class="info-message warning">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <span
+        >Vous recevrez une notification une fois le paiement validé (sous 24h
+        maximum)</span
+      >
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="goToHome()">
+        Retour à l'accueil
+      </button>
+    </div>
+  </div>
+
+  <!-- Failed -->
+  <div
+    *ngIf="transaction?.status === 'FAILED'"
+    class="confirmation-card failed"
+  >
+    <div class="icon-wrapper failed-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+    </div>
+
+    <h1 class="title">Paiement échoué</h1>
+    <p class="subtitle">Votre transaction n'a pas pu être effectuée</p>
+
+    <div class="details-card">
+      <div class="detail-row">
+        <span class="label">Référence de transaction</span>
+        <span class="value">{{ transaction?.reference }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Montant</span>
+        <span class="value amount"
+          >{{ transaction?.amount | number : "1.0-0" }}
+          {{ transaction?.currency }}</span
+        >
+      </div>
+    </div>
+
+    <div class="info-message error">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+        ></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span
+        >Le paiement a été refusé. Veuillez vérifier vos informations et
+        réessayer</span
+      >
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary">Réessayer le paiement</button>
+      <button class="btn btn-secondary">Contacter le support</button>
+    </div>
+  </div>
+
+  <!-- Loading / Verification en cours -->
+  <div *ngIf="isVerifying" class="loading-state">
+    <div class="spinner"></div>
+    <p>Vérification de votre paiement...</p>
+    <span class="sub-text">Veuillez patienter</span>
+  </div>
+
+  <!-- Error lors de la vérification -->
+  <div *ngIf="verificationError" class="confirmation-card failed">
+    <div class="icon-wrapper failed-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+        ></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+
+    <h1 class="title">Erreur de vérification</h1>
+    <p class="subtitle">Impossible de vérifier le statut de votre paiement</p>
+
+    <div class="info-message error">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <span>{{ verificationError }}</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="retryTransactionVerification()">
+        Réessayer la vérification
+      </button>
+      <button class="btn btn-secondary" (click)="contactSupport()">
+        Contacter le support
+      </button>
+    </div>
+  </div>
+</div>
