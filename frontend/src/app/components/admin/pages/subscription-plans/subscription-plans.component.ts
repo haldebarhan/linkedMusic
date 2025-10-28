@@ -3,11 +3,12 @@ import { AdminApi } from '../../data/admin-api.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { buildPages } from '../../../../helpers/build-page';
+import Swal from 'sweetalert2';
 
 export interface Subscription {
   id: number;
   name: string;
-  slug: string;
+  status: boolean;
   period: string;
   price: number;
   benefits: string[];
@@ -71,7 +72,44 @@ export class SubscriptionPlansComponent implements OnInit {
     field.expanded = !field.expanded;
   }
 
-  remove(field: Subscription) {}
+  formatStatus(status: boolean): string {
+    return status === true ? 'Actif' : 'Inactif';
+  }
+
+  remove(field: Subscription) {
+    Swal.fire({
+      title: 'Etes-vous sûr ?',
+      icon: 'warning',
+      html: `Cette action va supprimer le plan <strong>"${field.name}"</strong><br> Les abonnement liés à ce plan seront préservés jusqu'a leur expiration.`,
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'Annuler',
+      confirmButtonText: 'Oui, Supprimer',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.api.removeData('subscription-plans', field.id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: 'Supprimé!',
+              text: 'Le Plan a été supprimé',
+              icon: 'success',
+              didClose: () => {
+                this.listData(this.page);
+              },
+            });
+          },
+          error: () => {
+            Swal.fire({
+              title: 'Erreur!',
+              text: 'Une erreur est survenue lors de la suppression du plan',
+              icon: 'error',
+            });
+          },
+        });
+      }
+    });
+  }
   edit(field: Subscription) {
     this.router.navigate(['/admin/subscription-plans/edit/', field.id]);
   }

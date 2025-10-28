@@ -9,7 +9,11 @@ export interface AuthUser {
   role: UserRole;
   displayName: string;
   location: string;
+  zipCode: string;
+  country: string;
   profileImage: string;
+  phone: string;
+  subscriptions: any;
   [key: string]: any;
 }
 

@@ -36,7 +36,12 @@ export class SubscriptionController {
   }
 
   async findSubscriptionPlans(req: Request, res: Response) {
-    const { page: pageQuery, limit: limitQuery, order: orderQuery } = req.query;
+    const {
+      page: pageQuery,
+      limit: limitQuery,
+      order: orderQuery,
+      opt: OptionQuery,
+    } = req.query;
     const page = parseInt(pageQuery as string) || 1;
     const limit = parseInt(limitQuery as string) || 10;
     const page_number = Math.max(page, 1);
@@ -45,6 +50,10 @@ export class SubscriptionController {
       ? (orderQuery as Order)
       : Order.DESC;
     const where: any = {};
+    const options = OptionQuery === "true" ? true : false;
+    if (options) {
+      where.active = true;
+    }
     try {
       const plans = await this.subscriptionService.findSubscriptionPlans({
         limit: limit_query,
@@ -63,7 +72,10 @@ export class SubscriptionController {
     const { id } = req.params;
     try {
       const plan = await this.subscriptionService.findOne(+id);
-      const response = formatResponse(200, plan);
+      const formattedPlan = this.subscriptionService.formatSubscriptionData([
+        plan,
+      ]);
+      const response = formatResponse(200, formattedPlan[0]);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -76,6 +88,19 @@ export class SubscriptionController {
       const data: SubscribeDTO = Object.assign(new SubscribeDTO(), req.body);
       const subscribe = await this.subscriptionService.subscribe(user.id, data);
       const response = formatResponse(200, subscribe);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async removePlan(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      await this.subscriptionService.removePlan(+id);
+      const response = formatResponse(200, {
+        message: "Plan removed successfully",
+      });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

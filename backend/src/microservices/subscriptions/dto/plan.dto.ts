@@ -36,7 +36,7 @@ export class CreatePlanDTO {
   benefits: CreateBenefit[];
 }
 
-class SubscribeOption {
+export class SubscribeOption {
   @IsOptional()
   @IsBoolean()
   cancelCurrent?: boolean;

@@ -6,4 +6,5 @@ export interface PersonalInfoData {
   firstName?: string;
   lastName?: string;
   country?: string;
+  zipCode?: string;
 }

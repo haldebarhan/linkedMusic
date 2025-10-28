@@ -25,7 +25,7 @@
             <th></th>
             <th>#</th>
             <th>Nom</th>
-            <th>Slug</th>
+            <th>Statut</th>
             <th>Type</th>
             <th>Prix</th>
           </tr>
@@ -51,8 +51,8 @@
                 {{ (page - 1) * limit + i + 1 }}
               </td>
               <td data-label="Nom">{{ field.name }}</td>
-              <td data-label="Slug">
-                <code>{{ field.slug }}</code>
+              <td data-label="status">
+                <code>{{ formatStatus(field.status) }}</code>
               </td>
               <td data-label="Type">
                 {{ field.period }}

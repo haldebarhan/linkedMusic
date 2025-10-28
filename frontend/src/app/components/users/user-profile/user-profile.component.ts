@@ -10,6 +10,7 @@ type userProfile = {
   lastName: string | null;
   firstName: string | null;
   country: string | null;
+  zipCode: string | null;
 };
 
 @Component({
@@ -27,6 +28,7 @@ export class UserProfileComponent implements OnInit {
     lastName: null,
     firstName: null,
     country: null,
+    zipCode: null,
   };
   completed: boolean = false;
   constructor(private authService: ApiAuthService, private router: Router) {}
@@ -46,6 +48,7 @@ export class UserProfileComponent implements OnInit {
           firstName: this.data.firstName,
           email: this.data.email,
           country: this.data.country,
+          zipCode: this.data.zipCode,
         };
         this.completed = Object.values(this.completProfile).every(
           (value) => value !== null
@@ -63,6 +66,12 @@ export class UserProfileComponent implements OnInit {
 
   goToEdit() {
     this.router.navigate(['/users/profile/edit', this.data.id]);
+  }
+
+  fullLocation(zipCode: string, location: string) {
+    return zipCode && location
+      ? `${zipCode} ${location}`
+      : location || zipCode || '---';
   }
 
   private formatAddress(location: string, country: string) {

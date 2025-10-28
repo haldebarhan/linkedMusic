@@ -1,4 +1,5 @@
 import { Order } from "@/utils/enums/order.enum";
+import { PlanStatus } from "@/utils/enums/subscription-status.enum";
 import DatabaseService from "@/utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
@@ -46,7 +47,7 @@ export class PlanRepository {
     return await prisma.subscriptionPlan.findMany({
       take,
       skip,
-      where,
+      where: { status: PlanStatus.ACTIVE, ...where },
       orderBy: { createdAt: order ?? Order.DESC },
       include: {
         benefits: { select: { benefit: true, inherited: true } },
@@ -73,6 +74,26 @@ export class PlanRepository {
       where: { id },
       data: {
         active: true,
+      },
+    });
+  }
+
+  async putPlanPendingRemoval(id: number) {
+    return await prisma.subscriptionPlan.update({
+      where: { id },
+      data: {
+        status: PlanStatus.PENDING_REMOVAL,
+        active: false,
+      },
+    });
+  }
+
+  async removePlan(id: number) {
+    return await prisma.subscriptionPlan.update({
+      where: { id },
+      data: {
+        status: PlanStatus.REMOVED,
+        active: false,
       },
     });
   }

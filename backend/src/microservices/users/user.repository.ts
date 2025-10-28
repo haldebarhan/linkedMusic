@@ -1,7 +1,7 @@
 import { BaseRepository } from "@/utils/classes/base.repoository";
 import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
-import { PrismaClient, Status, User } from "@prisma/client";
+import { PrismaClient, Status, SubscriptionStatus, User } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
@@ -29,11 +29,33 @@ export class UserRepository extends BaseRepository<
   async findOne(id: number): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { id },
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
+      },
     });
   }
 
   async findByParams(where: any) {
-    return prisma.user.findUnique({ where });
+    return prisma.user.findUnique({
+      where,
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
+      },
+    });
   }
 
   async findByPhone(phone: string, excludeUserId?: number) {
@@ -41,6 +63,16 @@ export class UserRepository extends BaseRepository<
       where: {
         phone,
         ...(excludeUserId && { id: { not: excludeUserId } }),
+      },
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
       },
     });
   }
@@ -51,6 +83,16 @@ export class UserRepository extends BaseRepository<
         displayName,
         ...(excludeUserId && { id: { not: excludeUserId } }),
       },
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
+      },
     });
   }
 
@@ -58,6 +100,16 @@ export class UserRepository extends BaseRepository<
     return prisma.user.update({
       where: { id },
       data,
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            plan: { select: { name: true, period: true } },
+          },
+        },
+      },
     });
   }
 }

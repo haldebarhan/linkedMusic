@@ -16,11 +16,15 @@ import { setIo } from "./sockets/io-singleton";
 import authRoutes from "./api/auth/route";
 import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
+import pspRoutes from "./api/psp/psp.route";
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
 import { SearchService } from "./utils/services/search.service";
 import { getAllowedOrigins } from "./utils/functions/allowed-origins";
-import { startSubscriptionDailyCron } from "./events/schedulers/scheduler";
+import {
+  startSubscriptionDailyCron,
+  startCheckSubscriptionStatus,
+} from "./events/schedulers/scheduler";
 // import { ConfigService } from "./utils/services/configuration.service";
 
 const allowed = getAllowedOrigins();
@@ -34,7 +38,7 @@ const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requêtes par IP
   message: {
-    error: "Trop de requêtes, veuillez réessayer plus tard",
+    error: "Trop de requêtes. veuillez réessayer plus tard",
     retryAfter: 15 * 60,
   },
   standardHeaders: true,
@@ -47,7 +51,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 tentatives de connexion
   message: {
-    error: "Trop de tentatives de connexion, réessayez plus tard",
+    error: "Trop de tentatives de connexion. réessayez plus tard",
     retryAfter: 15 * 60,
   },
   skipSuccessfulRequests: true,
@@ -75,7 +79,8 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    startSubscriptionDailyCron();
+    // startSubscriptionDailyCron();
+    // startCheckSubscriptionStatus();
   }
 
   config() {
@@ -136,6 +141,19 @@ class Server {
       });
     });
 
+    this.app.post("/payment/return", (req: Request, res: Response) =>
+      res.sendStatus(200)
+    );
+
+    this.app.get("/payment/return", (req: Request, res: Response) => {
+      const FRONT_URL = ENV.FRONTEND_URL ?? "http://localhost:4200";
+      const qs = req.originalUrl.includes("?")
+        ? "?" + req.originalUrl.split("?")[1]
+        : "";
+      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/return${qs}`;
+      return res.redirect(302, location);
+    });
+
     this.app.use(
       "/api-docs",
       swaggerUi.serve,
@@ -145,6 +163,7 @@ class Server {
     this.app.use("/api", authLimiter, authRoutes);
     this.app.use("/api/admin", adminLimiter, adminRoutes);
     this.app.use("/api/users", authLimiter, userRoutes);
+    this.app.use("/webhooks/psp", pspRoutes);
 
     this.app.use((req, res) => {
       res.status(404).json({ error: "Route non trouvée" });

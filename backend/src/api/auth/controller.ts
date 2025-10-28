@@ -96,4 +96,7 @@ export class AuthController {
   async findSubscriptionPlans(req: Request, res: Response) {
     return await this.subscriptionController.findSubscriptionPlans(req, res);
   }
+  async getSubscriptionPlan(req: Request, res: Response) {
+    return await this.subscriptionController.findSubscriptionPlan(req, res);
+  }
 }

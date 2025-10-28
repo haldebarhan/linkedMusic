@@ -13,6 +13,8 @@ import {
 import { PrismaClient } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
 import { Order } from "@/utils/enums/order.enum";
+import { PaymentRepository } from "../payments/payment.repository";
+import { PaymentDTO } from "../payments/payment.dto";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -42,14 +44,15 @@ const PERIOD_SLUG_MAP: Record<PlanPeriod, string> = {
 export class SubscriptionService {
   constructor(
     private readonly planRepository: PlanRepository,
-    private readonly subscriptionRepository: SubscriptionRepository
+    private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly paymentRepository: PaymentRepository
   ) {}
 
   async subscribe(userId: number, data: SubscribeDTO) {
     const { planId, opts } = data;
     const plan = await this.planRepository.findById(planId);
 
-    if (!plan) {
+    if (!plan || plan.active === false) {
       throw createError(404, "Plan not found");
     }
 
@@ -204,11 +207,17 @@ export class SubscriptionService {
     });
   }
 
-  private formatSubscriptionData(data: any[]) {
+  async removePlan(id: number) {
+    await this.findOne(id);
+    return await this.planRepository.removePlan(id);
+  }
+
+  formatSubscriptionData(data: any[]) {
     return data.map((subscription) => ({
       id: subscription.id,
       name: subscription.name,
-      slug: subscription.slug,
+      status: subscription.active,
+      isFree: subscription.isFree,
       period: subscription.period,
       price: subscription.priceCents,
       benefits: this.unifiedBenefits(subscription),

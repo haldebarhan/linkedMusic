@@ -75,4 +75,10 @@ export class SubscriptionRepository {
   async insertFreeClaim(userId: number) {
     return prisma.freeClaim.create({ data: { userId } });
   }
+
+  async findSubscriptionUsersByPlan(planId: number) {
+    return prisma.userSubscription.findMany({
+      where: { planId, status: SubcriptionStatus.ACTIVE },
+    });
+  }
 }

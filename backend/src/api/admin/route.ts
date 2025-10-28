@@ -162,10 +162,15 @@ router.post(
 router.get("/subscription-plans/:id", async (req: Request, res: Response) =>
   adminController.findSubscriptionPlan(req, res)
 );
+
 router.put(
   "/subscription-plans/:id",
   ValidateDtoMiddleware(UpdatePlanDTO),
   async (req: Request, res: Response) => adminController.updatePlan(req, res)
+);
+
+router.delete("/subscription-plans/:id", async (req: Request, res: Response) =>
+  adminController.removePlan(req, res)
 );
 
 export default router;
