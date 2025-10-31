@@ -53,7 +53,6 @@ export class AuthService {
     const res = await firstValueFrom(
       this.api.loginWithPassword({ email, password })
     );
-    console.log(res.data);
     const state: AuthState = {
       isAuthenticated: true,
       user: res.data.user as AuthUser,

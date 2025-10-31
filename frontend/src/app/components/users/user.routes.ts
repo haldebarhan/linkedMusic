@@ -8,8 +8,15 @@ export const USER_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'profile',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./dashboard-view/dashboard-view.component').then(
+            (m) => m.DashboardViewComponent
+          ),
       },
       {
         path: 'profile',

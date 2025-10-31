@@ -20,6 +20,7 @@
             <div
               class="friend-drawer friend-drawer--onhover"
               [class.active]="t.id === activeThreadId"
+              [class.locked]="!hasActiveSubscription"
               (click)="selectThread(t.id)"
             >
               <img
@@ -34,13 +35,19 @@
                     t.lastAt | date : "HH:mm"
                   }}</span>
                 </div>
-                <p class="text-muted mb-0">{{ t.lastSnippet || "—" }}</p>
+                <p class="text-muted mb-0">
+                  {{ t.lastSnippet || "—" }}
+                </p>
               </div>
               <span
-                *ngIf="t.unreadCount"
+                *ngIf="t.unreadCount && hasActiveSubscription"
                 class="badge rounded-pill bg-primary ms-auto"
                 >{{ t.unreadCount }}</span
               >
+              <i
+                *ngIf="!hasActiveSubscription"
+                class="fa-solid fa-lock text-muted ms-auto"
+              ></i>
             </div>
             <hr class="my-1" />
           </ng-container>
@@ -53,7 +60,7 @@
     </div>
 
     <!-- COLONNE DROITE — Conversation -->
-    <div class="col-12 col-md-8 d-flex flex-column">
+    <div class="col-12 col-md-8 d-flex flex-column position-relative">
       <div class="settings-tray">
         <div class="friend-drawer no-gutters friend-drawer--grey">
           <img
@@ -68,8 +75,29 @@
         </div>
       </div>
 
-      <!-- Conversation (scroll) -->
-      <div class="chat-panel chat-scroll" #chatScroll>
+      <!-- Overlay de cadenas pour abonnement requis -->
+      <div *ngIf="!hasActiveSubscription" class="subscription-overlay">
+        <div class="subscription-lock-container">
+          <div class="lock-icon-wrapper">
+            <i class="fa-solid fa-lock lock-icon"></i>
+          </div>
+          <h3 class="lock-title">Fonctionnalité Premium</h3>
+          <p class="lock-description">
+            Un abonnement actif est requis pour accéder à la messagerie.
+          </p>
+          <button class="btn btn-primary btn-lg mt-3" (click)="goToPackPlan()">
+            <i class="fa-solid fa-crown me-2"></i>
+            Activer mon abonnement
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversation (scroll) - Floue si pas d'abonnement -->
+      <div
+        class="chat-panel chat-scroll"
+        #chatScroll
+        [class.blurred]="!hasActiveSubscription"
+      >
         <ng-container *ngIf="messages?.length; else emptyConvTpl">
           <div
             class="message-row"
@@ -90,23 +118,36 @@
           <div #scrollBottom></div>
         </ng-container>
         <ng-template #emptyConvTpl>
-          <div class="text-center text-muted py-5">Aucun message.</div>
+          <div class="text-center text-muted py-5">
+            {{
+              hasActiveSubscription
+                ? "Aucun message."
+                : "Sélectionnez une conversation"
+            }}
+          </div>
         </ng-template>
       </div>
 
-      <!-- Barre d’envoi -->
-      <div class="chat-box-tray">
+      <!-- Barre d'envoi - Désactivée si pas d'abonnement -->
+      <div class="chat-box-tray" [class.disabled]="!hasActiveSubscription">
         <form class="d-flex w-100" [formGroup]="form" (ngSubmit)="send()">
           <input
             type="text"
             formControlName="content"
             class="form-control"
-            placeholder="Écrire un message…"
+            [placeholder]="
+              hasActiveSubscription ? 'Écrire un message…' : 'Abonnement requis'
+            "
           />
           <button
             class="btn btn-primary ms-2"
             type="submit"
-            [disabled]="form.invalid || sending || !activeThreadId"
+            [disabled]="
+              form.invalid ||
+              sending ||
+              !activeThreadId ||
+              !hasActiveSubscription
+            "
             title="Envoyer"
           >
             <i class="fa-solid fa-paper-plane"></i>

@@ -1,6 +1,6 @@
 import { Order } from "@/utils/enums/order.enum";
 import DatabaseService from "@/utils/services/database.service";
-import { PrismaClient } from "@prisma/client";
+import { AnnouncementStatus, PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
@@ -41,6 +41,49 @@ export class AnnouncementRepository {
           },
         },
       },
+    });
+  }
+
+  async findUserTopPublication(userId: number, limit = 10) {
+    return await prisma.announcement.findMany({
+      where: {
+        ownerId: userId,
+        // isPublished: true,
+        // status: AnnouncementStatus.PUBLISHED,
+      },
+      orderBy: [
+        { views: Order.DESC },
+        { updatedAt: Order.DESC },
+        { Conversation: { _count: Order.DESC } },
+      ],
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        status: true,
+        createdAt: true,
+        views: true,
+        _count: { select: { Conversation: true } },
+      },
+    });
+  }
+
+  async countUserTotalActivePublication(userId: number) {
+    const where: any = {
+      ownerId: userId,
+      isPublished: true,
+      status: AnnouncementStatus.PUBLISHED,
+    };
+    return prisma.announcement.count({
+      where,
+    });
+  }
+
+  async countUserAnnouncementTotalViews(userId: number) {
+    return await prisma.announcement.aggregate({
+      where: { ownerId: userId },
+      _sum: { views: true },
     });
   }
 

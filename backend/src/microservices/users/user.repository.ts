@@ -35,7 +35,16 @@ export class UserRepository extends BaseRepository<
           select: {
             startAt: true,
             endAt: true,
-            plan: { select: { name: true, period: true } },
+            autoRenew: true,
+            status: true,
+            plan: {
+              select: {
+                name: true,
+                period: true,
+                priceCents: true,
+                benefits: { select: { benefit: { select: { label: true } } } },
+              },
+            },
           },
         },
       },
@@ -51,7 +60,16 @@ export class UserRepository extends BaseRepository<
           select: {
             startAt: true,
             endAt: true,
-            plan: { select: { name: true, period: true } },
+            autoRenew: true,
+            status: true,
+            plan: {
+              select: {
+                name: true,
+                period: true,
+                priceCents: true,
+                benefits: { select: { benefit: { select: { label: true } } } },
+              },
+            },
           },
         },
       },

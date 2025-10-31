@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiAuthService } from '../../../auth/api-auth.service';
 import { Router } from '@angular/router';
@@ -19,7 +19,7 @@ type userProfile = {
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css',
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   data: any;
   completProfile: userProfile = {
     email: '',
@@ -31,11 +31,15 @@ export class UserProfileComponent implements OnInit {
     zipCode: null,
   };
   completed: boolean = false;
+  showButton = false;
   constructor(private authService: ApiAuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.authService.getMe().subscribe({
       next: (res) => {
+        this.showButton = res.data.provider
+          ? res.data.provider === 'password'
+          : false;
         this.data = res.data;
         this.data.location = this.formatAddress(
           this.data.location,
@@ -72,6 +76,14 @@ export class UserProfileComponent implements OnInit {
     return zipCode && location
       ? `${zipCode} ${location}`
       : location || zipCode || '---';
+  }
+
+  ngOnDestroy(): void {
+    this.showButton = false;
+  }
+
+  changePassword() {
+    this.router.navigate(['/users/profile/change-password']);
   }
 
   private formatAddress(location: string, country: string) {

@@ -4,46 +4,48 @@
 
 /* Container principal avec hauteur FIXE */
 .container-fluid {
-  height: 85vh; /* Hauteur fixe au lieu de min-height */
+  height: 85vh;
 }
 
 /* Coquille responsive avec hauteur FIXE */
 .messages-shell {
-  height: 100%; /* Prend toute la hauteur du container */
+  height: 100%;
 }
 
 /* Colonne gauche — threads avec flexbox */
 .messages-shell .col-md-4 {
-  height: 100%; /* Hauteur fixe */
+  height: 100%;
 }
 
 /* Colonne droite — conversation avec flexbox */
 .messages-shell .col-md-8 {
-  height: 100%; /* Hauteur fixe */
+  height: 100%;
 }
 
 /* Zone de scroll des threads - hauteur calculée automatiquement */
 .threads-scroll {
   overflow-y: auto;
   overflow-x: hidden;
-  flex: 1 1 0; /* Prend tout l'espace disponible */
-  min-height: 0; /* Important pour que flex + overflow fonctionnent */
+  flex: 1 1 0;
+  min-height: 0;
   padding: 6px 0;
-  max-height: calc(85vh - 6rem); /* header + marges */
+  max-height: calc(85vh - 6rem);
 }
 
 /* Zone de scroll de la conversation - hauteur calculée automatiquement */
 .chat-scroll {
-  /* overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 0; 
-  min-height: 0; 
-  padding: 6px 0; */
-
   flex: 1 1 auto;
   overflow: auto;
-  max-height: calc(85vh - 10.5rem); /* header + input + marges */
+  max-height: calc(85vh - 10.5rem);
   padding: 0.5rem 0.75rem;
+  transition: filter 0.3s ease;
+}
+
+/* Effet de flou quand pas d'abonnement */
+.chat-scroll.blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Entêtes - hauteur fixe */
@@ -51,7 +53,7 @@
   background: #eee;
   padding: 10px 15px;
   border-radius: 7px;
-  flex-shrink: 0; /* Empêche la compression */
+  flex-shrink: 0;
 }
 
 /* Barre d'envoi - hauteur fixe */
@@ -60,7 +62,13 @@
   padding: 10px 15px;
   border-radius: 7px;
   margin-top: 10px;
-  flex-shrink: 0; /* Empêche la compression */
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chat-box-tray.disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .settings-tray--right i {
@@ -84,7 +92,7 @@
   background: #fff;
   transition: 0.25s ease;
   border-radius: 6px;
-  flex-shrink: 0; /* Empêche la compression des items */
+  flex-shrink: 0;
 }
 .friend-drawer--grey {
   background: #eee;
@@ -99,6 +107,16 @@
 .friend-drawer .time {
   color: grey;
 }
+
+/* Thread verrouillé */
+.friend-drawer.locked {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.friend-drawer.locked:hover {
+  background: #fff !important;
+}
+
 .friend-drawer--onhover:hover,
 .friend-drawer.active {
   background: var(--blue) !important;
@@ -110,6 +128,117 @@
 .friend-drawer.active p,
 .friend-drawer.active .time {
   color: #131313 !important;
+}
+
+/* Overlay d'abonnement requis */
+.subscription-overlay {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: fadeInOverlay 0.4s ease;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.subscription-lock-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 500px;
+  animation: slideUpLock 0.5s ease;
+}
+
+@keyframes slideUpLock {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lock-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  animation: pulseLock 2s ease-in-out infinite;
+}
+
+@keyframes pulseLock {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.4);
+  }
+}
+
+.lock-icon {
+  font-size: 3.5rem;
+  color: white;
+}
+
+.lock-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lock-description {
+  font-size: 1.1rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.subscription-overlay .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 0.9rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.subscription-overlay .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5);
+}
+
+.subscription-overlay .btn-primary:active {
+  transform: translateY(0);
 }
 
 hr {
@@ -130,11 +259,11 @@ hr {
 .message-row {
   display: flex;
   padding: 0 8px;
-  flex-shrink: 0; /* Empêche la compression des messages */
+  flex-shrink: 0;
 }
 .message-row.mine {
   justify-content: flex-end;
-} /* MES messages à droite */
+}
 
 .chat-bubble {
   padding: 10px 14px;
@@ -191,9 +320,29 @@ hr {
     display: none;
   }
 
-  /* Réduire la hauteur sur mobile si nécessaire */
   .messages-shell,
   .messages-shell .col-12 {
     height: 80vh;
+  }
+
+  .lock-title {
+    font-size: 1.5rem;
+  }
+
+  .lock-description {
+    font-size: 1rem;
+  }
+
+  .lock-icon-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .lock-icon {
+    font-size: 3rem;
+  }
+
+  .subscription-lock-container {
+    padding: 2rem 1.5rem;
   }
 }

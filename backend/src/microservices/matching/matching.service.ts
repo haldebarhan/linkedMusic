@@ -48,7 +48,7 @@ export class MatchingService {
     });
   }
 
-  private async hasActiveSubscription(userId: number): Promise<boolean> {
+  async hasActiveSubscription(userId: number): Promise<boolean> {
     const now = new Date();
     const active = await prisma.userSubscription.findFirst({
       where: {

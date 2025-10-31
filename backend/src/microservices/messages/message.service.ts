@@ -129,7 +129,14 @@ export class MessageService {
       this.messageRepository.countListThread(userId),
     ]);
 
-    const threadRow = await this.buildThreadRows(rows, userId);
+    const hasActiveSubscription = await this.matching.hasActiveSubscription(
+      userId
+    );
+    const threadRow = await this.buildThreadRows(
+      rows,
+      userId,
+      hasActiveSubscription
+    );
     return {
       data: threadRow,
       metadata: {
@@ -170,19 +177,27 @@ export class MessageService {
   //     io.to(rooms.userRoom(peerId)).emit("notif:unread", { total: unread });
   //   }
 
-  private async buildThreadRows(data: any[], userId: number) {
+  private async buildThreadRows(
+    data: any[],
+    userId: number,
+    hasActiveSubscription: boolean
+  ) {
     const threadRow = await Promise.all(
       data.map(async (c) => {
         const id = c.id;
         const last = c.Messages[0];
         const peer = c.senderId === userId ? c.receiver : c.sender;
-        const peerName = peer?.Profile?.displayName ?? `User ${peer?.id}`;
-        const peerAvatar = peer.profileImage
-          ? await minioService.generatePresignedUrl(
-              ENV.MINIO_BUCKET_NAME,
-              peer.profileImage
-            )
-          : "";
+        const peerName = hasActiveSubscription
+          ? peer?.displayName
+          : "Utilisateur (masqué)";
+        const peerAvatar = hasActiveSubscription
+          ? peer.profileImage
+            ? await minioService.generatePresignedUrl(
+                ENV.MINIO_BUCKET_NAME,
+                peer.profileImage
+              )
+            : ""
+          : "https://placehold.co/60x60";
         const count = c._count.Messages ?? 0;
 
         return {
@@ -192,7 +207,7 @@ export class MessageService {
           threadId: id,
           peerAvatar,
           unreadCount: count,
-          lastSnippet: last.content,
+          lastSnippet: hasActiveSubscription ? last.content : "••••••",
           lastAt: last.createdAt,
         };
       })

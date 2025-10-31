@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   ElementRef,
+  OnChanges,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -52,7 +53,7 @@ const EV = {
   templateUrl: './user-messages.component.html',
   styleUrl: './user-messages.component.css',
 })
-export class UserMessagesComponent implements OnInit, OnDestroy {
+export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
   // UI
   loadingThreads = false;
   loadingMessages = false;
@@ -68,6 +69,8 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
   messages: MessageRow[] = [];
   peerName = '';
   peerAvatar: string | null = null;
+
+  hasActiveSubscription: boolean = false;
 
   // pagination (faÃ§on Gmail)
   page = 1;
@@ -87,7 +90,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
   }
 
   // Form
-  form: FormGroup;
+  form!: FormGroup;
 
   currentUserId!: number;
 
@@ -102,15 +105,14 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private socket: SocketService
   ) {
-    this.form = this.fb.group({
-      content: ['', [Validators.required, Validators.minLength(1)]],
-    });
     this.auth.auth$.subscribe((user) => {
       this.currentUserId = user?.user?.id!;
+      this.hasActiveSubscription = user.user?.subscriptions[0] !== undefined;
     });
   }
 
   ngOnInit(): void {
+    this.initForm();
     this.loadingThreads = true;
     this.socket.emit(EV.THREADS_LIST);
     this.socket.on<ThreadRow[]>(EV.THREADS_DATA, (rows: any) => {
@@ -126,6 +128,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
       messages: MessageRow[];
       total: number;
     }>(EV.CONVO_DATA, (p) => {
+      if (!this.hasActiveSubscription) return;
       if (p.threadId !== this.activeThreadId) return;
       this.messages = p.messages ?? [];
       this.loadingMessages = false;
@@ -136,6 +139,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
     this.socket.on<{ threadId: number; message: MessageRow }>(
       EV.MESSAGE_NEW,
       (p) => {
+        if (!this.hasActiveSubscription) return;
         // met à jour la preview
         const row = this.threads.find((t) => t.id === p.threadId);
         if (row) {
@@ -157,6 +161,16 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
     );
   }
 
+  ngOnChanges(): void {
+    this.syncFormEnabled();
+  }
+
+  initForm() {
+    this.form = this.fb.group({
+      content: ['', [Validators.required, Validators.maxLength(1000)]],
+    });
+  }
+
   ngOnDestroy(): void {
     this.socket.off(EV.THREADS_DATA);
     this.socket.off(EV.CONVO_DATA);
@@ -166,6 +180,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
   isMine = (m: { senderId: number }) => m.senderId === this.currentUserId;
 
   selectThread(threadId: number) {
+    if (!this.hasActiveSubscription) return;
     if (this.activeThreadId === threadId) {
       this.socket.emit(EV.CONVO_LOAD, { threadId, page: 1, limit: 200 });
       return;
@@ -189,6 +204,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
 
   /** ----------------- Actions ----------------- */
   send() {
+    if (!this.hasActiveSubscription) return;
     if (this.form.invalid || this.sending || !this.activeThreadId) return;
     const content = (this.form.value.content ?? '').trim();
     if (!content) return;
@@ -206,6 +222,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
   }
 
   onIncomingMessage(msg: MessageRow) {
+    if (!this.hasActiveSubscription) return;
     this.updateThreadPreview(
       msg.threadId,
       msg.content,
@@ -219,6 +236,10 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
     }
     this.messages = [...this.messages, msg];
     queueMicrotask(() => this.scrollToBottom());
+  }
+
+  goToPackPlan() {
+    this.router.navigate(['/pack/pricing-plan']);
   }
 
   private updateThreadPreview(
@@ -262,5 +283,14 @@ export class UserMessagesComponent implements OnInit, OnDestroy {
         setTimeout(() => this.scrollToBottom(), 0);
       });
     });
+  }
+
+  private syncFormEnabled() {
+    const shouldEnable = this.hasActiveSubscription && !!this.activeThreadId;
+    if (shouldEnable) {
+      this.form.enable({ emitEvent: false });
+    } else {
+      this.form.disable({ emitEvent: false });
+    }
   }
 }

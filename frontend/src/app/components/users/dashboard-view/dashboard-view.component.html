@@ -1,0 +1,229 @@
+<div class="dashboard-content">
+  <!-- Header avec filtres -->
+  <div class="content-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <i class="fa-solid fa-file-lines"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ totalActive }}</h3>
+        <p class="stat-title">Publication actives</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <i class="fa-solid fa-eye"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ totalViews }}</h3>
+        <p class="stat-title">Vue total</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <i class="fa-solid fa-inbox"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ requestReceived }}</h3>
+        <p class="stat-title">Demande reçues</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <i class="fa-solid fa-paper-plane"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ requestSent }}</h3>
+        <p class="stat-title">Demande formulées</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mon Abonnement -->
+  <div class="card subscription-card">
+    <div class="card-header">
+      <h3>Mon Abonnement</h3>
+    </div>
+
+    <ng-container *ngIf="subscription; else noSubscription">
+      <!-- Abonnement Actif -->
+      <div class="subscription-active">
+        <div class="subscription-header">
+          <div
+            class="plan-badge"
+            [attr.data-type]="
+              subscription.planType === 'FREE' ? 'standard' : 'premium'
+            "
+          >
+            <i class="fa-solid fa-star"></i>
+            <span>{{ subscription.planName }}</span>
+          </div>
+          <span class="status-badge active">{{
+            getStatusLabel(subscription.status)
+          }}</span>
+        </div>
+
+        <div class="subscription-details">
+          <div class="detail-item">
+            <label>Montant</label>
+            <div class="value">
+              <strong
+                >{{ subscription.amount | number : "1.0-0" }}
+                {{ subscription.currency }}</strong
+              >
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <label>Date de début</label>
+            <div class="value">
+              {{ subscription.startDate | date : "dd/MM/yyyy" }}
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <label>Date de f</label>
+            <div class="value">
+              {{ subscription.endDate | date : "dd/MM/yyyy" }}
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <label>Renouvellement auto</label>
+            <div class="value">
+              <span
+                class="renewal-badge"
+                [class.enabled]="subscription.autoRenew"
+              >
+                {{ subscription.autoRenew ? "Activé" : "Désactivé" }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="features-section"
+          *ngIf="subscription.features && subscription.features.length > 0"
+        >
+          <h4>Avantages inclus</h4>
+          <ul class="features-list">
+            <li *ngFor="let feature of subscription.features">
+              <i class="fa-solid fa-check"></i>
+              {{ feature }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #noSubscription>
+      <div class="subscription-inactive">
+        <div class="alert-box info">
+          <i class="fa-solid fa-circle-info"></i>
+          <div class="alert-content">
+            <h4>Aucun abonnement actif</h4>
+            <p>
+              Vous n'avez pas encore d'abonnement. Découvrez nos offres et
+              profitez de tous les avantages pour booster vos annonces !
+            </p>
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="viewPlans()">
+          Découvrir les offres
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+    <!-- Publications les plus vues -->
+    <div class="card publications-card">
+      <div class="card-header">
+        <h3>Publications les plus vues</h3>
+        <button class="see-all" (click)="viewAllPublications()">
+          Voir tout
+        </button>
+      </div>
+      <div class="publications-list">
+        <div
+          *ngFor="let pub of topPublications"
+          class="publication-item"
+          (click)="viewPublication(pub.id)"
+        >
+          <div class="pub-info">
+            <h4>{{ pub.title }}</h4>
+            <div class="pub-meta">
+              <span class="pub-stat">
+                <i class="fa-solid fa-eye"></i>
+                {{ pub.views }} vues
+              </span>
+              <span class="pub-stat">
+                <i class="fa-solid fa-users"></i>
+                {{ pub.requests }} demandes
+              </span>
+            </div>
+          </div>
+          <div class="pub-actions">
+            <span class="status-badge" [ngClass]="getStatusClass(pub.status)">{{
+              pub.status
+            }}</span>
+            <button class="more-btn" (click)="$event.stopPropagation()">
+              <i class="fa-solid fa-arrow-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Derniers Paiements -->
+    <div class="card payments-card">
+      <div class="card-header">
+        <h3>Derniers paiements</h3>
+        <button class="see-all" (click)="viewAllPayments()">Voir tout</button>
+      </div>
+      <div class="payments-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction</th>
+              <th>Montant</th>
+              <th>Méthode</th>
+              <th>Date</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of recentPayments" class="payment-row">
+              <td>
+                <div class="transaction-info">
+                  <div class="transaction-id">{{ payment.transactionId }}</div>
+                  <div class="transaction-desc">{{ payment.description }}</div>
+                </div>
+              </td>
+              <td>
+                <strong>{{ payment.amount | number : "1.0-0" }}</strong>
+                {{ payment.currency }}
+              </td>
+              <td>{{ payment.method }}</td>
+              <td>{{ payment.date | date : "dd/MM/yyyy" }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="getStatusClass(payment.status)"
+                >
+                  {{ getStatusLabel(payment.status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

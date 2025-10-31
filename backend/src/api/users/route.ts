@@ -56,6 +56,9 @@ router.delete(
     userController.removeAnnouncement(req, res)
 );
 
+router.get("/dashboard", async (req: AuthenticatedRequest, res: Response) =>
+  userController.getDashboard(req, res)
+);
 router.get(
   "/matching/eligibility",
   async (req: AuthenticatedRequest, res: Response) =>

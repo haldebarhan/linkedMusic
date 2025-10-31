@@ -74,6 +74,18 @@ export class MessageRepository {
     });
   }
 
+  async countUserRelationshipRequestsSent(userId: number) {
+    return await prisma.conversation.count({
+      where: { receiverId: userId },
+    });
+  }
+
+  async countUserRelationshipRequestsReceived(userId: number) {
+    return await prisma.conversation.count({
+      where: { senderId: userId },
+    });
+  }
+
   async count(where?: any) {
     return await prisma.conversation.count({ where });
   }
