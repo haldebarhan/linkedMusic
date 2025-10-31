@@ -1,21 +1,27 @@
 import { ENV } from "@/config/env";
 import { MinioService } from "../services/minio.service";
+import { container } from "tsyringe";
+import { MatchingService } from "@/microservices/matching/matching.service";
 
 const minioService: MinioService = MinioService.getInstance();
+const matching = container.resolve(MatchingService);
 
 export const buildThreadRows = async (data: any[], userId: number) => {
+  const isSub = await matching.hasActiveSubscription(userId);
   const threadRow = await Promise.all(
     data.map(async (c) => {
       const id = c.id;
       const last = c.Messages[0];
       const peer = c.senderId === userId ? c.receiver : c.sender;
-      const peerName = peer?.Profile?.displayName ?? `User ${peer?.id}`;
-      const peerAvatar = peer.profileImage
-        ? await minioService.generatePresignedUrl(
-            ENV.MINIO_BUCKET_NAME,
-            peer.profileImage
-          )
-        : "";
+      const peerName = isSub ? peer?.displayName : "Utilisateur (masqué)";
+      const peerAvatar = isSub
+        ? peer.profileImage
+          ? await minioService.generatePresignedUrl(
+              ENV.MINIO_BUCKET_NAME,
+              peer.profileImage
+            )
+          : ""
+        : "https://placehold.co/60x60";
       const count = c._count.Messages ?? 0;
 
       return {
@@ -25,7 +31,7 @@ export const buildThreadRows = async (data: any[], userId: number) => {
         threadId: id,
         peerAvatar,
         unreadCount: count,
-        lastSnippet: last.content,
+        lastSnippet: isSub ? last.content : "••••••",
         lastAt: last.createdAt,
       };
     })

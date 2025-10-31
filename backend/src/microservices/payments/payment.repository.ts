@@ -1,3 +1,4 @@
+import { Order } from "@/utils/enums/order.enum";
 import DatabaseService from "@/utils/services/database.service";
 import { PaymentProvider, PaymentStatus, PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
@@ -27,5 +28,24 @@ export class PaymentRepository {
 
   async findOneByReference(reference: string) {
     return await prisma.payment.findUnique({ where: { reference } });
+  }
+
+  async getUserLastPayments(userId: number) {
+    return await prisma.payment.findMany({
+      where: { userId },
+      orderBy: { createdAt: Order.DESC },
+      take: 5,
+      select: {
+        id: true,
+        reference: true,
+        amount: true,
+        currency: true,
+        status: true,
+        createdAt: true,
+        purpose: true,
+        plan: { select: { name: true } },
+        provider: true,
+      },
+    });
   }
 }

@@ -47,9 +47,18 @@
       <div class="field-view">{{ data && displayValue(data.firstName) }}</div>
     </div>
 
-    <div>
+    <div class="">
       <button class="btn btn-primary" (click)="goToEdit()">
         {{ completed ? "Modifier" : "Completeter mon profile" }}
+      </button>
+
+      <button
+        (click)="changePassword()"
+        class="btn btn-success"
+        style="margin-left: 19px"
+        *ngIf="showButton"
+      >
+        Changer mon mot de passe
       </button>
     </div>
   </div>

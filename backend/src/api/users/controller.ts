@@ -1,4 +1,5 @@
 import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
+import { DashBoardController } from "@/microservices/dashboard/dashboard.controller";
 import { MatchingController } from "@/microservices/matching/matching.controller";
 import { MessageController } from "@/microservices/messages/message.controller";
 import { PaymentController } from "@/microservices/payments/payment.controller";
@@ -14,7 +15,8 @@ export class UserController {
     private readonly matchingController: MatchingController,
     private readonly messageController: MessageController,
     private readonly subscriptionController: SubscriptionController,
-    private readonly payementController: PaymentController
+    private readonly payementController: PaymentController,
+    private readonly dashboardController: DashBoardController
   ) {}
 
   // Announcements
@@ -76,5 +78,11 @@ export class UserController {
   }
   async checkReference(req: AuthenticatedRequest, res: Response) {
     return await this.payementController.checkPaymentStatus(req, res);
+  }
+
+  // Dashboard
+
+  async getDashboard(req: AuthenticatedRequest, res: Response) {
+    return await this.dashboardController.getUserDashboard(req, res);
   }
 }

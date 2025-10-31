@@ -115,6 +115,12 @@ export class ApiService<T> {
       .pipe(catchError(this.handleError));
   }
 
+  getDashboard() {
+    return this.http
+      .get<ApiResponse<any>>(`${this.API_URL}/users/dashboard`)
+      .pipe(catchError(this.handleError));
+  }
+
   getEligibility(announcementId: number) {
     const endpoint = 'users/matching/eligibility';
     return this.http
