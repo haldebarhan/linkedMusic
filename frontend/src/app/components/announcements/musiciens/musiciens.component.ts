@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { debounceTime, Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
+import { country_list } from '../../../helpers/countries';
 
 @Component({
   selector: 'app-musiciens',
@@ -37,7 +38,7 @@ export class MusiciensComponent implements OnInit {
   loading = false;
 
   private sub?: Subscription;
-
+  countries: Array<{ name: string; code: string }> = [];
   constructor(
     private readonly apiService: ApiService<any>,
     private readonly fb: FormBuilder,
@@ -54,6 +55,7 @@ export class MusiciensComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.countries = country_list;
     this.loadResources();
 
     this.route.queryParams.subscribe((qp) => {

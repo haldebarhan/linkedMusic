@@ -48,8 +48,8 @@ export class AnnouncementRepository {
     return await prisma.announcement.findMany({
       where: {
         ownerId: userId,
-        // isPublished: true,
-        // status: AnnouncementStatus.PUBLISHED,
+        isPublished: true,
+        status: AnnouncementStatus.PUBLISHED,
       },
       orderBy: [
         { views: Order.DESC },
@@ -127,6 +127,26 @@ export class AnnouncementRepository {
         views: {
           increment: 1,
         },
+      },
+    });
+  }
+
+  async approuveAnnouncement(id: number) {
+    return await prisma.announcement.update({
+      where: { id },
+      data: {
+        status: AnnouncementStatus.PUBLISHED,
+        isPublished: true,
+      },
+    });
+  }
+
+  async rejectAnnouncement(id: number) {
+    return await prisma.announcement.update({
+      where: { id },
+      data: {
+        status: AnnouncementStatus.DRAFT,
+        isPublished: true,
       },
     });
   }

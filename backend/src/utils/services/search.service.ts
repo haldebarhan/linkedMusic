@@ -2,6 +2,7 @@
 import { MeiliSearch } from "meilisearch";
 import { ENV } from "@/config/env";
 import createError from "http-errors";
+import { AnnouncementStatus } from "@prisma/client";
 
 // ---------- Client & index ----------
 const INDEX_NAME = "announcements";
@@ -215,6 +216,37 @@ export class SearchService {
     } catch (error) {
       const status = error.code ?? 500;
       throw createError(status, "Erreur lors de l'incrémentation des vues:");
+    }
+  }
+
+  static async approuveAnnouncement(announcementId: number) {
+    try {
+      const currentDoc = await index.getDocument(announcementId);
+      const updatedDoc = {
+        ...currentDoc,
+        isPublished: true,
+        status: AnnouncementStatus.PUBLISHED as string,
+      };
+      const task = await index.updateDocuments([updatedDoc]);
+      await waitTask(task);
+    } catch (error) {
+      const status = error.code ?? 500;
+      throw createError(status, "Erreur lors de l'approbation de l'annonce.");
+    }
+  }
+  static async rejectAnnouncement(announcementId: number) {
+    try {
+      const currentDoc = await index.getDocument(announcementId);
+      const updatedDoc = {
+        ...currentDoc,
+        isPublished: false,
+        status: AnnouncementStatus.DRAFT as string,
+      };
+      const task = await index.updateDocuments([updatedDoc]);
+      await waitTask(task);
+    } catch (error) {
+      const status = error.code ?? 500;
+      throw createError(status, "Erreur lors de l'approbation de l'annonce.");
     }
   }
 }

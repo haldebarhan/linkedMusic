@@ -1,3 +1,4 @@
+import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
 import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
@@ -11,7 +12,8 @@ export class AdminController {
     private readonly userController: UserController,
     private readonly configController: ConfigurationController,
     private readonly catalogueController: CatalogueController,
-    private readonly subscriptionController: SubscriptionController
+    private readonly subscriptionController: SubscriptionController,
+    private readonly announcementController: AnnouncementController
   ) {}
 
   // Users
@@ -126,5 +128,17 @@ export class AdminController {
   }
   async removePlan(req: Request, res: Response) {
     return await this.subscriptionController.removePlan(req, res);
+  }
+
+  // Announcements
+  async getPendingAnnouncements(req: Request, res: Response) {
+    return await this.announcementController.findAnnouncements(req, res);
+  }
+
+  async approuveAnnouncement(req: Request, res: Response) {
+    return await this.announcementController.approuveAnnouncement(req, res);
+  }
+  async rejectAnnouncement(req: Request, res: Response) {
+    return await this.announcementController.rejectAnnouncement(req, res);
   }
 }

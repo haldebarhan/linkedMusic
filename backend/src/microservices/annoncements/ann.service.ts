@@ -275,6 +275,30 @@ export class AnnouncementService {
     }
   }
 
+  async approuveAnnouncement(id: number) {
+    const [announcement] = await Promise.all([
+      this.findOne(id),
+      SearchService.getDocument(id),
+    ]);
+    const [updated] = await Promise.all([
+      this.annRepository.approuveAnnouncement(announcement.id),
+      SearchService.approuveAnnouncement(announcement.id),
+    ]);
+    return updated;
+  }
+
+  async rejectAnnouncement(id: number) {
+    const [announcement] = await Promise.all([
+      this.findOne(id),
+      SearchService.getDocument(id),
+    ]);
+    const [updated] = await Promise.all([
+      this.annRepository.approuveAnnouncement(announcement.id),
+      SearchService.approuveAnnouncement(announcement.id),
+    ]);
+    return updated;
+  }
+
   private async getServiceType(id: number) {
     const serviceType = await this.catalogueRepository.findServiceType(id);
     if (!serviceType) throw createError(404, "Invalid Service Type");

@@ -27,6 +27,18 @@ const adminController = container.resolve(AdminController);
 
 router.use(adminMiddleware);
 
+router.get("/announcements", async (req: Request, res: Response) =>
+  adminController.getPendingAnnouncements(req, res)
+);
+
+router.put("/announcements/approuve/:id", async (req: Request, res: Response) =>
+  adminController.approuveAnnouncement(req, res)
+);
+
+router.put("/announcements/reject/:id", async (req: Request, res: Response) =>
+  adminController.rejectAnnouncement(req, res)
+);
+
 // Users
 router.get("/users", cache, async (req: Request, res: Response) =>
   adminController.getAllUsers(req, res)

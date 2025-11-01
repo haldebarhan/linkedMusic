@@ -31,6 +31,7 @@ import {
   kindFromMimeOrName,
   stableIdFromUrl,
 } from '../../helpers/path-part';
+import { country_list } from '../../helpers/countries';
 
 type PreviewItem = {
   url: string;
@@ -80,9 +81,10 @@ export class PostFormComponent implements OnInit, OnDestroy {
   label: string = '';
   perServiceType: Record<string, Field[]> = {};
   private fileUrls: PreviewItem[] = [];
-  // Ajoute ces champs
+
   private removedExisting = new Set<string>();
   private objectUrlToFile = new Map<string, File>();
+  countries: Array<{ name: string; code: string }> = [];
 
   constructor(
     private readonly apiService: ApiService<any>,
@@ -91,6 +93,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
     private readonly fb: FormBuilder
   ) {}
   ngOnInit(): void {
+    this.countries = country_list;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.announcementId = idParam !== null ? +idParam : null;
     this.slug = this.route.snapshot.paramMap.get('category');
