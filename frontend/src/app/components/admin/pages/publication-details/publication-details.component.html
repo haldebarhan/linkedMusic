@@ -1,0 +1,79 @@
+<ng-template #loadingTpl>
+  <div class="container py-5 text-center text-muted">Chargement…</div>
+</ng-template>
+<div class="container py-3" *ngIf="!loading && announcement; else loadingTpl">
+  <div class="row g-4">
+    <!-- Main -->
+    <div class="col-lg-8">
+      <div class="card bg-light text-dark p-3">
+        <h1 class="h4 mb-2">{{ announcement.title }}</h1>
+        <div class="row small text-muted">
+          <div class="col-4">Publié le</div>
+          <div class="col-8">
+            {{ announcement.createdAt | date : "d MMMM y" }}
+          </div>
+          <div class="col-4">Lieu</div>
+          <div class="col-8">{{ announcement.location || "—" }}</div>
+          <ng-container *ngIf="announcement.styles?.length">
+            <div class="col-4">Styles</div>
+            <div class="col-8">{{ announcement.styles.join(", ") }}</div>
+          </ng-container>
+          <div class="col-12 mt-2" *ngIf="announcement.tag">
+            <strong>{{ announcement.tag }}</strong>
+          </div>
+        </div>
+
+        <hr class="my-3" />
+        <p style="white-space: pre-line">{{ announcement.description }}</p>
+        <!-- Media -->
+        <app-media-gallery
+          [files]="announcement.fichiers || []"
+        ></app-media-gallery>
+        <div
+          class="text-end text-muted small"
+          *ngIf="announcement.views != null"
+        >
+          Cette annonce a &eacute;t&eacute; vue {{ announcement.views }} fois
+        </div>
+      </div>
+    </div>
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card bg-light text-dark p-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div>
+            <div class="fw-semibold">
+              {{ advertiser.displayName || "—" }}
+            </div>
+            <div class="small text-dark">
+              {{ advertiser._count.announcements ?? 0 }} annonce{{
+                (advertiser._count.announcements ?? 0) === 1 ? "" : "s"
+              }}
+            </div>
+          </div>
+          <img
+            *ngIf="advertiser.profileImage"
+            [src]="advertiser.profileImage"
+            class="rounded-circle"
+            width="48"
+            height="48"
+            alt=""
+          />
+        </div>
+        <!-- Bouton répondre -->
+        <button
+          class="btn w-100 mb-2 btn-success"
+          (click)="approuve(announcement.id)"
+        >
+          <i class="fa-regular fa-thumbs-up"></i> Approuver
+        </button>
+        <button
+          class="btn w-100 mb-2 btn-danger"
+          (click)="reject(announcement.id)"
+        >
+          <i class="fa-regular fa-thumbs-down"></i> Rejeter
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

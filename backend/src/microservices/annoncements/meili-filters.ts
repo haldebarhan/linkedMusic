@@ -14,7 +14,7 @@ export function buildMeiliFilter(
   const parts: string[] = [];
 
   parts.push(`category = "${esc(categorySlug)}"`);
-  parts.push("status = PENDING_APPROVAL");
+  parts.push("status = PUBLISHED");
 
   // Styles (array string) -> OR entre les valeurs
   if (Array.isArray(f.styles) && f.styles.length) {

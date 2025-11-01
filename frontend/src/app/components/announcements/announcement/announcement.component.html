@@ -46,11 +46,10 @@
             class="form-select location-select"
             formControlName="location"
           >
-            <option [ngValue]="''">Monde entier</option>
-            <option [ngValue]="'France'">France</option>
-            <option [ngValue]="'Paris'">Paris</option>
-            <option [ngValue]="'Lyon'">Lyon</option>
-            <option [ngValue]="'Marseille'">Marseille</option>
+            <option value="" disabled>Selectionnez un pays</option>
+            <option *ngFor="let c of countries" [ngValue]="c.name">
+              {{ c.name }}
+            </option>
           </select>
         </div>
       </div>

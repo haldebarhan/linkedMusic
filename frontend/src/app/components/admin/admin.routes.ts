@@ -10,6 +10,8 @@ import { FieldsViewComponent } from './pages/fields-view/fields-view.component';
 import { ServiceViewComponent } from './pages/service-view/service-view.component';
 import { SubscriptionPlansComponent } from './pages/subscription-plans/subscription-plans.component';
 import { SubscriptionFormComponent } from './pages/forms/subscription-form/subscription-form.component';
+import { PublicationsComponent } from './pages/publications/publications.component';
+import { PublicationDetailsComponent } from './pages/publication-details/publication-details.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -17,8 +19,21 @@ export const ADMIN_ROUTES: Routes = [
     component: AdminComponent,
     children: [
       {
+        path: '',
+        redirectTo: 'publications',
+        pathMatch: 'full',
+      },
+      {
         path: 'categories',
         loadComponent: () => CategoriePageComponent,
+      },
+      {
+        path: 'publications',
+        loadComponent: () => PublicationsComponent,
+      },
+      {
+        path: 'publications/:id',
+        loadComponent: () => PublicationDetailsComponent,
       },
       {
         path: 'categories/edit/:id',

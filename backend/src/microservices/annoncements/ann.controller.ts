@@ -9,6 +9,8 @@ import { toArray } from "@/utils/functions/utilities";
 import { Order } from "@/utils/enums/order.enum";
 import { saveFilesToBucket } from "@/utils/functions/save-file";
 import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { AnnouncementStatus } from "@prisma/client";
+import { Role } from "@/utils/enums/role.enum";
 
 @injectable()
 export class AnnouncementController {
@@ -49,7 +51,9 @@ export class AnnouncementController {
       } = req.query;
 
       const where: any = {};
-      if (user) where.ownerId = user.id;
+      if (user.role === Role.USER) where.ownerId = user.id;
+      else if (user.role === Role.ADMIN)
+        where.status = AnnouncementStatus.PENDING_APPROVAL;
 
       const page = parseInt(pageQuery as string) || 1;
       const limit = parseInt(limitQuery as string) || 10;
@@ -172,6 +176,27 @@ export class AnnouncementController {
         }
       );
       const response = paginatedResponse(200, results);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async approuveAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const updated = await this.annService.approuveAnnouncement(+id);
+      const response = formatResponse(200, updated);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+  async rejectAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const updated = await this.annService.rejectAnnouncement(+id);
+      const response = formatResponse(200, updated);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

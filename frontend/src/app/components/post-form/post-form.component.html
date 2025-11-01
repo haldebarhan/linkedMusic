@@ -255,10 +255,10 @@
         </div>
         <div class="col-md-3">
           <select class="form-select" formControlName="country">
-            <option value="">— Indifférent —</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
+            <option value="" disabled>— Indifférent —</option>
+            <option *ngFor="let c of countries" value="{{ c.name }}">
+              {{ c.name }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">

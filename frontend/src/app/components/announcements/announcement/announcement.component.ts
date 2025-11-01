@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, Subscription } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
 import { TruncatePipe } from '../../../shared/pipes/truncate.pipe';
+import { country_list } from '../../../helpers/countries';
 
 interface ServiceTypeDto {
   id: number;
@@ -34,6 +35,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   limit = 20;
   loading = false;
   query: string | null = null;
+  countries: Array<{ name: string; code: string }> = [];
 
   private sub?: Subscription;
 
@@ -50,6 +52,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.countries = country_list;
     this.route.paramMap.subscribe(async (pm) => {
       this.slug = pm.get('category') || '';
       await this.loadServicesOfCategory(this.slug);
