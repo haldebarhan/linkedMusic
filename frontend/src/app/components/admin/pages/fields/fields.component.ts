@@ -62,11 +62,15 @@ export class FieldsComponent implements OnInit {
     this.router.navigate(['/admin/fields/view', field.id]);
   }
 
+  goToEdit(field: any) {
+    this.router.navigate(['/admin/fields/edit', field.id]);
+  }
+
   removeField(field: any) {
     SweetAlert.fire({
       title: 'Etes-vous sure ?',
       icon: 'warning',
-      text: `Vous allez supprimer le field [${field.name}]`,
+      text: `Vous allez supprimer le field [${field.label}]`,
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',

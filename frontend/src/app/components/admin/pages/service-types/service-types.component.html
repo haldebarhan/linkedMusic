@@ -24,7 +24,6 @@
           <tr>
             <th>#</th>
             <th>Nom</th>
-            <th>Slug</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -35,14 +34,11 @@
               {{ (page - 1) * limit + i + 1 }}
             </td>
             <td data-label="Nom">{{ service.name }}</td>
-            <td data-label="Slug">
-              <code>{{ service.slug }}</code>
-            </td>
             <td>
-              <div class="d-flex justify-content-around text-center">
+              <div>
                 <i
                   class="fas fa-list fa-1x text-primary"
-                  style="cursor: pointer"
+                  style="cursor: pointer; margin-right: 19px"
                   (click)="goToDetails(service)"
                 ></i>
                 <i

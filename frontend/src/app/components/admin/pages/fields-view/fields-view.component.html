@@ -122,8 +122,6 @@
               />
             </th>
             <th>Nom</th>
-            <th>Slug</th>
-            <th>Catégorie</th>
           </tr>
         </thead>
         <tbody>
@@ -137,12 +135,6 @@
               />
             </td>
             <td data-label="Nom">{{ s.name }}</td>
-            <td data-label="Slug">
-              <code>{{ s.slug }}</code>
-            </td>
-            <td data-label="Catégorie">
-              {{ s.category?.name || s.categoryName || "—" }}
-            </td>
           </tr>
           <tr *ngIf="!rows.length">
             <td colspan="4" class="text-center text-muted py-4">

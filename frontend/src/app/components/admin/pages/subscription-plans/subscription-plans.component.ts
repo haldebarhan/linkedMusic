@@ -11,7 +11,7 @@ export interface Subscription {
   status: boolean;
   period: string;
   price: number;
-  benefits: string[];
+  benefits: { id?: number; label: string }[];
   expanded?: boolean;
 }
 

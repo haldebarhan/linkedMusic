@@ -23,7 +23,6 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Clé</th>
             <th>Label</th>
             <th>Recherchage</th>
             <th>Filtrable</th>
@@ -36,9 +35,8 @@
             <td data-label="#" class="text-muted">
               {{ (page - 1) * limit + i + 1 }}
             </td>
-            <td data-label="key">{{ field.key }}</td>
             <td data-label="label">
-              <code>{{ field.label }}</code>
+              {{ field.label }}
             </td>
             <td data-label="searchable">
               {{ field.searchable ? "Oui" : "Non" }}
@@ -47,12 +45,18 @@
               {{ field.filterable ? "Oui" : "Non" }}
             </td>
             <td>
-              <div class="d-flex justify-content-around text-center">
+              <div class="d-flex justify-content-between">
                 <i
                   class="fas fa-list fa-1x text-primary"
                   style="cursor: pointer"
                   (click)="goToDetails(field)"
                 ></i>
+                <i
+                  class="fa-solid fa-screwdriver-wrench text-success"
+                  style="cursor: pointer"
+                  (click)="goToEdit(field)"
+                >
+                </i>
                 <i
                   class="fas fa-trash fa-1x text-danger"
                   style="cursor: pointer"

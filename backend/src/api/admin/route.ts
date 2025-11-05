@@ -16,6 +16,7 @@ import {
   CreateFieldOptionDto,
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
+  UpdateFieldDto,
 } from "@/microservices/catalogues/catalogue.dto";
 import {
   CreatePlanDTO,
@@ -124,6 +125,11 @@ router.get("/catalog/fields", async (req: Request, res: Response) =>
 router.get("/catalog/fields/:id", async (req: Request, res: Response) =>
   adminController.findField(req, res)
 );
+router.put(
+  "/catalog/fields/:id",
+  ValidateDtoMiddleware(UpdateFieldDto),
+  async (req: Request, res: Response) => adminController.updateField(req, res)
+);
 
 router.delete("/catalog/fields/:id", async (req: Request, res: Response) =>
   adminController.removeField(req, res)
@@ -140,12 +146,6 @@ router.post(
   "/catalog/attach-services",
   ValidateDtoMiddleware(AttachServicesDTO),
   async (req: Request, res: Response) => adminController.attachService(req, res)
-);
-
-router.post(
-  "/catalog/detach-services",
-  ValidateDtoMiddleware(AttachServicedDTO),
-  async (req: Request, res: Response) => adminController.detachService(req, res)
 );
 
 router.post(
