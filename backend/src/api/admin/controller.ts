@@ -80,6 +80,9 @@ export class AdminController {
   async createField(req: Request, res: Response) {
     return await this.catalogueController.createField(req, res);
   }
+  async updateField(req: Request, res: Response) {
+    return await this.catalogueController.updateField(req, res);
+  }
 
   async createFieldOption(req: Request, res: Response) {
     return await this.catalogueController.createFieldOption(req, res);
@@ -101,9 +104,6 @@ export class AdminController {
     return await this.catalogueController.attachService(req, res);
   }
 
-  async detachService(req: Request, res: Response) {
-    return await this.catalogueController.detachService(req, res);
-  }
   async attachField(req: Request, res: Response) {
     return await this.catalogueController.attachField(req, res);
   }

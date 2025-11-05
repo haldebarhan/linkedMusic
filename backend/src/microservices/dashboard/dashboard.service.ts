@@ -79,7 +79,7 @@ export class DashboardSerice {
   private async countUserTotalActivePublicationViews(userId: number) {
     const views =
       await this.announcementRepository.countUserAnnouncementTotalViews(userId);
-    return views._sum.views;
+    return views._sum.views || 0;
   }
 
   private async countUserTotalRelationRequestReceived(userId: number) {

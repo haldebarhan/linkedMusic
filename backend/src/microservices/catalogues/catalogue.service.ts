@@ -9,10 +9,14 @@ import {
   CreateFieldDto,
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
+  UpdateFieldDto,
 } from "./catalogue.dto";
 import createError from "http-errors";
 import { Order } from "@/utils/enums/order.enum";
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
+import DatabaseService from "@/utils/services/database.service";
+
+const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
 export class CatalogueService {
@@ -185,6 +189,78 @@ export class CatalogueService {
     }
   }
 
+  async updateField(id: number, data: UpdateFieldDto) {
+    return prisma.$transaction(async (tx) => {
+      const { options, optionsToRemove, ...rest } = data;
+
+      // 1) Vérifie que le field existe (et verrouille si besoin)
+      await this.findfield(id);
+
+      // 2) Construit la liste plate d'opérations
+      const ops: Promise<any>[] = [];
+
+      // a) Upsert-like: si o.id existe => update, sinon => create
+      if (options?.length) {
+        for (const o of options) {
+          if (o.id) {
+            ops.push(
+              tx.fieldOption.update({
+                where: { id: o.id },
+                data: {
+                  label: o.label,
+                  value: o.value,
+                  order: o.order,
+                },
+              })
+            );
+          } else {
+            // crée une nouvelle option rattachée au field
+            ops.push(
+              tx.fieldOption.create({
+                data: {
+                  label: o.label!,
+                  value: o.value!,
+                  order: o.order,
+                  field: { connect: { id } },
+                },
+              })
+            );
+          }
+        }
+      }
+
+      // b) Suppressions en bloc, et on s’assure qu’on supprime bien sur CE field
+      if (optionsToRemove?.length) {
+        const idsToRemove = optionsToRemove
+          .map((x) => x.id)
+          .filter((n): n is number => typeof n === "number");
+        if (idsToRemove.length) {
+          ops.push(
+            tx.fieldOption.deleteMany({
+              where: {
+                id: { in: idsToRemove },
+                fieldId: id,
+              },
+            })
+          );
+        }
+      }
+
+      // 3) Exécute toutes les opérations sur options
+      if (ops.length) {
+        await Promise.all(ops);
+      }
+
+      // 4) Met à jour le field lui-même
+      const updated = await tx.field.update({
+        where: { id },
+        data: { ...rest },
+      });
+
+      return updated;
+    });
+  }
+
   // fields
   async listFields(params: {
     limit: number;
@@ -330,21 +406,6 @@ export class CatalogueService {
       throw createError(
         error.status || 500,
         `Failed to detach fields to service: ${error.message}`
-      );
-    }
-  }
-
-  async dettachServiceToCategory(data: AttachServicedDTO) {
-    try {
-      const { serviceTypeId, categoryId } = data;
-      return await this.catalogueRepository.detachServiceToCategory(
-        categoryId,
-        serviceTypeId
-      );
-    } catch (error) {
-      throw createError(
-        error.status || 500,
-        `Failed to detach category to service: ${error.message}`
       );
     }
   }

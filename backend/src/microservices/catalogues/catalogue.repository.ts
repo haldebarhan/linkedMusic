@@ -7,6 +7,7 @@ import {
   CreateFieldOptionDto,
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
+  UpdateFieldDto,
 } from "./catalogue.dto";
 import { Order } from "@/utils/enums/order.enum";
 
@@ -199,6 +200,31 @@ export class CatalogueRepository {
   async createField(data: Omit<CreateFieldDto, "options">) {
     return await prisma.field.create({ data });
   }
+
+  async updateField(
+    id: number,
+    data: Omit<UpdateFieldDto, "options" | "optionsToRemove">
+  ) {
+    return await prisma.field.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  }
+
+  //   async upsertFieldOption(data: CreateFieldOptionDto) {
+  //     return await prisma.fieldOption.upsert({
+  //       where: { fieldId_value: { fieldId: data.fieldId!, value: data.label } },
+  //       update: {
+  //         label: data.label,
+  //         value: data.value,
+  //         order: data.order,
+  //         fieldId: data.fieldId,
+  //       },
+  //       create: { label: data.label, value: data.label, fieldId: data.fieldId! },
+  //     });
+  //   }
 
   async createFieldOption(data: CreateFieldOptionDto) {
     return prisma.fieldOption.create({

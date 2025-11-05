@@ -217,9 +217,25 @@ export class UpdateFieldDto {
   @IsOptional()
   @IsBoolean({ message: "filterable must be a boolean" })
   filterable?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateFieldOptionDto)
+  options?: UpdateFieldOptionDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateFieldOptionDto)
+  optionsToRemove?: UpdateFieldOptionDto[];
 }
 
 export class UpdateFieldOptionDto {
+  @IsOptional()
+  @IsNumber({}, { message: "id must be a number" })
+  id?: number;
+
   @IsOptional()
   @IsNumber({}, { message: "fieldId must be a number" })
   fieldId?: number;

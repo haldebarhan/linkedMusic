@@ -127,13 +127,26 @@
               <tr
                 *ngFor="let opt of options.controls; index as i"
                 [formGroupName]="i"
+                [class.table-info]="opt.get('id')?.value < 0"
               >
+                <!-- Champ caché pour l'ID -->
+                <input type="hidden" formControlName="id" />
+
                 <td data-label="Label">
-                  <input
-                    class="form-control form-control-sm"
-                    formControlName="label"
-                    (input)="setOptionValue(i)"
-                  />
+                  <div class="d-flex align-items-center gap-2">
+                    <input
+                      class="form-control form-control-sm"
+                      formControlName="label"
+                      (input)="setOptionValue(i)"
+                    />
+                    <span
+                      *ngIf="opt.get('id')?.value < 0"
+                      class="badge bg-success text-white"
+                      title="Nouvelle option"
+                    >
+                      <i class="fas fa-plus"></i>
+                    </span>
+                  </div>
                 </td>
                 <td data-label="Value">
                   <input

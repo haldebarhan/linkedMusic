@@ -11,6 +11,7 @@ import {
   CreateFieldOptionDto,
   CreateServiceTypeDTO,
   UpdateCategoryDTO,
+  UpdateFieldDto,
 } from "./catalogue.dto";
 import { handleError } from "@/utils/helpers/handle-error";
 import { formatResponse } from "@/utils/helpers/response-formatter";
@@ -199,6 +200,18 @@ export class CatalogueController {
     }
   }
 
+  async updateField(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const dto: UpdateFieldDto = Object.assign(new UpdateFieldDto(), req.body);
+      const result = await this.catalogueService.updateField(+id, dto);
+      const response = formatResponse(201, result);
+      res.status(201).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
   async listFields(req: Request, res: Response) {
     try {
       const {
@@ -281,19 +294,6 @@ export class CatalogueController {
     }
   }
 
-  async detachService(req: Request, res: Response) {
-    try {
-      const dto: AttachServicedDTO = Object.assign(
-        new AttachServicedDTO(),
-        req.body
-      );
-      const result = await this.catalogueService.dettachServiceToCategory(dto);
-      const response = formatResponse(201, result);
-      res.status(201).json(response);
-    } catch (error) {
-      handleError(res, error);
-    }
-  }
   async attachField(req: Request, res: Response) {
     try {
       const dto: AttachFieldsDTO = Object.assign(

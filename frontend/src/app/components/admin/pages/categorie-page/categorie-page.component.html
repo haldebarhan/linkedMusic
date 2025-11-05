@@ -24,7 +24,6 @@
           <tr>
             <th>#</th>
             <th>Nom</th>
-            <th>Slug</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -35,22 +34,12 @@
               {{ (page - 1) * limit + i + 1 }}
             </td>
             <td data-label="Nom">{{ c.name }}</td>
-            <td data-label="Slug">
-              <code>{{ c.slug }}</code>
-            </td>
             <td>
-              <div class="d-flex justify-content-around text-center">
-                <i
-                  class="fas fa-list fa-1x text-primary"
-                  style="cursor: pointer"
-                  (click)="removeCategory(c)"
-                ></i>
-                <i
-                  class="fas fa-trash fa-1x text-danger"
-                  style="cursor: pointer"
-                  (click)="removeCategory(c)"
-                ></i>
-              </div>
+              <i
+                class="fas fa-trash fa-1x text-danger"
+                style="cursor: pointer"
+                (click)="removeCategory(c)"
+              ></i>
             </td>
           </tr>
           <tr *ngIf="!rows?.length">

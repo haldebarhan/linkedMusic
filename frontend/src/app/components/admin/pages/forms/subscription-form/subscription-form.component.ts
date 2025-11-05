@@ -27,7 +27,7 @@ interface Plan {
   period: Period;
   priceCents?: number;
   parentId?: string;
-  active: boolean;
+  status: boolean;
   benefits: { id?: number; label: string }[];
 }
 
@@ -121,11 +121,11 @@ export class SubscriptionFormComponent implements OnInit {
       period: plan.period,
       priceCents: plan.priceCents,
       parentId: plan.parentId,
-      active: plan.active,
+      active: plan.status,
     });
 
     plan.benefits.forEach((benefit: any) => {
-      this.addBenefit(benefit.benefit.label, benefit.benefit.id);
+      this.addBenefit(benefit.label, benefit.id);
     });
   }
 

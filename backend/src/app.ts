@@ -160,9 +160,13 @@ class Server {
       swaggerUi.setup(swaggerOptions, { explorer: true })
     );
 
-    this.app.use("/api", authLimiter, authRoutes);
-    this.app.use("/api/admin", adminLimiter, adminRoutes);
-    this.app.use("/api/users", authLimiter, userRoutes);
+    // this.app.use("/api", authLimiter, authRoutes);
+    // this.app.use("/api/admin", adminLimiter, adminRoutes);
+    // this.app.use("/api/users", authLimiter, userRoutes);
+    // this.app.use("/webhooks/psp", pspRoutes);
+    this.app.use("/api", authRoutes);
+    this.app.use("/api/admin", adminRoutes);
+    this.app.use("/api/users", userRoutes);
     this.app.use("/webhooks/psp", pspRoutes);
 
     this.app.use((req, res) => {

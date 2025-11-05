@@ -158,7 +158,7 @@ export class ServiceViewComponent implements OnInit {
       });
   }
 
-  detach(serviceTypeId: number) {
+  detach(categoryId: number) {
     SweetAlert.fire({
       title: 'Etes-vous sure ?',
       icon: 'warning',
@@ -172,9 +172,9 @@ export class ServiceViewComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.api
-          .createResource('detach-fields', {
-            categoryId: serviceTypeId,
-            fieldId: this.serviceId,
+          .createResource('detach-services', {
+            categoryId: categoryId,
+            serviceTypeId: this.serviceId,
           })
           .subscribe({
             next: () => {
@@ -184,9 +184,9 @@ export class ServiceViewComponent implements OnInit {
                 icon: 'success',
                 didClose: () => {
                   this.attached = this.attached.filter(
-                    (a) => a.id !== serviceTypeId
+                    (a) => a.id !== categoryId
                   );
-                  this.selectedIds.delete(serviceTypeId);
+                  this.selectedIds.delete(categoryId);
                 },
               });
             },

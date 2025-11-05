@@ -152,16 +152,15 @@ export class AnnouncementController {
         ? (_o as Order)
         : Order.DESC;
 
-      // Normalise les filtres :
-      // - garde *_min/_max tels quels
-      // - transforme le reste en array si besoin (supporte "k=a&k=b" ET "k=a,b")
       const filters: Record<string, any> = {};
       for (const [k, v] of Object.entries(rawFilters)) {
         if (k.endsWith("_min") || k.endsWith("_max")) {
           filters[k] = v;
+        } else if (k === "styles") {
+          filters[k] = toArray(v);
         } else {
           const arr = toArray(v);
-          filters[k] = arr.length > 1 ? arr.join(" ") : arr[0] ?? v ?? "";
+          filters[k] = arr.length > 1 ? arr : arr[0] ?? v ?? "";
         }
       }
 

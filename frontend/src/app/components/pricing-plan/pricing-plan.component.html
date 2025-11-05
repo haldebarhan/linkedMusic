@@ -30,7 +30,7 @@
           </div>
 
           <ul class="list-unstyled feature-list">
-            <li *ngFor="let b of row.benefits">{{ b }}</li>
+            <li *ngFor="let b of row.benefits">{{ b.label }}</li>
           </ul>
           <ng-container *ngIf="!isPopularPlan(row); else popularButton">
             <button

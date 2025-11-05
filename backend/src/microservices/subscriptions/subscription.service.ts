@@ -185,8 +185,10 @@ export class SubscriptionService {
         ]);
       }
 
-      // Supprimer et créer les bénéfices en parallèle
       await Promise.all([
+        benefits?.length
+          ? this.createBenefitAndAssociateToPlan(benefits, plan.id, tx)
+          : Promise.resolve(),
         benefitsToRemove?.length
           ? tx.planBenefit.deleteMany({
               where: {
@@ -194,9 +196,6 @@ export class SubscriptionService {
                 benefitId: { in: benefitsToRemove },
               },
             })
-          : Promise.resolve(),
-        benefits?.length
-          ? this.subscriptionRepository.createBenefit(benefits)
           : Promise.resolve(),
       ]);
 
@@ -224,18 +223,22 @@ export class SubscriptionService {
     }));
   }
 
-  private unifiedBenefits(subscription: any): string[] {
-    const benefits: string[] = [];
+  private unifiedBenefits(subscription: any): { id?: number; label: string }[] {
+    const benefits: { id?: number; label: string }[] = [];
 
     // Ajouter référence au plan parent
     if (subscription.parentId && subscription.parent) {
-      benefits.push(`Avantage(s) du pack ${subscription.parent.name}`);
+      benefits.push({
+        label: `Avantage(s) du pack ${subscription.parent.name}`,
+      });
     }
 
     // Ajouter les bénéfices non hérités
     subscription.benefits
       ?.filter((b: any) => !b.inherited)
-      .forEach((b: any) => benefits.push(b.benefit.label));
+      .forEach((b: any) =>
+        benefits.push({ id: b.benefit.id, label: b.benefit.label })
+      );
 
     return benefits;
   }
