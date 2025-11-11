@@ -15,3 +15,17 @@ export interface Announcement {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AnnouncementSearchParams {
+  categorySlug?: string;
+  search?: string;
+  country?: string;
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  fieldFilters?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}

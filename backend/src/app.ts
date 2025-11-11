@@ -19,7 +19,6 @@ import userRoutes from "./api/users/route";
 import pspRoutes from "./api/psp/psp.route";
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
-import { SearchService } from "./utils/services/search.service";
 import { getAllowedOrigins } from "./utils/functions/allowed-origins";
 import {
   startSubscriptionDailyCron,
@@ -266,8 +265,6 @@ class Server {
 
 (async () => {
   // await ConfigService.loadConfigs();
-  await SearchService.initAndConfigure();
-  //   await SearchService.clearDoc();
   const server = new Server();
   server.start();
 })();

@@ -44,16 +44,6 @@ export const routes: Routes = [
       import('./components/home/home.component').then((m) => m.HomeComponent),
   },
   {
-    path: 'annonces/musiciens',
-    canMatch: [guestCanMatch],
-    canActivate: [guestCanActivate],
-    data: { guestPolicy: 'allow' },
-    loadComponent: () =>
-      import('./components/announcements/musiciens/musiciens.component').then(
-        (m) => m.MusiciensComponent
-      ),
-  },
-  {
     path: 'announcemnts/:category',
     canMatch: [guestCanMatch],
     canActivate: [guestCanActivate],

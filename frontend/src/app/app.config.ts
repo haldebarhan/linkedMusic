@@ -15,6 +15,12 @@ import {
 import { AuthService } from './auth/auth.service';
 import { AuthInterceptor } from './auth/auth.interceptor';
 import { RefreshTokenService } from './auth/refresh-token.service';
+import { importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
+
+// Enregistrement des données de locale française
+registerLocaleData(localeFr, 'fr');
 
 function initAuth(auth: AuthService, refresher: RefreshTokenService) {
   return () => {
@@ -37,6 +43,10 @@ export const appConfig: ApplicationConfig = {
       useFactory: initAuth,
       deps: [AuthService, RefreshTokenService],
       multi: true,
+    },
+    {
+      provide: LOCALE_ID,
+      useValue: 'fr',
     },
   ],
 };

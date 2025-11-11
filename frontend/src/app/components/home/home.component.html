@@ -33,11 +33,7 @@
           <div
             class="card-custom"
             *ngFor="let category of categories"
-            [routerLink]="
-              category.slug === 'musiciens'
-                ? ['/annonces', 'musiciens']
-                : ['/announcemnts', category.slug]
-            "
+            [routerLink]="['/announcemnts', category.slug]"
           >
             <div class="icon-text">
               <i class="{{ getIcon(category.slug) }}"></i>

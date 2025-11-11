@@ -3,16 +3,18 @@ import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { UserController } from "@/microservices/users/user.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
-import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
+import { CategoryController } from "@/microservices/categories/category.controller";
+import { AnnouncementController as AnnController } from "@/microservices/annoncements/announcement.controller";
 
 @injectable()
 export class AuthController {
   constructor(
     private readonly userController: UserController,
     private readonly catalogController: CatalogueController,
-    private readonly announcementController: AnnouncementController,
-    private readonly subscriptionController: SubscriptionController
+    private readonly subscriptionController: SubscriptionController,
+    private readonly categoryController: CategoryController,
+    private readonly annController: AnnController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -84,19 +86,24 @@ export class AuthController {
     return await this.catalogController.listServiceTypes(req, res);
   }
 
-  async listByCategory(req: Request, res: Response) {
-    return await this.announcementController.listByCategory(req, res);
-  }
-
-  async findAnnouncement(req: Request, res: Response) {
-    return await this.announcementController.findOne(req, res);
-  }
-
   // SUBSCRIPTION PLANS
   async findSubscriptionPlans(req: Request, res: Response) {
     return await this.subscriptionController.findSubscriptionPlans(req, res);
   }
   async getSubscriptionPlan(req: Request, res: Response) {
     return await this.subscriptionController.findSubscriptionPlan(req, res);
+  }
+
+  // Categories
+
+  async getCategories(req: Request, res: Response) {
+    return await this.categoryController.getAllCategories(req, res);
+  }
+  async getCategoryBySlug(req: Request, res: Response) {
+    return await this.categoryController.getCategoryBySlug(req, res);
+  }
+
+  async searchAnnouncement(req: Request, res: Response) {
+    return await this.annController.searchAnnouncements(req, res);
   }
 }

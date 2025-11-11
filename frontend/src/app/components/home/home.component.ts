@@ -14,9 +14,9 @@ export class HomeComponent implements OnInit {
   constructor(private readonly api: ApiService<any>) {}
 
   ngOnInit(): void {
-    this.api.getAll({ endpoint: 'catalog/categories' }).subscribe({
-      next: (res) => {
-        this.categories = res.items.data;
+    this.api.getAll({ endpoint: 'categories' }).subscribe({
+      next: (res: any) => {
+        this.categories = res.data;
       },
       error: (err) => console.error(err),
     });

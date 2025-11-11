@@ -19,6 +19,13 @@ enum Role {
     PROVIDER
 }
 
+enum HighlightLevel {
+    STANDARD
+    PRO
+    PREMIUM
+    VIP
+}
+
 enum Status {
     ACTIVATED
     DESACTIVATED
@@ -29,36 +36,18 @@ enum Status {
     UNVERIFIED
 }
 
-enum ProfileStatus {
-    VERIFIED
-    UNVERIFIED
-    PENDING_APPROVAL
-    CLOSED
-}
-
-enum ProfileType {
-    STANDARD
-    PREMIUM
-}
-
-enum FieldType {
-    text
-    number
-    textarea
-    select
-    checkbox
-}
-
 enum FieldInputType {
     TEXT
     TEXTAREA
     NUMBER
     SELECT
-    CHECKBOX
     RADIO
+    CHECKBOX
     MULTISELECT
     TOGGLE
     RANGE
+    DATE
+    FILE
 }
 
 enum AuthProvider {
@@ -114,10 +103,11 @@ enum PaymentPurpose {
 }
 
 enum AnnouncementStatus {
-    PUBLISHED
     DRAFT
-    ARCHIVED
     PENDING_APPROVAL
+    PUBLISHED
+    ARCHIVED
+    REJECTED
 }
 
 enum ConfigType {
@@ -135,29 +125,21 @@ model User {
     displayName           String?            @map("display_name")
     firstName             String?            @map("first_name")
     lastName              String?            @map("last_name")
-    zipCode               String?            @map("zip_code")
     role                  Role               @default(USER)
     status                Status             @default(ACTIVATED)
     profileImage          String             @map("profile_image")
     comments              String?
     location              String?
     country               String?
+    city                  String?
+    zipCode               String?            @map("zip_code")
     createdAt             DateTime           @default(now()) @map("created_at")
     updatedAt             DateTime           @updatedAt @map("updated_at")
     files                 File[]
-    Favorite              Favorite[]
-    Message               Message[]
+    Favorites             Favorite[]
+    messages              Message[]
     sentConversations     Conversation[]     @relation("ConversationSender")
     receivedConversations Conversation[]     @relation("ConversationReceiver")
-    Topic                 Topic[]
-    Comment               Comment[]
-    Reply                 Reply[]
-    CommentLike           CommentLike[]
-    ReplyLike             ReplyLike[]
-    CommentReport         CommentReport[]
-    ReplyReport           ReplyReport[]
-    FavoriteTopic         FavoriteTopic[]
-    WatchTopic            WatchTopic[]
     announcements         Announcement[]
     Payment               Payment[]
     MatchingAccess        MatchingAccess[]
@@ -185,159 +167,189 @@ model File {
     id         Int      @id @default(autoincrement()) @map("id")
     name       String   @map("name")
     fileUrl    String   @map("file_url")
+    mimeType   String?  @map("mime_type") // image/jpeg, audio/mp3, video/mp4
+    fileSize   Int?     @map("file_size")
     userId     Int      @map("user_id")
     uploadedAt DateTime @default(now()) @map("uploaded_at")
     User       User     @relation(fields: [userId], references: [id])
 
+    @@index([userId])
     @@map("files")
 }
 
 model Category {
-    id            Int                    @id @default(autoincrement()) @map("id")
-    name          String                 @unique
-    slug          String                 @unique
-    icon          String?
-    createdAt     DateTime               @default(now())
-    updatedAt     DateTime               @updatedAt
-    Announcement  Announcement[]
-    CategoryField CategoryField[]
-    services      CategoryServiceType[]
-    Announcements AnnouncementCategory[]
+    id             Int             @id @default(autoincrement()) @map("id")
+    name           String          @unique
+    slug           String          @unique
+    icon           String?
+    order          Int             @default(0)
+    active         Boolean         @default(true)
+    createdAt      DateTime        @default(now())
+    updatedAt      DateTime        @updatedAt
+    announcements  Announcement[]
+    categoryFields CategoryField[]
 
     @@map("categories")
 }
 
-model ServiceType {
-    id            Int                   @id @default(autoincrement()) @map("id")
-    name          String
-    slug          String                @unique
-    description   String?
-    groupId       Int?                  @map("group_id")
-    createdAt     DateTime              @default(now())
-    updatedAt     DateTime              @updatedAt
-    parentId      Int?                  @map("parent_id")
-    parent        ServiceType?          @relation("ServiceTypeToParent", fields: [parentId], references: [id])
-    group         RoleGroup?            @relation("ServiceGroup", fields: [groupId], references: [id])
-    Announcements Announcement[]
-    children      ServiceType[]         @relation("ServiceTypeToParent")
-    categories    CategoryServiceType[]
-
-    @@map("service_types")
-}
-
-model CategoryServiceType {
-    categoryId    Int         @map("category_id")
-    serviceTypeId Int         @map("service_type_id")
-    category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
-    isDefault     Boolean     @default(false)
-    order         Int         @default(0)
-    createdAt     DateTime    @default(now())
-
-    @@id([categoryId, serviceTypeId])
-    @@index([serviceTypeId])
-    @@map("category_service_types")
-}
-
-model AnnouncementCategory {
-    announcementId Int
-    categoryId     Int
-    announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-    category       Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-    @@id([announcementId, categoryId])
-    @@index([categoryId])
-    @@map("announcement_categories")
-}
-
 model Field {
-    id            Int             @id @default(autoincrement()) @map("id")
-    key           String          @unique
+    id            Int            @id @default(autoincrement()) @map("id")
+    key           String         @unique
     label         String
     inputType     FieldInputType
     placeholder   String?
+    helpText      String?
     unit          String?
-    searchable    Boolean         @default(true)
-    filterable    Boolean         @default(true)
-    options       FieldOption[]
-    createdAt     DateTime        @default(now())
-    updatedAt     DateTime        @updatedAt
-    AnnFieldValue AnnFieldValue[]
-    CategoryField CategoryField[]
+    required      Boolean        @default(false)
+    minLength     Int?
+    maxLength     Int?
+    minValue      Float?
+    maxValue      Float?
+    pattern       String?
+    dependsOn     String? // Clé du champ parent (ex: "experience_studio")
+    showWhen      String?
+    searchable    Boolean        @default(false) // Utilisable dans la recherche
+    filterable    Boolean        @default(false) // Utilisable dans les filtres
+    sortable      Boolean        @default(false)
+    externalTable String?        @map("external_table")
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime       @updatedAt @map("updated_at")
 
+    options        FieldOption[]
+    annValues      AnnFieldValue[]
+    categoryFields CategoryField[]
+
+    @@index([key])
     @@map("fields")
 }
 
 model FieldOption {
-    id                  Int                   @id @default(autoincrement()) @map("id")
-    fieldId             Int
-    field               Field                 @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-    label               String
-    value               String
-    order               Int                   @default(0)
-    createdAt           DateTime              @default(now())
-    updatedAt           DateTime              @updatedAt
-    AnnFieldValueOption AnnFieldValueOption[]
+    id                   Int                   @id @default(autoincrement()) @map("id")
+    fieldId              Int                   @map("field_id")
+    label                String
+    value                String
+    order                Int                   @default(0)
+    active               Boolean               @default(true)
+    metadata             Json?
+    createdAt            DateTime              @default(now()) @map("created_at")
+    updatedAt            DateTime              @updatedAt @map("updated_at")
+    field                Field                 @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+    annFieldValueOptions AnnFieldValueOption[]
 
     @@unique([fieldId, value])
+    @@index([fieldId])
     @@map("field_options")
 }
 
-model RoleGroup {
-    id        Int           @id @default(autoincrement()) @map("id")
-    name      String        @unique
-    services  ServiceType[] @relation("ServiceGroup")
-    createdAt DateTime      @default(now())
-    updatedAt DateTime      @updatedAt
-
-    @@map("role_groups")
-}
-
 model Announcement {
-    id            Int                @id @default(autoincrement())
-    title         String
-    description   String
-    ownerId       Int
-    images        String[]
-    serviceTypeId Int
-    categoryId    Int?
-    price         Int?
-    location      String?
-    status        AnnouncementStatus @default(PENDING_APPROVAL)
-    isPublished   Boolean            @default(false)
-    isHighlighted Boolean            @default(false)
-    views         Int                @default(0)
-    createdAt     DateTime           @default(now())
-    updatedAt     DateTime           @updatedAt
-
-    user           User                   @relation(fields: [ownerId], references: [id])
-    serviceType    ServiceType            @relation(fields: [serviceTypeId], references: [id])
-    category       Category?              @relation(fields: [categoryId], references: [id])
-    AnnValues      AnnFieldValue[]
-    Favorite       Favorite[]
-    Conversation   Conversation[]
-    CustomField    CustomField[]
-    categories     AnnouncementCategory[]
+    id             Int                @id @default(autoincrement())
+    title          String
+    description    String
+    ownerId        Int
+    categoryId     Int
+    images         String[]
+    videos         String[]
+    audios         String[]
+    price          Int?
+    priceUnit      String?            @map("price_unit")
+    negotiable     Boolean            @default(false)
+    location       String?
+    country        String?
+    countryCode    String?
+    city           String?
+    status         AnnouncementStatus @default(PENDING_APPROVAL)
+    isPublished    Boolean            @default(false)
+    isHighlighted  Boolean            @default(false)
+    highlightLevel HighlightLevel     @default(STANDARD)
+    views          Int                @default(0)
+    createdAt      DateTime           @default(now()) @map("created_at")
+    updatedAt      DateTime           @updatedAt @map("updated_at")
+    publishedAt    DateTime?          @map("published_at")
+    user           User               @relation(fields: [ownerId], references: [id])
+    category       Category           @relation(fields: [categoryId], references: [id])
+    fieldValues    AnnFieldValue[]
+    Favorites      Favorite[]
+    conversations  Conversation[]
     matchingAccess MatchingAccess[]
 
-    @@index([serviceTypeId])
     @@index([categoryId])
+    @@index([ownerId])
+    @@index([createdAt])
+    @@index([status, isPublished])
     @@map("announcements")
 }
 
+model MusicStyle {
+    id       Int     @id @default(autoincrement())
+    name     String  @unique // "House", "Techno", "Afrobeat"
+    slug     String  @unique
+    category String? // "Électronique", "Africain", "Urban"
+    active   Boolean @default(true)
+    order    Int     @default(0)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("music_styles")
+}
+
+model Instrument {
+    id       Int     @id @default(autoincrement())
+    name     String  @unique // "Piano", "Guitare", "Batterie"
+    slug     String  @unique
+    category String? // "Cordes", "Vents", "Percussions"
+    active   Boolean @default(true)
+    order    Int     @default(0)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("instruments")
+}
+
+model Language {
+    id     Int     @id @default(autoincrement())
+    name   String  @unique // "Français", "Anglais"
+    code   String  @unique // "fr", "en", "es"
+    active Boolean @default(true)
+    order  Int     @default(0)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("languages")
+}
+
+model Software {
+    id     Int     @id @default(autoincrement())
+    name   String  @unique // "FL Studio", "Ableton Live"
+    slug   String  @unique
+    type   String // "DAW", "PLUGIN", "VST"
+    active Boolean @default(true)
+    order  Int     @default(0)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("software")
+}
+
 model CategoryField {
-    categoryId Int
-    fieldId    Int
-
-    required        Boolean @default(false)
-    visibleInFilter Boolean @default(true)
-    visibleInForm   Boolean @default(true)
-    order           Int     @default(0)
-
-    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    field    Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+    categoryId      Int      @map("category_id")
+    fieldId         Int      @map("field_id")
+    required        Boolean  @default(false)
+    visibleInFilter Boolean  @default(true)
+    visibleInForm   Boolean  @default(true)
+    visibleInList   Boolean  @default(true) @map("visible_in_list")
+    order           Int      @default(0)
+    defaultValue    Json?    @map("default_value")
+    createdAt       DateTime @default(now()) @map("created_at")
+    category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    field           Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
     @@id([categoryId, fieldId])
+    @@index([categoryId])
+    @@index([fieldId])
     @@map("category_fields")
 }
 
@@ -345,15 +357,16 @@ model AnnFieldValue {
     id             BigInt                @id @default(autoincrement())
     announcementId Int
     fieldId        Int
+    valueText      String?               @map("value_text") // Pour TEXT, TEXTAREA, SELECT, RADIO
+    valueNumber    Float?                @map("value_number") // Pour NUMBER, RANGE
+    valueBoolean   Boolean?              @map("value_boolean")
+    valueDate      DateTime?             @map("value_date") // Pour DATE
+    valueJson      Json?                 @map("value_json")
+    createdAt      DateTime              @default(now())
+    updatedAt      DateTime              @updatedAt
     announcement   Announcement          @relation(fields: [announcementId], references: [id], onDelete: Cascade)
     field          Field                 @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-    valueText      String?
-    valueNumber    Float?
-    valueBoolean   Boolean?
     options        AnnFieldValueOption[]
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
     @@unique([announcementId, fieldId])
     @@index([fieldId])
@@ -394,7 +407,7 @@ model Conversation {
     announcementId Int?
     announcement   Announcement? @relation(fields: [announcementId], references: [id])
     createdAt      DateTime      @default(now())
-    Messages       Message[]
+    messages       Message[]
 
     @@unique([senderId, receiverId, announcementId])
     @@map("conversations")
@@ -410,20 +423,10 @@ model Message {
     conversation   Conversation @relation(fields: [conversationId], references: [id])
     sender         User         @relation(fields: [senderId], references: [id])
 
+    @@index([conversationId])
+    @@index([senderId])
+    @@index([readAt])
     @@map("messages")
-}
-
-model CustomField {
-    id            Int          @id @default(autoincrement()) @map("id")
-    label         String
-    type          FieldType
-    value         String
-    annoncementId Int
-    annoncement   Announcement @relation(fields: [annoncementId], references: [id])
-    createdAt     DateTime     @default(now())
-    updatedAt     DateTime     @updatedAt
-
-    @@map("custom_fields")
 }
 
 model Styles {
@@ -433,135 +436,6 @@ model Styles {
     updatedAt DateTime @updatedAt
 
     @@map("styles")
-}
-
-model TopicCategory {
-    id        Int      @id @default(autoincrement()) @map("id")
-    name      String   @unique
-    slug      String   @unique
-    topics    Topic[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-model Topic {
-    id            Int             @id @default(autoincrement()) @map("id")
-    title         String
-    content       String
-    authorId      Int
-    categoryId    Int
-    createdAt     DateTime        @default(now())
-    updatedAt     DateTime        @updatedAt
-    author        User            @relation(fields: [authorId], references: [id])
-    Comment       Comment[]
-    category      TopicCategory   @relation(fields: [categoryId], references: [id])
-    FavoriteTopic FavoriteTopic[]
-    WatchTopic    WatchTopic[]
-
-    @@map("topics")
-}
-
-model Comment {
-    id        Int             @id @default(autoincrement()) @map("id")
-    content   String
-    authorId  Int
-    topicId   Int
-    author    User            @relation(fields: [authorId], references: [id])
-    topic     Topic           @relation(fields: [topicId], references: [id])
-    replies   Reply[]
-    likes     CommentLike[]
-    reports   CommentReport[]
-    createdAt DateTime        @default(now())
-
-    @@map("comments")
-}
-
-model Reply {
-    id        Int           @id @default(autoincrement()) @map("id")
-    content   String
-    authorId  Int
-    commentId Int
-    author    User          @relation(fields: [authorId], references: [id])
-    comment   Comment       @relation(fields: [commentId], references: [id])
-    likes     ReplyLike[]
-    reports   ReplyReport[]
-    createdAt DateTime      @default(now())
-
-    @@map("replies")
-}
-
-model CommentLike {
-    id        Int      @id @default(autoincrement()) @map("id")
-    userId    Int
-    user      User     @relation(fields: [userId], references: [id])
-    comment   Comment  @relation(fields: [commentId], references: [id])
-    commentId Int
-    createdAt DateTime @default(now())
-
-    @@unique([userId, commentId])
-    @@map("comment_likes")
-}
-
-model ReplyLike {
-    id        Int      @id @default(autoincrement()) @map("id")
-    user      User     @relation(fields: [userId], references: [id])
-    userId    Int
-    reply     Reply    @relation(fields: [replyId], references: [id])
-    replyId   Int
-    createdAt DateTime @default(now())
-
-    @@unique([userId, replyId])
-    @@map("reply_likes")
-}
-
-model CommentReport {
-    id        Int      @id @default(autoincrement()) @map("id")
-    reason    String
-    user      User     @relation(fields: [userId], references: [id])
-    userId    Int
-    comment   Comment  @relation(fields: [commentId], references: [id])
-    commentId Int
-    createdAt DateTime @default(now())
-
-    @@unique([userId, commentId])
-    @@map("comment_reports")
-}
-
-model ReplyReport {
-    id        Int      @id @default(autoincrement()) @map("id")
-    reason    String
-    user      User     @relation(fields: [userId], references: [id])
-    userId    Int
-    reply     Reply    @relation(fields: [replyId], references: [id])
-    replyId   Int
-    createdAt DateTime @default(now())
-
-    @@unique([userId, replyId])
-    @@map("reply_reports")
-}
-
-model FavoriteTopic {
-    id        Int      @id @default(autoincrement()) @map("id")
-    topicId   Int
-    userId    Int
-    user      User     @relation(fields: [userId], references: [id])
-    topic     Topic    @relation(fields: [topicId], references: [id])
-    createdAt DateTime @default(now())
-
-    @@unique([userId, topicId])
-    @@map("favorite_topics")
-}
-
-model WatchTopic {
-    id        Int      @id @default(autoincrement()) @map("id")
-    topicId   Int
-    userId    Int
-    user      User     @relation(fields: [userId], references: [id])
-    topic     Topic    @relation(fields: [topicId], references: [id])
-    createdAt DateTime @default(now())
-
-    @@unique([userId, topicId])
-    @@map("watch_topics")
 }
 
 model AppConfig {
@@ -576,23 +450,27 @@ model AppConfig {
 }
 
 model Payment {
-    id             Int              @id @default(autoincrement())
-    userId         Int
-    reference      String           @unique
-    amount         Int
-    planId         Int
-    currency       Currency         @default(XOF)
-    status         PaymentStatus    @default(PENDING)
+    id             Int               @id @default(autoincrement())
+    userId         Int               @map("user_id")
+    reference      String            @unique
+    amount         Int // Montant en centimes
+    currency       Currency          @default(XOF)
+    status         PaymentStatus     @default(PENDING)
     provider       PaymentProvider
-    purpose        PaymentPurpose   @default(SUBSCRIPTION)
-    plan           SubscriptionPlan @relation(fields: [planId], references: [id])
-    user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-    createdAt      DateTime         @default(now())
-    updatedAt      DateTime         @updatedAt
+    purpose        PaymentPurpose    @default(SUBSCRIPTION)
+    planId         Int?              @map("plan_id")
+    // Métadonnées du paiement
+    providerData   Json?             @map("provider_data") // Données du provider
+    createdAt      DateTime          @default(now()) @map("created_at")
+    updatedAt      DateTime          @updatedAt @map("updated_at")
+    paidAt         DateTime?         @map("paid_at")
+    user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    plan           SubscriptionPlan? @relation(fields: [planId], references: [id])
     matchingAccess MatchingAccess[]
 
     @@index([userId, status, purpose])
     @@index([purpose, status])
+    @@index([createdAt])
     @@map("payments")
 }
 
@@ -638,6 +516,7 @@ model SubscriptionPlan {
     period        PlanPeriod
     isFree        Boolean            @default(false)
     priceCents    Int                @default(0)
+    currency      Currency           @default(XOF)
     durationDays  Int?
     status        PlanStatus         @default(ACTIVE)
     active        Boolean            @default(true)

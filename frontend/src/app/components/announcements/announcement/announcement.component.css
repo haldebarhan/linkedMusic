@@ -1,60 +1,418 @@
-/* taille de colonne & look */
-.services-col {
-  min-width: 220px; /* ajuste selon ton design */
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* ============================================ */
+/* ANNOUNCEMENT COMPONENT - AVEC RECHERCHE AVANCÉE */
+/* ============================================ */
+
+/* ============================================ */
+/* ZONE DE RECHERCHE */
+/* ============================================ */
+
+.card {
+  border: none;
+  transition: all 0.3s ease;
 }
 
-.service-item {
-  background: transparent;
-  border: 0;
-  color: #e8e8e8;
-  padding: 0;
-  text-align: left;
-  font-size: 1.125rem; /* ~18px comme ta capture */
+.card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.advanced-search-panel {
+  animation: slideDown 0.3s ease-out;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* LABELS ET INPUTS */
+/* ============================================ */
+
+.form-label {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.65rem 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+  outline: none;
+}
+
+/* ============================================ */
+/* CHECKBOXES ET RADIOS */
+/* ============================================ */
+
+.form-check-input {
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.form-check-label {
+  cursor: pointer;
+  user-select: none;
+  margin-left: 0.5rem;
+}
+
+/* ============================================ */
+/* SWITCHES (TOGGLE) */
+/* ============================================ */
+
+.form-switch .form-check-input {
+  width: 3rem;
+  height: 1.5rem;
   cursor: pointer;
 }
 
-.service-item:hover {
+.form-switch .form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* ============================================ */
+/* BOUTONS */
+/* ============================================ */
+
+.btn {
+  padding: 0.65rem 1.5rem;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #0d6efd;
+  border: none;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0b5ed7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.btn-outline-primary {
+  border: 2px solid #0d6efd;
+  color: #0d6efd;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: #0d6efd;
+  color: white;
+}
+
+.btn-outline-secondary {
+  border: 2px solid #6c757d;
+  color: #6c757d;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: #6c757d;
+  color: white;
+}
+
+/* ============================================ */
+/* LISTE DES RÉSULTATS */
+/* ============================================ */
+
+.list-group-item {
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.list-group-item.cursor-pointer {
+  cursor: pointer;
+}
+
+.list-group-item img {
+  transition: transform 0.2s ease;
+}
+
+.list-group-item:hover img {
+  transform: scale(1.05);
+}
+
+/* ============================================ */
+/* BADGES */
+/* ============================================ */
+
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+/* ============================================ */
+/* PAGINATION */
+/* ============================================ */
+
+.pagination {
+  margin: 0;
+}
+
+.page-link {
+  color: #0d6efd;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.125rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #0a58ca;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: #fff;
+}
+
+/* ============================================ */
+/* BREADCRUMB */
+/* ============================================ */
+
+.breadcrumb {
+  background: transparent;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: "›";
+  color: #6c757d;
+}
+
+.breadcrumb-item a {
+  color: #0d6efd;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+  color: #0a58ca;
   text-decoration: underline;
 }
-.service-item.active {
-  font-weight: 700;
-  text-decoration: underline;
+
+.breadcrumb-item.active {
+  color: #6c757d;
 }
 
-/* panneau sombre (optionnel) */
-.services-panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ============================================ */
+/* UTILITIES */
+/* ============================================ */
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
-.location-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #2f2f2f; /* fond sombre */
-  border-radius: 0.5rem;
-  padding: 0.35rem 0.5rem;
+.text-primary {
+  color: #0d6efd !important;
 }
 
-.location-bar i {
-  color: #fff;
-  font-size: 1rem;
-  line-height: 1;
+.text-muted {
+  color: #6c757d !important;
 }
 
-.location-select {
-  width: auto; /* s’adapte au contenu */
-  min-width: 180px; /* ajuste si besoin */
-  background: #5f5f5f;
-  color: #fff;
-  border: 0;
-  padding: 0.35rem 0.75rem;
-  border-radius: 0.5rem;
+/* ============================================ */
+/* LOADING SPINNER */
+/* ============================================ */
+
+.spinner-border {
+  animation: spinner-border 0.75s linear infinite;
 }
 
-.location-select:focus {
-  box-shadow: none;
-  outline: 2px solid rgba(255, 255, 255, 0.15);
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .advanced-search-panel .col-md-6 {
+    margin-bottom: 1rem;
+  }
+
+  .list-group-item {
+    padding: 1rem;
+  }
+
+  .list-group-item h5 {
+    font-size: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .page-link {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* ============================================ */
+/* ANIMATIONS */
+/* ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card,
+.list-group-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================ */
+/* SCROLLBAR CUSTOM (optionnel) */
+/* ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ============================================ */
+/* ICON SPACING */
+/* ============================================ */
+
+.fas,
+.far {
+  margin-right: 0.25rem;
+}
+
+/* ============================================ */
+/* EMPTY STATE */
+/* ============================================ */
+
+.list-group-item.text-center {
+  padding: 3rem 1rem;
+}
+
+.list-group-item.text-center i {
+  color: #adb5bd;
+}
+
+.list-group-item.text-center h5 {
+  margin-top: 1rem;
+  color: #495057;
+}
+
+/* ============================================ */
+/* HOVER EFFECTS */
+/* ============================================ */
+
+a:not(.btn) {
+  transition: color 0.2s ease;
+}
+
+a:not(.btn):hover {
+  color: #0a58ca;
+}
+
+/* ============================================ */
+/* FOCUS VISIBLE (Accessibility) */
+/* ============================================ */
+
+*:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
 }

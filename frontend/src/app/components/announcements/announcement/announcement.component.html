@@ -1,190 +1,554 @@
-<div class="container-fluid py-3" [formGroup]="form">
+<div class="container-fluid py-3">
   <!-- Fil d'ariane -->
-  <nav aria-label="breadcrumb" class="mb-4 bg-light">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-light rounded p-2">
+      <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+      <li class="breadcrumb-item"><a href="/annonces">Annonces</a></li>
       <li class="breadcrumb-item active" aria-current="page">
-        {{ slug | titlecase }}
+        {{ categoryName || (slug | titlecase) }}
       </li>
     </ol>
   </nav>
-  <!-- Entête simple -->
-  <h1 class="h4 mb-3 text-capitalize">{{ getTheme(slug) }}</h1>
 
-  <!-- Filtres -->
-  <div class="bg-light rounded p-3 mb-4">
-    <div class="row g-3 align-items-center">
-      <!-- Service -->
-      <div
-        class="services-panel bg-dark rounded p-3 mb-3"
-        *ngIf="servicesColumns?.length"
-        [formGroup]="form"
-      >
-        <div class="d-flex flex-wrap gap-4">
-          <!-- une colonne -->
-          <div class="services-col" *ngFor="let col of servicesColumns">
-            <button
-              type="button"
-              class="service-item"
-              *ngFor="let s of col"
-              [class.active]="form.value.serviceTypeId === s.id"
-              (click)="toggleService(s.id)"
-            >
-              {{ s.name }}
-            </button>
-          </div>
-        </div>
-      </div>
+  <!-- En-tête -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+      <i class="fas fa-music me-2"></i>
+      {{ getTheme(slug) }}
+    </h1>
+  </div>
 
-      <!-- Localisation centrée sous les services -->
-      <div class="d-flex justify-content-center my-3">
-        <div class="location-bar">
-          <!-- Icône : utilise FA si dispo, sinon active la ligne Bootstrap Icons -->
-          <i class="fa-solid fa-location-dot"></i>
-          <!-- <i class="bi bi-geo-alt-fill"></i> -->
-          <select
-            class="form-select location-select"
-            formControlName="location"
-          >
-            <option value="" disabled>Selectionnez un pays</option>
-            <option *ngFor="let c of countries" [ngValue]="c.name">
+  <!-- ============================================ -->
+  <!-- ZONE DE RECHERCHE -->
+  <!-- ============================================ -->
+  <div class="card shadow-sm mb-4" [formGroup]="searchForm">
+    <div class="card-body">
+      <!-- Recherche de base -->
+      <div class="row g-3 mb-3">
+        <!-- Localisation -->
+        <div class="col-md-6">
+          <label class="form-label">
+            <i class="fas fa-map-marker-alt me-2"></i>
+            Localisation
+          </label>
+          <select class="form-select" formControlName="location">
+            <option value="">Tous les pays</option>
+            <option *ngFor="let c of countries" [ngValue]="c.code">
               {{ c.name }}
             </option>
           </select>
+        </div>
+
+        <!-- Bouton recherche avancée -->
+        <div class="col-md-6 d-flex align-items-end">
+          <button
+            type="button"
+            class="btn btn-outline-primary w-100"
+            (click)="toggleAdvancedSearch()"
+          >
+            <i
+              class="fas"
+              [ngClass]="{
+                'fa-chevron-down': !showAdvancedSearch,
+                'fa-chevron-up': showAdvancedSearch
+              }"
+            ></i>
+            {{ showAdvancedSearch ? "Masquer" : "Afficher" }} la recherche
+            avancée
+          </button>
+        </div>
+      </div>
+
+      <!-- Recherche avancée (champs dynamiques) -->
+      <div
+        *ngIf="showAdvancedSearch && searchFields.length > 0"
+        class="advanced-search-panel border-top pt-3"
+      >
+        <h6 class="mb-3">
+          <i class="fas fa-filter me-2"></i>
+          Filtres avancés
+        </h6>
+
+        <div class="row g-3">
+          <!-- Boucle sur les champs de recherche dynamiques -->
+          <ng-container *ngFor="let categoryField of searchFields">
+            <div class="col-md-6" [ngSwitch]="categoryField.field.inputType">
+              <!-- ============================================ -->
+              <!-- TEXT -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'TEXT'">
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [formControlName]="categoryField.field.key"
+                  [placeholder]="
+                    categoryField.field.placeholder || categoryField.field.label
+                  "
+                />
+              </div>
+
+              <!-- ============================================ -->
+              <!-- TEXTAREA -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'TEXTAREA'">
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <textarea
+                  class="form-control"
+                  rows="2"
+                  [formControlName]="categoryField.field.key"
+                  [placeholder]="
+                    categoryField.field.placeholder || categoryField.field.label
+                  "
+                ></textarea>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- NUMBER -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'NUMBER'">
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [formControlName]="categoryField.field.key"
+                  [min]="categoryField.field.minValue ?? null"
+                  [max]="categoryField.field.maxValue ?? null"
+                  [placeholder]="
+                    categoryField.field.placeholder || categoryField.field.label
+                  "
+                />
+              </div>
+
+              <!-- ============================================ -->
+              <!-- RANGE (Min/Max) -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'RANGE'">
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <input
+                      type="number"
+                      class="form-control"
+                      [formControlName]="categoryField.field.key + '_min'"
+                      placeholder="Min"
+                      [min]="categoryField.field.minValue ?? null"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      type="number"
+                      class="form-control"
+                      [formControlName]="categoryField.field.key + '_max'"
+                      placeholder="Max"
+                      [max]="categoryField.field.maxValue ?? null"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- SELECT -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'SELECT'">
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <select
+                  class="form-select"
+                  [formControlName]="categoryField.field.key"
+                >
+                  <option value="">Tous</option>
+                  <option
+                    *ngFor="let opt of categoryField.field.options"
+                    [value]="opt.value"
+                  >
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- RADIO -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'RADIO'">
+                <label class="form-label d-block">
+                  {{ categoryField.field.label }}
+                </label>
+                <div class="d-flex flex-wrap gap-3">
+                  <div
+                    class="form-check"
+                    *ngFor="let opt of categoryField.field.options"
+                  >
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      [value]="opt.value"
+                      [formControlName]="categoryField.field.key"
+                      [id]="categoryField.field.key + '_' + opt.value"
+                    />
+                    <label
+                      class="form-check-label"
+                      [for]="categoryField.field.key + '_' + opt.value"
+                    >
+                      {{ opt.label }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- CHECKBOX / MULTISELECT -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'CHECKBOX'">
+                <label class="form-label d-block">
+                  {{ categoryField.field.label }}
+                </label>
+                <div class="d-flex flex-wrap gap-3">
+                  <div
+                    class="form-check"
+                    *ngFor="let opt of categoryField.field.options"
+                  >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [id]="categoryField.field.key + '_' + opt.value"
+                      [checked]="isInArray(categoryField.field.key, opt.value)"
+                      (change)="
+                        onMultiToggle(
+                          categoryField.field.key,
+                          opt.value,
+                          $event
+                        )
+                      "
+                    />
+                    <label
+                      class="form-check-label"
+                      [for]="categoryField.field.key + '_' + opt.value"
+                    >
+                      {{ opt.label }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'MULTISELECT'">
+                <label class="form-label d-block">
+                  {{ categoryField.field.label }}
+                </label>
+                <div class="d-flex flex-wrap gap-3">
+                  <div
+                    class="form-check"
+                    *ngFor="let opt of categoryField.field.options"
+                  >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [id]="categoryField.field.key + '_' + opt.value"
+                      [checked]="isInArray(categoryField.field.key, opt.value)"
+                      (change)="
+                        onMultiToggle(
+                          categoryField.field.key,
+                          opt.value,
+                          $event
+                        )
+                      "
+                    />
+                    <label
+                      class="form-check-label"
+                      [for]="categoryField.field.key + '_' + opt.value"
+                    >
+                      {{ opt.label }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- TOGGLE -->
+              <!-- ============================================ -->
+              <div *ngSwitchCase="'TOGGLE'">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [id]="categoryField.field.key"
+                    [checked]="searchForm.get(categoryField.field.key)?.value"
+                    (change)="onToggleChange(categoryField.field.key, $event)"
+                  />
+                  <label
+                    class="form-check-label"
+                    [for]="categoryField.field.key"
+                  >
+                    {{ categoryField.field.label }}
+                  </label>
+                </div>
+              </div>
+
+              <!-- ============================================ -->
+              <!-- TYPE NON GÉRÉ -->
+              <!-- ============================================ -->
+              <div *ngSwitchDefault>
+                <label class="form-label">
+                  {{ categoryField.field.label }}
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [formControlName]="categoryField.field.key"
+                  [placeholder]="categoryField.field.label"
+                />
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="resetFilters()"
+          >
+            <i class="fas fa-redo me-2"></i>
+            Réinitialiser
+          </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ============================================ -->
+  <!-- RÉSULTATS -->
+  <!-- ============================================ -->
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-3">Recherche en cours...</p>
+  </div>
+
   <!-- Résultats (desktop) -->
-  <div class="d-none d-md-block">
+  <div *ngIf="!loading" class="d-none d-md-block">
+    <!-- Info et tri -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="text-muted">
-        <strong>{{ metadata.total }}</strong> annonces – page
-        <strong>{{ metadata.page }}</strong>
+        <strong>{{ metadata.total }}</strong> annonce{{
+          metadata.total > 1 ? "s" : ""
+        }}
+        trouvée{{ metadata.total > 1 ? "s" : "" }} — page
+        <strong>{{ metadata.page }}</strong> / {{ metadata.totalPage }}
       </div>
       <div class="d-flex align-items-center">
         <span class="me-2">Tri :</span>
         <select
           class="form-select"
           style="width: auto"
-          (change)="applyFilters(false)"
+          [value]="currentSortValue"
+          (change)="onSortChange($event)"
         >
-          <option value="date">Date</option>
-          <option>Localisation</option>
+          <option value="date_asc">Date croissante</option>
+          <option value="date_desc">Date décroissante</option>
         </select>
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-light table-hover">
-        <thead>
-          <tr></tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of rows">
-            <td>
-              <div class="d-flex align-items-start">
-                <img
-                  src="https://placehold.co/400"
-                  alt=""
-                  class="me-3"
-                  width="60"
-                  height="60"
-                />
+    <!-- Liste des résultats -->
+    <div class="card shadow-sm">
+      <div class="list-group list-group-flush">
+        <div
+          *ngFor="let item of rows"
+          class="list-group-item list-group-item-action cursor-pointer"
+          (click)="goToDetails(item.id)"
+        >
+          <div class="d-flex align-items-start">
+            <!-- Image -->
+            <img
+              [src]="item.images?.[0] || 'https://placehold.co/120x90'"
+              alt="{{ item.title }}"
+              class="me-3 rounded"
+              width="120"
+              height="90"
+              style="object-fit: cover"
+            />
+
+            <!-- Contenu -->
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start">
                 <div>
-                  <a class="fw-semibold" (click)="goToDetails(item.id)">{{
-                    item.title
-                  }}</a>
-                  <div class="text-muted small">
-                    {{ query ? (item.description | truncate) : item.location }}
+                  <h5 class="mb-1">
+                    {{ item.title }}
+                    <span
+                      class="badge bg-warning text-dark ms-2"
+                      *ngIf="item.isHighlighted"
+                    >
+                      <i class="fas fa-star"></i> En vedette
+                    </span>
+                  </h5>
+                  <p class="text-muted mb-2">
+                    {{ item.description | truncate : 150 }}
+                  </p>
+                  <div class="d-flex gap-3 text-muted small">
+                    <span *ngIf="item.location">
+                      <i class="fas fa-map-marker-alt me-1"></i>
+                      {{ item.location }}
+                    </span>
+                    <span>
+                      <i class="far fa-calendar me-1"></i>
+                      {{ item.createdAt | date : "dd-MM-yyyy" }}
+                    </span>
+                    <span *ngIf="item.views">
+                      <i class="far fa-eye me-1"></i>
+                      {{ item.views }} vue{{ item.views > 1 ? "s" : "" }}
+                    </span>
                   </div>
                 </div>
+
+                <!-- Prix -->
+                <div *ngIf="item.price" class="text-end">
+                  <div class="h5 text-primary mb-0">
+                    {{ item.price | number : "1.0-2" }}
+                  </div>
+                  <small class="text-muted" *ngIf="item.priceUnit">
+                    / {{ item.priceUnit }}
+                  </small>
+                </div>
               </div>
-            </td>
-            <td>{{ item.createdAt | date }}</td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aucun résultat -->
+        <div *ngIf="rows.length === 0" class="list-group-item text-center py-5">
+          <i class="fas fa-search fa-3x text-muted mb-3"></i>
+          <h5>Aucune annonce trouvée</h5>
+          <p class="text-muted">
+            Essayez de modifier vos critères de recherche
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Pagination -->
-    <div
-      class="d-flex justify-content-center mt-3"
+    <nav
       *ngIf="metadata.totalPage > 1"
+      aria-label="Navigation"
+      class="mt-4 d-flex justify-content-center"
     >
-      <button
-        class="btn btn-outline-light me-2"
-        [disabled]="metadata.page === 1"
-        (click)="changePage(metadata.page - 1)"
-      >
-        Précédent
-      </button>
-      <ng-container *ngFor="let p of pages">
-        <button
-          class="btn"
-          [ngClass]="{
-            'btn-primary': p === metadata.page,
-            'btn-outline-light': p !== metadata.page
-          }"
-          (click)="changePage(p)"
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="metadata.page === 1">
+          <button
+            class="page-link"
+            (click)="changePage(metadata.page - 1)"
+            [disabled]="metadata.page === 1"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </li>
+
+        <li
+          class="page-item"
+          *ngFor="let p of pages"
+          [class.active]="p === metadata.page"
         >
-          {{ p }}
-        </button>
-      </ng-container>
-      <button
-        class="btn btn-outline-light ms-2"
-        [disabled]="metadata.page === metadata.totalPage"
-        (click)="changePage(metadata.page + 1)"
-      >
-        Suivant
-      </button>
-    </div>
+          <button class="page-link" (click)="changePage(p)">
+            {{ p }}
+          </button>
+        </li>
+
+        <li
+          class="page-item"
+          [class.disabled]="metadata.page === metadata.totalPage"
+        >
+          <button
+            class="page-link"
+            (click)="changePage(metadata.page + 1)"
+            [disabled]="metadata.page === metadata.totalPage"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </li>
+      </ul>
+    </nav>
   </div>
 
-  <!-- Mobile: liste simple -->
-  <div class="d-block d-md-none">
-    <div class="list-group">
-      <a
-        href="#"
-        class="list-group-item list-group-item-action d-flex align-items-start"
-        *ngFor="let item of rows"
-      >
-        <img
-          src="https://placehold.co/400"
-          class="rounded me-2"
-          width="60"
-          height="60"
-          alt="Annonce"
-        />
-        <div>
-          <div class="fw-bold">
-            {{ item.title }}
-            <span class="badge bg-success" *ngIf="item.isHighlighted">PRO</span>
-          </div>
-          <div class="text-muted small">
-            {{ item.description | slice : 0 : 40 }}
-          </div>
-          <div class="small">
-            {{ item.location }} • {{ item.createdAt | date }}
-          </div>
-        </div>
-      </a>
+  <!-- Mobile: liste simplifiée -->
+  <div *ngIf="!loading" class="d-block d-md-none">
+    <!-- Info -->
+    <div class="text-center text-muted mb-3">
+      <strong>{{ metadata.total }}</strong> annonce{{
+        metadata.total > 1 ? "s" : ""
+      }}
     </div>
 
-    <!-- Loader -->
-    <div class="text-center my-3">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Chargement...</span>
+    <!-- Liste -->
+    <div class="list-group">
+      <div
+        *ngFor="let item of rows"
+        class="list-group-item list-group-item-action"
+        (click)="goToDetails(item.id)"
+      >
+        <div class="d-flex align-items-start">
+          <img
+            [src]="item.images?.[0] || 'https://placehold.co/80x60'"
+            class="rounded me-2"
+            width="80"
+            height="60"
+            style="object-fit: cover"
+            alt="{{ item.title }}"
+          />
+          <div class="flex-grow-1">
+            <div class="fw-bold">
+              {{ item.title }}
+              <span
+                class="badge bg-warning text-dark ms-1"
+                *ngIf="item.isHighlighted"
+              >
+                <i class="fas fa-star"></i>
+              </span>
+            </div>
+            <div class="text-muted small">
+              {{ item.description | slice : 0 : 60 }}...
+            </div>
+            <div class="small mt-1">
+              <span class="text-muted" *ngIf="item.location">
+                {{ item.location }} •
+              </span>
+              {{ item.createdAt | date : "dd/MM/yyyy" }}
+            </div>
+            <div class="text-primary fw-bold mt-1" *ngIf="item.price">
+              {{ item.price | number : "1.0-2" }} €
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aucun résultat -->
+      <div *ngIf="rows.length === 0" class="list-group-item text-center py-4">
+        <i class="fas fa-search fa-2x text-muted mb-2"></i>
+        <div>Aucune annonce trouvée</div>
       </div>
     </div>
 
     <!-- Bouton retour en haut -->
     <button
-      class="btn btn-primary rounded-circle shadow position-fixed back-to-top"
+      class="btn btn-primary rounded-circle shadow position-fixed"
+      style="bottom: 20px; right: 20px; width: 50px; height: 50px"
       (click)="scrollToTop()"
+      *ngIf="rows.length > 5"
     >
-      ↑
+      <i class="fas fa-arrow-up"></i>
     </button>
   </div>
 </div>

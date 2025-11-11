@@ -72,11 +72,15 @@ export class UserAnnouncementsComponent implements OnInit, OnDestroy {
         },
       })
       .subscribe({
-        next: (res) => {
-          const items = res.items.data;
-          const meta = res.items.metadata;
+        next: (res: any) => {
+          const items = res.data.data;
+          const meta = res.data.pagination;
           this.rows = items;
-          this.metadata = meta;
+          this.metadata = {
+            total: meta.total,
+            totalPage: meta.totalPages,
+            page: meta.page,
+          };
           this.pages = this.buildPages(
             this.metadata.page,
             this.metadata.totalPage

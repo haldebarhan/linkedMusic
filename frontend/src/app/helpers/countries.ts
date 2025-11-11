@@ -1,4 +1,64 @@
-export const country_list = [
+const africanCountryCodes = [
+  'DZ',
+  'AO',
+  'BJ',
+  'BW',
+  'BF',
+  'BI',
+  'CV',
+  'CM',
+  'CF',
+  'TD',
+  'KM',
+  'CG',
+  'CD',
+  'CI',
+  'DJ',
+  'EG',
+  'GQ',
+  'ER',
+  'SZ',
+  'ET',
+  'GA',
+  'GM',
+  'GH',
+  'GN',
+  'GW',
+  'KE',
+  'LS',
+  'LR',
+  'LY',
+  'MG',
+  'MW',
+  'ML',
+  'MR',
+  'MU',
+  'YT',
+  'MA',
+  'MZ',
+  'NA',
+  'NE',
+  'NG',
+  'RW',
+  'RE',
+  'ST',
+  'SN',
+  'SC',
+  'SL',
+  'SO',
+  'ZA',
+  'SS',
+  'SD',
+  'TZ',
+  'TG',
+  'TN',
+  'UG',
+  'EH',
+  'ZM',
+  'ZW',
+];
+
+const countries = [
   { code: 'AF', name: 'Afghanistan' },
   { code: 'AX', name: 'Îles Åland' },
   { code: 'AL', name: 'Albanie' },
@@ -250,3 +310,28 @@ export const country_list = [
   { code: 'ZM', name: 'Zambie' },
   { code: 'ZW', name: 'Zimbabwe' },
 ];
+
+const AFRICA_SET = new Set(africanCountryCodes);
+
+const collator = new Intl.Collator('fr', {
+  sensitivity: 'accent',
+  ignorePunctuation: true,
+});
+const stripFrenchArticle = (name: string) =>
+  name
+    .replace(/^(L['’])\s*/i, '') // L', L’
+    .replace(/^(Le|La|Les)\s+/i, ''); // Le, La, Les
+
+const africaCountries = [...countries]
+  .filter((c) => AFRICA_SET.has(c.code))
+  .sort((a, b) =>
+    collator.compare(stripFrenchArticle(a.name), stripFrenchArticle(b.name))
+  );
+
+const otherCountries = [...countries]
+  .filter((c) => !AFRICA_SET.has(c.code))
+  .sort((a, b) =>
+    collator.compare(stripFrenchArticle(a.name), stripFrenchArticle(b.name))
+  );
+
+export const country_list = [...africaCountries, ...otherCountries];
