@@ -13,7 +13,9 @@
     "migration:reset": "prisma migrate reset --schema=./src/database/prisma/schema.prisma",
     "migration:generate": "prisma generate --schema=./src/database/prisma/schema.prisma",
     "preinstall": "npx only-allow pnpm && node -v | awk -F. '{if ($1<22 || ($1==22 && $2<13)) exit 1}' || (echo 'Erreur: Vous devez utiliser Node.js 22.13.0 ou supérieur' && exit 1)",
-    "postinstall": "pnpm migration:generate && tsc"
+    "postinstall": "pnpm migration:generate && tsc",
+    "create:seed": "ts-node scripts/seed.ts",
+    "create:announcements": "ts-node scripts/seed-announcement.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +33,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
+    "@types/node": "^24.10.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/winston": "^2.4.4",

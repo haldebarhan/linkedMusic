@@ -35,7 +35,7 @@ export class ChatService {
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
-        Messages: true,
+        messages: true,
         sender: true,
         receiver: true,
         announcement: true,

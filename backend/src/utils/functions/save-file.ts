@@ -40,3 +40,32 @@ export const saveFilesToBucket = async (
   );
   return uploadedFiles;
 };
+
+export const saveAnnouncementFiles = async (
+  files: Express.Multer.File[]
+): Promise<{ images: string[]; audios: string[]; videos: string[] }> => {
+  const images: string[] = [];
+  const audios: string[] = [];
+  const videos: string[] = [];
+  const bucketName = ENV.MINIO_BUCKET_NAME;
+
+  for (const file of files) {
+    const objectName = `zikdev/announcements/${file.originalname}`;
+    const metaData = {
+      "Content-Type": file.mimetype,
+    };
+
+    const fileBuffer = file.buffer;
+    await minioService.uploadFile(bucketName, objectName, fileBuffer, metaData);
+
+    if (file.mimetype.startsWith("image")) {
+      images.push(objectName);
+    } else if (file.mimetype.startsWith("audio")) {
+      audios.push(objectName);
+    } else if (file.mimetype.startsWith("video")) {
+      videos.push(objectName);
+    }
+  }
+
+  return { images, audios, videos };
+};

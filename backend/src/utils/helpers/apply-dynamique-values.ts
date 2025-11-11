@@ -124,15 +124,15 @@ export const buildDocForIndex = async (
   const a = await prisma.announcement.findUniqueOrThrow({
     where: { id },
     include: {
-      serviceType: {
-        select: {
-          slug: true,
-          categories: { select: { category: { select: { slug: true } } } },
-        },
-      },
-      AnnValues: {
-        include: { field: true, options: { include: { option: true } } },
-      },
+      //   serviceType: {
+      //     select: {
+      //       slug: true,
+      //       categories: { select: { category: { select: { slug: true } } } },
+      //     },
+      //   },
+      //   AnnValues: {
+      //     include: { field: true, options: { include: { option: true } } },
+      //   },
     },
   });
 
@@ -141,8 +141,8 @@ export const buildDocForIndex = async (
     id: a.id,
     title: a.title,
     description: a.description?.slice(0, 200) ?? "",
-    category: a.serviceType.categories.map((ann) => ann.category.slug),
-    serviceType: a.serviceType.slug,
+    // category: a.serviceType.categories.map((ann) => ann.category.slug),
+    // serviceType: a.serviceType.slug,
     fichiers: a.images,
     isPublished: a.isPublished,
     isHighlighted: a.isHighlighted,
@@ -154,28 +154,28 @@ export const buildDocForIndex = async (
     updatedAt: a.updatedAt,
   };
 
-  for (const v of a.AnnValues) {
-    const key = v.field.key;
-    switch (v.field.inputType) {
-      case "NUMBER":
-      case "RANGE":
-        (doc as any)[key] = v.valueNumber ?? null;
-        break;
-      case "TOGGLE":
-        (doc as any)[key] = !!v.valueBoolean;
-        break;
-      case "SELECT":
-      case "RADIO":
-        (doc as any)[key] = v.options[0]?.option.value ?? null;
-        break;
-      case "MULTISELECT":
-      case "CHECKBOX":
-        (doc as any)[key] = v.options.map((o) => o.option.value);
-        break;
-      default:
-        (doc as any)[key] = v.valueText ?? null;
-    }
-  }
+  //   for (const v of a.AnnValues) {
+  //     const key = v.field.key;
+  //     switch (v.field.inputType) {
+  //       case "NUMBER":
+  //       case "RANGE":
+  //         (doc as any)[key] = v.valueNumber ?? null;
+  //         break;
+  //       case "TOGGLE":
+  //         (doc as any)[key] = !!v.valueBoolean;
+  //         break;
+  //       case "SELECT":
+  //       case "RADIO":
+  //         (doc as any)[key] = v.options[0]?.option.value ?? null;
+  //         break;
+  //       case "MULTISELECT":
+  //       case "CHECKBOX":
+  //         (doc as any)[key] = v.options.map((o) => o.option.value);
+  //         break;
+  //       default:
+  //         (doc as any)[key] = v.valueText ?? null;
+  //     }
+  //   }
 
   if (values && Object.keys(values).length > 0) {
     for (const [key, raw] of Object.entries(values)) {

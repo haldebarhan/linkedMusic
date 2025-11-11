@@ -18,13 +18,18 @@ export const ValidateDtoMiddleware = <T extends object>(
         return;
       }
 
-      const dtoInstance = plainToInstance(dtoClass, req.body);
+      const dtoInstance = plainToInstance(dtoClass, req.body, {
+        enableImplicitConversion: true,
+        excludeExtraneousValues: false, // 👈 Important
+        exposeUnsetFields: false, // 👈 N'expose pas les champs non définis
+      });
 
       const errors = await validate(dtoInstance, {
-        whitelist: true,
+        whitelist: false, // 👈 Désactivez le whitelist !
         forbidNonWhitelisted: false,
         skipMissingProperties: false,
-        forbidUnknownValues: true,
+        forbidUnknownValues: false,
+        validationError: { target: false, value: false },
       });
 
       if (errors.length > 0) {

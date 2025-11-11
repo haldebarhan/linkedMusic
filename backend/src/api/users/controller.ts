@@ -1,4 +1,3 @@
-import { AnnouncementController } from "@/microservices/annoncements/ann.controller";
 import { DashBoardController } from "@/microservices/dashboard/dashboard.controller";
 import { MatchingController } from "@/microservices/matching/matching.controller";
 import { MessageController } from "@/microservices/messages/message.controller";
@@ -7,37 +6,43 @@ import { SubscriptionController } from "@/microservices/subscriptions/subscripti
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import { Response, Request } from "express";
 import { injectable } from "tsyringe";
+import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
 
 @injectable()
 export class UserController {
   constructor(
-    private readonly announcementController: AnnouncementController,
     private readonly matchingController: MatchingController,
     private readonly messageController: MessageController,
     private readonly subscriptionController: SubscriptionController,
     private readonly payementController: PaymentController,
-    private readonly dashboardController: DashBoardController
+    private readonly dashboardController: DashBoardController,
+    private readonly announcementController: AnnouncementController
   ) {}
 
-  // Announcements
+  // Announcement New Version
 
   async createAnnouncement(req: AuthenticatedRequest, res: Response) {
     return await this.announcementController.createAnnouncement(req, res);
   }
   async updateAnnouncement(req: AuthenticatedRequest, res: Response) {
-    return await this.announcementController.update(req, res);
-  }
-
-  async findAnnouncements(req: AuthenticatedRequest, res: Response) {
-    return await this.announcementController.findAnnouncements(req, res);
+    return await this.announcementController.updateAnnouncement(req, res);
   }
 
   async removeAnnouncement(req: AuthenticatedRequest, res: Response) {
-    return await this.announcementController.remove(req, res);
+    return await this.announcementController.deleteAnnouncement(req, res);
   }
 
-  async findAnnouncement(req: AuthenticatedRequest, res: Response) {
-    return await this.announcementController.findOne(req, res);
+  async publishAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.publishAnnouncement(req, res);
+  }
+  async archiveAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.archiveAnnouncement(req, res);
+  }
+  async myAnnouncements(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.getMyAnnouncements(req, res);
+  }
+  async myAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.getMyAnnouncement(req, res);
   }
 
   // Matching

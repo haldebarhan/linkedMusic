@@ -8,6 +8,7 @@ import {
 import { catchError, Observable, throwError } from 'rxjs';
 import { ApiListResponse } from '../interfaces/paginated-response';
 import { ApiResponse } from '../interfaces/response-formatter';
+import { AnnouncementSearchParams } from '../interfaces/annoncement';
 
 const SERVER_ERROR_RESPONSE_MAP: Record<number, string> = {
   400: 'Requête invalide. Vérifiez les données envoyées.',
@@ -177,5 +178,28 @@ export class ApiService<T> {
     }
 
     return throwError(() => apiError);
+  }
+
+  // ============================================================================
+  // NEW API
+  // ============================================================================
+
+  searchAnnouncements(
+    params: AnnouncementSearchParams
+  ): Observable<ApiListResponse<T>> {
+    const cleanParams: Record<string, any> = {};
+    Object.keys(params).forEach((key) => {
+      const value = (params as any)[key];
+      if (value !== undefined && value !== null && value !== '') {
+        cleanParams[key] = value;
+      }
+    });
+    const httpParams = new HttpParams({ fromObject: cleanParams });
+    return this.http.get<ApiListResponse<any>>(
+      `${this.API_URL}/announcements/search`,
+      {
+        params: httpParams,
+      }
+    );
   }
 }

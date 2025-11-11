@@ -19,7 +19,7 @@ export class MessageRepository {
       skip,
       take,
       include: {
-        Messages: {
+        messages: {
           orderBy: { createdAt: Order.DESC },
           include: {
             sender: {
@@ -43,7 +43,7 @@ export class MessageRepository {
     return await prisma.conversation.findFirst({
       where: { id },
       include: {
-        Messages: true,
+        messages: true,
       },
     });
   }
@@ -59,7 +59,7 @@ export class MessageRepository {
     return await prisma.conversation.update({
       where: { id },
       data: {
-        Messages: {
+        messages: {
           updateMany: {
             where: {
               readAt: null,
@@ -112,7 +112,7 @@ export class MessageRepository {
             profileImage: true,
           },
         },
-        Messages: {
+        messages: {
           orderBy: { createdAt: Order.DESC },
           take: 1,
           select: {
@@ -124,7 +124,7 @@ export class MessageRepository {
         },
         _count: {
           select: {
-            Messages: {
+            messages: {
               where: { readAt: null, senderId: { not: userId } },
             },
           },

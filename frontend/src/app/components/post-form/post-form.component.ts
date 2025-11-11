@@ -18,8 +18,11 @@ import {
 import { CommonModule } from '@angular/common';
 import {
   Category,
+  CategoryField,
+  CategorySchema,
   Field,
   FieldInputType,
+  FieldValueDto,
 } from '../../shared/types/field-input-type';
 import { formatLabel } from '../../helpers/input-label';
 import { Toast } from '../../helpers/sweet-alert';
@@ -56,34 +59,40 @@ type PreviewItem = {
 })
 export class PostFormComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  // Fichiers
   existingFiles: PreviewItem[] = [];
   previewFiles: PreviewItem[] = [];
-  slug: string | null = null;
   files: File[] = [];
+  private fileUrls: PreviewItem[] = [];
+  private removedExisting = new Set<string>();
+  private objectUrlToFile = new Map<string, File>();
+
+  // Catégorie et données
+  slug: string | null = null;
   categorySlug: string | null = null;
-  announcement: any;
+  categoryName: string = '';
+  categoryId: number | null = null;
+  label: string = '';
+
+  // Annonce (mode édition)
+  announcement: any = null;
   announcementId: number | null = null;
+
+  // Champs dynamiques - Structure adaptée à l'API
+  categorySchema: CategorySchema | null = null;
+  visibleFields: CategoryField[] = [];
+
+  // Formulaire
+  form!: FormGroup;
+  submitting = false;
+  loadingSchema = false;
+
   services: any[] = [];
   dynFields: any[] = [];
   commonFields: Field[] = [];
-  categoryName: string = '';
-  results: Category = {
-    id: 0,
-    categorySlug: '',
-    category: '',
-    services: [],
-    fields: [],
-  };
 
-  submitting = false;
-  form!: FormGroup;
-  loadingServices = false;
-  label: string = '';
-  perServiceType: Record<string, Field[]> = {};
-  private fileUrls: PreviewItem[] = [];
-
-  private removedExisting = new Set<string>();
-  private objectUrlToFile = new Map<string, File>();
+  // Pays
   countries: Array<{ name: string; code: string }> = [];
 
   constructor(
@@ -94,161 +103,435 @@ export class PostFormComponent implements OnInit, OnDestroy {
   ) {}
   ngOnInit(): void {
     this.countries = country_list;
+
     const idParam = this.route.snapshot.paramMap.get('id');
     this.announcementId = idParam !== null ? +idParam : null;
     this.slug = this.route.snapshot.paramMap.get('category');
+
+    // Validation du routing
     if (!this.slug && !this.announcementId) {
       this.router.navigate(['/annonces/publier']);
+      return;
     }
-    if (this.slug) {
+
+    // Chargement
+    if (this.announcementId) {
+      this.loadAnnouncement(this.announcementId);
+    } else if (this.slug) {
       this.categorySlug = this.slug;
       this.label = formatLabel(this.slug);
       this.loadSchema(this.slug);
     }
-    if (this.announcementId) {
-      this.loadAnnouncement(this.announcementId);
-    }
   }
+
   ngOnDestroy(): void {
     this.clearNewFileUrls();
   }
 
-  loadAnnouncement(id: number) {
+  /**
+   * Charge une annonce existante pour l'édition
+   */
+  loadAnnouncement(id: number): void {
     this.apiService.getOne('users/announcements', id).subscribe({
       next: (res) => {
         this.announcement = res.data;
-        const slug = Array.isArray(this.announcement.category)
-          ? String(this.announcement.category[0]).toLowerCase()
-          : String(this.announcement.category).toLowerCase();
+        const slug = this.announcement.category.slug;
+
         this.categorySlug = slug;
         this.label = formatLabel(slug);
         this.loadSchema(slug);
       },
+      error: (err) => {
+        console.error('Erreur chargement annonce:', err);
+        Toast.fire({
+          icon: 'error',
+          text: "Impossible de charger l'annonce",
+        });
+      },
     });
   }
 
-  patchForm() {
-    if (!this.announcement) return;
-    const ann = this.announcement;
-    const [city = '', country = ''] = String(ann.location || '').split(' ');
-    const tag = String(ann.tag || '').split(' ') ?? null;
-    const serviceType = this.services.find(
-      (s) => s.name === ann.serviceType
-    )?.id;
-    if (tag && tag[2]) {
-      const sst = this.services.find((s) => s.name === tag[2])?.id;
-      if (sst) this.form.get('searchServiceType')?.setValue(sst);
-    }
+  /**
+   * Charge le schéma de la catégorie
+   */
+  loadSchema(slug: string): void {
+    this.loadingSchema = true;
 
-    const styles: string[] | null = Array.isArray(ann.styles)
-      ? ann.styles
-      : null;
-    if (styles?.length) this.form.get('styles')?.setValue(styles);
-
-    this.hydrateExistingFiles(ann.fichiers);
-    this.form.patchValue({
-      title: ann.title,
-      description: ann.description,
-      city,
-      country,
-      serviceType,
-    });
-  }
-
-  loadSchema(slug: string) {
     this.apiService
       .getAll({
-        endpoint: `catalog/categories/${slug}/filters`,
+        endpoint: `categories/${slug}`,
       })
       .subscribe({
         next: (res: any) => {
-          this.results = res.data;
-          this.dynFields = this.results.fields;
-          this.categoryName = this.results.category;
-          this.services = this.results.services;
+          this.categorySchema = res.data;
+          this.categoryId = this.categorySchema!.id;
+          this.categoryName = this.categorySchema!.name;
 
-          this.commonFields = this.results.fields ?? [];
-          this.perServiceType = {};
-          this.buildForm(slug);
+          // Filtrer les champs visibles dans le formulaire
+          this.visibleFields = this.categorySchema!.categoryFields.filter(
+            (cf) => cf.visibleInForm
+          ).sort((a, b) => a.order - b.order);
+
+          // Construire le formulaire
+          this.buildForm();
+
+          // Si mode édition, patcher les valeurs
+          if (this.announcement) {
+            this.patchForm();
+          }
         },
-        error: (err) => console.error('err: ', err),
+        error: (err) => {
+          console.error('Erreur chargement schéma:', err);
+          Toast.fire({
+            icon: 'error',
+            text: 'Impossible de charger le formulaire',
+          });
+        },
+        complete: () => {
+          this.loadingSchema = false;
+        },
       });
   }
 
-  buildForm(slug: string) {
-    const group = {
-      serviceType: ['', Validators.required],
+  /**
+   * Construit le formulaire avec les champs de base + champs dynamiques
+   */
+  private buildForm(): void {
+    const group: any = {
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: ['', [Validators.required, Validators.minLength(20)]],
       country: [''],
       city: [''],
       price: [''],
-      photos: [[] as string[]],
     };
-    this.commonFields.forEach((field) => this.addControlForField(group, field));
+
+    // Ajouter tous les champs dynamiques
+    this.visibleFields.forEach((categoryField) => {
+      this.addControlForField(group, categoryField);
+    });
+
     this.form = this.fb.group(group);
+  }
 
-    if (slug === 'musiciens')
-      this.form.addControl(
-        'searchServiceType',
-        new FormControl('', [Validators.required])
-      );
+  /**
+   * Ajoute un contrôle de formulaire pour un champ donné
+   */
+  private addControlForField(group: any, categoryField: CategoryField): void {
+    const field = categoryField.field;
+    const validators = categoryField.required ? [Validators.required] : [];
 
-    this.applyServiceType(this.form.get('serviceType')!.value);
-    const ctrl = this.form.get('serviceType')!;
-    ctrl.disable({ emitEvent: false });
-    if (this.services.length === 1) {
-      ctrl.setValue(this.services[0].id, { emitEvent: false });
-    }
-    ctrl.enable({ emitEvent: false });
+    // Ajouter des validateurs supplémentaires selon le type
+    if (field.minLength) validators.push(Validators.minLength(field.minLength));
+    if (field.maxLength) validators.push(Validators.maxLength(field.maxLength));
+    if (typeof field.minValue === 'number')
+      validators.push(Validators.min(field.minValue));
+    if (typeof field.maxValue === 'number')
+      validators.push(Validators.max(field.maxValue));
+    if (field.pattern) validators.push(Validators.pattern(field.pattern));
 
-    if (this.announcement) {
-      this.patchForm();
+    switch (field.inputType) {
+      case 'TEXT':
+      case 'TEXTAREA':
+      case 'SELECT':
+      case 'RADIO':
+        group[field.key] = new FormControl(
+          categoryField.defaultValue || '',
+          validators
+        );
+        break;
+
+      case 'NUMBER':
+        group[field.key] = new FormControl(
+          categoryField.defaultValue || '',
+          validators
+        );
+        break;
+
+      case 'RANGE':
+        group[`${field.key}_min`] = new FormControl('');
+        group[`${field.key}_max`] = new FormControl('');
+        break;
+
+      case 'CHECKBOX':
+      case 'MULTISELECT':
+        group[field.key] = new FormControl(categoryField.defaultValue || []);
+        break;
+
+      case 'TOGGLE':
+        group[field.key] = new FormControl(
+          categoryField.defaultValue !== null
+            ? categoryField.defaultValue
+            : false
+        );
+        break;
+
+      default:
+        // Type non reconnu, ajouter un contrôle par défaut
+        group[field.key] = new FormControl(
+          categoryField.defaultValue || '',
+          validators
+        );
     }
   }
 
-  submit() {
+  /**
+   * Remplit le formulaire avec les données d'une annonce existante
+   */
+  private patchForm(): void {
+    if (!this.announcement) return;
+
+    const ann = this.announcement;
+
+    // Fichiers existants
+    this.hydrateExistingFiles(ann.fichiers || ann.images || []);
+
+    // Valeurs de base
+    this.form.patchValue({
+      title: ann.title,
+      description: ann.description,
+      city: ann.city,
+      country: ann.country,
+      price: ann.price,
+    });
+
+    // Valeurs dynamiques depuis fieldValues
+    if (ann.fieldValues && Array.isArray(ann.fieldValues)) {
+      ann.fieldValues.forEach((fv: any) => {
+        const fieldKey = fv.field?.key;
+        if (!fieldKey || !this.form.contains(fieldKey)) return;
+
+        // Déterminer la valeur selon le type
+        let value: any;
+
+        if (fv.valueBoolean !== undefined && fv.valueBoolean !== null) {
+          value = fv.valueBoolean;
+        } else if (fv.valueNumber !== undefined && fv.valueNumber !== null) {
+          value = fv.valueNumber;
+        } else if (fv.valueText !== undefined && fv.valueText !== null) {
+          value = fv.valueText;
+        } else if (fv.options && Array.isArray(fv.options)) {
+          // Pour les multiselect/checkbox
+          value = fv.options.map((opt: any) => opt.value);
+        } else if (fv.valueJson) {
+          value = fv.valueJson;
+        }
+
+        if (value !== undefined) {
+          this.form.get(fieldKey)?.setValue(value);
+        }
+      });
+    }
+  }
+
+  /**
+   * Soumet le formulaire
+   */
+  submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      Toast.fire({
+        icon: 'warning',
+        text: 'Veuillez remplir tous les champs obligatoires',
+      });
       return;
     }
+
     this.submitting = true;
     const payload = this.buildPayload();
-    const FormData = this.announcementId
+    const formData = this.announcementId
       ? this.buildUpdateFormData(payload)
       : this.buildCreateFormData(payload);
 
     const endpoint = 'users/announcements';
-
     const obs = this.announcementId
-      ? this.apiService.update(endpoint, this.announcementId, FormData)
-      : this.apiService.create(endpoint, FormData);
+      ? this.apiService.update(endpoint, this.announcementId, formData)
+      : this.apiService.create(endpoint, formData);
 
     obs.subscribe({
       next: () => {
-        this.form.reset();
-        this.fileInput?.nativeElement &&
-          (this.fileInput.nativeElement.value = '');
-        this.files = [];
-        this.clearNewFileUrls();
-        this.removedExisting.clear();
-        this.previewFiles = [];
+        this.resetForm();
         Toast.fire({
           icon: 'success',
           text: this.announcementId ? 'Annonce mise à jour' : 'Annonce créée',
-          didClose: () => this.router.navigate(['/profile/announcements']),
+          //   didClose: () => this.router.navigate(['/profile/announcements']),
         });
       },
-      error: (err) => console.error(err),
-      complete: () => (this.submitting = false),
+      error: (err) => {
+        console.error('Erreur soumission:', err);
+        Toast.fire({
+          icon: 'error',
+          text: err.error?.message || 'Une erreur est survenue',
+        });
+      },
+      complete: () => {
+        this.submitting = false;
+      },
     });
   }
 
-  backToCategories() {
+  /**
+   * Construit le payload JSON pour l'API selon le DTO
+   */
+  private buildPayload(): any {
+    const formValues = this.form.value;
+    const fieldValues: FieldValueDto[] = [];
+
+    // Transformer chaque champ en FieldValueDto
+    this.visibleFields.forEach((categoryField) => {
+      const field = categoryField.field;
+      const key = field.key;
+      const fieldValue: FieldValueDto = {
+        fieldId: field.id,
+      };
+
+      if (field.inputType === 'RANGE') {
+        // Pour les champs RANGE, stocker comme JSON
+        const minValue = formValues[`${key}_min`];
+        const maxValue = formValues[`${key}_max`];
+
+        if (
+          minValue !== '' &&
+          minValue !== null &&
+          maxValue !== '' &&
+          maxValue !== null
+        ) {
+          fieldValue.valueJson = { min: minValue, max: maxValue };
+          fieldValues.push(fieldValue);
+        }
+      } else {
+        const value = formValues[key];
+
+        // Ignorer les valeurs vides
+        if (value === undefined || value === null || value === '') {
+          return;
+        }
+
+        // Mapper selon le type de champ
+        switch (field.inputType) {
+          case 'TEXT':
+          case 'TEXTAREA':
+            fieldValue.valueText = String(value);
+            fieldValues.push(fieldValue);
+            break;
+
+          case 'NUMBER':
+            fieldValue.valueNumber = Number(value);
+            fieldValues.push(fieldValue);
+            break;
+
+          case 'TOGGLE':
+            fieldValue.valueBoolean = Boolean(value);
+            fieldValues.push(fieldValue);
+            break;
+
+          case 'SELECT':
+          case 'RADIO':
+            // Trouver l'ID de l'option correspondante
+            const option = field.options.find((opt) => opt.value === value);
+            if (option) {
+              fieldValue.optionIds = [option.id];
+              fieldValues.push(fieldValue);
+            }
+            break;
+
+          case 'CHECKBOX':
+          case 'MULTISELECT':
+            // Trouver les IDs des options correspondantes
+            if (Array.isArray(value) && value.length > 0) {
+              const optionIds = value
+                .map((v) => field.options.find((opt) => opt.value === v)?.id)
+                .filter((id): id is number => id !== undefined);
+
+              if (optionIds.length > 0) {
+                fieldValue.optionIds = optionIds;
+                fieldValues.push(fieldValue);
+              }
+            }
+            break;
+
+          default:
+            // Type non géré, stocker comme texte
+            fieldValue.valueText = String(value);
+            fieldValues.push(fieldValue);
+        }
+      }
+    });
+
+    return {
+      title: formValues.title,
+      categoryId: this.categoryId,
+      description: formValues.description,
+      price: formValues.price ? Number(formValues.price) : undefined,
+      location: `${formValues.city || ''} ${formValues.country || ''}`.trim(),
+      country: formValues.country || undefined,
+      city: formValues.city || undefined,
+      fieldValues: fieldValues,
+    };
+  }
+
+  /**
+   * Construit le FormData pour la création
+   */
+  private buildCreateFormData(payload: any): FormData {
+    const fd = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      fd.append(
+        key,
+        typeof value === 'object' ? JSON.stringify(value) : String(value)
+      );
+    });
+
+    this.files.forEach((file) => {
+      fd.append('fichiers', file);
+    });
+
+    return fd;
+  }
+
+  /**
+   * Construit le FormData pour la mise à jour
+   */
+  private buildUpdateFormData(payload: any): FormData {
+    const fd = this.buildCreateFormData(payload);
+
+    if (this.removedExisting.size > 0) {
+      fd.append(
+        'removedFiles',
+        JSON.stringify(Array.from(this.removedExisting))
+      );
+    }
+
+    return fd;
+  }
+
+  /**
+   * Réinitialise le formulaire
+   */
+  private resetForm(): void {
+    this.form.reset();
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
+    this.files = [];
+    this.clearNewFileUrls();
+    this.removedExisting.clear();
+    this.previewFiles = [];
+  }
+
+  /**
+   * Retour à la sélection de catégorie
+   */
+  backToCategories(): void {
     this.router.navigate(['/annonces/publier']);
   }
 
-  onfileChange(event: Event) {
+  // ============================================
+  // GESTION DES FICHIERS
+  // ============================================
+
+  onfileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const list = Array.from(input.files || []);
     this.files = list;
@@ -256,16 +539,16 @@ export class PostFormComponent implements OnInit, OnDestroy {
     this.clearNewFileUrls();
     this.objectUrlToFile.clear();
 
-    this.fileUrls = list.map((f) => {
-      const url = URL.createObjectURL(f);
-      this.objectUrlToFile.set(url, f);
+    this.fileUrls = list.map((file) => {
+      const url = URL.createObjectURL(file);
+      this.objectUrlToFile.set(url, file);
 
-      const kind = kindFromMimeOrName(f.type, f.name);
+      const kind = kindFromMimeOrName(file.type, file.name);
       return {
         url,
         id: url,
-        name: f.name,
-        mime: f.type || guessMime(f.name),
+        name: file.name,
+        mime: file.type || guessMime(file.name),
         kind:
           kind === 'image' || kind === 'audio' || kind === 'video'
             ? kind
@@ -273,11 +556,12 @@ export class PostFormComponent implements OnInit, OnDestroy {
         __revoke__: () => URL.revokeObjectURL(url),
       };
     });
+
     this.recomputePreview();
     this.syncNativeFileInput();
   }
 
-  hydrateExistingFiles(urls: string[]) {
+  hydrateExistingFiles(urls: string[]): void {
     this.existingFiles = (Array.isArray(urls) ? urls : [])
       .filter((u) => !!u)
       .map((u) => {
@@ -287,7 +571,6 @@ export class PostFormComponent implements OnInit, OnDestroy {
           url: u,
           id,
           name: baseName(u),
-          key: id,
           mime: guessMime(u),
           kind:
             kind === 'image' || kind === 'audio' || kind === 'video'
@@ -298,14 +581,10 @@ export class PostFormComponent implements OnInit, OnDestroy {
     this.recomputePreview();
   }
 
-  /** Supprime un fichier de la preview.
-   *  - si c’est un existant: on le retire de existingFiles + on l’ajoute à removedExisting
-   *  - si c’est un nouveau: on révoque l’objectURL, on le retire de fileUrls + this.files
-   */
-  onRemovePreview = (val: string) => {
-    // 1) existant ?
+  onRemovePreview = (val: string): void => {
+    // Fichier existant
     const exIdx = this.existingFiles.findIndex(
-      (f: any) => f.id === val || f.url === val || f.key === val
+      (f) => f.id === val || f.url === val
     );
     if (exIdx > -1) {
       const ex = this.existingFiles[exIdx];
@@ -315,98 +594,62 @@ export class PostFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const nuIdx = this.fileUrls.findIndex(
-      (f: any) => f.id === val || f.url === val || f.key === val
-    );
+    // Nouveau fichier
+    const nuIdx = this.fileUrls.findIndex((f) => f.id === val || f.url === val);
     if (nuIdx > -1) {
       const item = this.fileUrls[nuIdx];
       item.__revoke__?.();
       this.fileUrls.splice(nuIdx, 1);
 
-      // enlève aussi le File correspondant et met à jour l'input
       const file = this.objectUrlToFile.get(item.url);
       if (file) {
         this.files = this.files.filter((f) => f !== file);
         this.objectUrlToFile.delete(item.url);
-        this.syncNativeFileInput?.(); // si tu as déjà cette méthode
+        this.syncNativeFileInput();
       }
       this.recomputePreview();
     }
   };
 
-  private clearNewFileUrls() {
+  private clearNewFileUrls(): void {
     this.fileUrls.forEach((p) => p.__revoke__?.());
     this.fileUrls = [];
   }
 
-  private buildPayload() {
-    const v = this.form.value as any;
-
-    const dyn: Record<string, any> = {};
-
-    this.buildDynamicKeyBySlug(this.slug!, v, dyn);
-    this.dynFields.forEach((f) => {
-      switch (f.inputType) {
-        case 'RANGE':
-          if (v[`${f.key}_min`] !== '') dyn[`${f.key}_min`] = v[`${f.key}_min`];
-          if (v[`${f.key}_max`] !== '') dyn[`${f.key}_max`] = v[`${f.key}_max`];
-          break;
-        default:
-          dyn[f.key] = v[f.key];
-      }
-    });
-
-    return {
-      title: v.title,
-      categoryId: this.results.id,
-      description: v.description,
-      serviceTypeId: this.findServiceById(parseInt(v.serviceType as string)).id,
-      price: v.price ? Number(v.price) : undefined,
-      location: `${v.city} ${v.country}`,
-      values: dyn,
-    };
-  }
-
-  private findServiceById(id: number) {
-    return this.services.find((service) => service.id === id);
-  }
-
-  private addControlForField(group: any, f: any) {
-    const req = f.required ? [Validators.required] : [];
-    switch (f.type as FieldInputType) {
-      case 'TEXT':
-      case 'TEXTAREA':
-      case 'SELECT':
-      case 'RADIO':
-        group[f.key] = new FormControl('', req);
-        break;
-      case 'NUMBER':
-        group[f.key] = new FormControl('', req);
-        break;
-      case 'RANGE':
-        group[`${f.key}_min`] = new FormControl('');
-        group[`${f.key}_max`] = new FormControl('');
-        break;
-      case 'CHECKBOX':
-      case 'MULTISELECT':
-        group[f.key] = new FormControl([]);
-        break;
-      case 'TOGGLE':
-        group[f.key] = new FormControl(false);
-        break;
+  private recomputePreview(): void {
+    const merged = [...this.existingFiles, ...this.fileUrls];
+    const map = new Map<string, PreviewItem>();
+    for (const f of merged) {
+      map.set(f.id, f);
     }
+    this.previewFiles = Array.from(map.values());
   }
 
-  get serviceTypeCtrl(): FormControl {
-    return this.form.get('serviceType') as FormControl;
+  private syncNativeFileInput(): void {
+    if (!this.fileInput) return;
+    const dt = new DataTransfer();
+    for (const f of this.files) {
+      dt.items.add(f);
+    }
+    this.fileInput.nativeElement.files = dt.files;
   }
 
+  // ============================================
+  // HELPERS POUR LE TEMPLATE
+  // ============================================
+
+  /**
+   * Vérifie si une valeur est dans un tableau (pour checkbox/multiselect)
+   */
   isInArray(key: string, value: string): boolean {
     const ctrl = this.form.get(key);
     const v = ctrl?.value;
     return Array.isArray(v) && v.includes(value);
   }
 
+  /**
+   * Gère le toggle d'une checkbox dans un multiselect
+   */
   onMultiToggle(key: string, value: string, ev: Event): void {
     const checked = (ev.target as HTMLInputElement)?.checked ?? false;
     const ctrl = this.form.get(key);
@@ -423,99 +666,42 @@ export class PostFormComponent implements OnInit, OnDestroy {
     ctrl.updateValueAndValidity({ onlySelf: true });
   }
 
+  /**
+   * Gère le changement d'état d'un toggle
+   */
   onToggleChange(key: string, ev: Event): void {
     const checked = (ev.target as HTMLInputElement)?.checked ?? false;
     this.form.get(key)?.setValue(checked);
   }
 
-  private recomputePreview() {
-    const merged = [...(this.existingFiles || []), ...(this.fileUrls || [])];
-    const map = new Map<string, PreviewItem>();
-    for (const f of merged) {
-      map.set(f.id, f);
+  /**
+   * Récupère le label d'erreur pour un champ
+   */
+  getErrorMessage(categoryField: CategoryField): string {
+    const field = categoryField.field;
+    const control = this.form.get(field.key);
+
+    if (!control || !control.errors || !control.touched) return '';
+
+    if (control.errors['required']) {
+      return 'Ce champ est obligatoire';
     }
-    this.previewFiles = Array.from(map.values());
-  }
-
-  private applyServiceType(val: string) {
-    if (this.dynFields.length) {
-      this.dynFields.forEach((f) => {
-        if (this.commonFields.find((c) => c.key === f.key)) return;
-        if (this.form.contains(f.key)) this.form.removeControl(f.key);
-        if (this.form.contains(`${f.key}_min`))
-          this.form.removeControl(`${f.key}_min`);
-        if (this.form.contains(`${f.key}_max`))
-          this.form.removeControl(`${f.key}_max`);
-      });
+    if (control.errors['minlength']) {
+      return `Minimum ${field.minLength} caractères`;
+    }
+    if (control.errors['maxlength']) {
+      return `Maximum ${field.maxLength} caractères`;
+    }
+    if (control.errors['min']) {
+      return `Valeur minimum: ${field.minValue}`;
+    }
+    if (control.errors['max']) {
+      return `Valeur maximum: ${field.maxValue}`;
+    }
+    if (control.errors['pattern']) {
+      return 'Format invalide';
     }
 
-    const key = String(val ?? '');
-    const specBySlug = this.perServiceType[key];
-    const specById =
-      this.perServiceType[
-        String(this.services.find((s) => s.slug === key)?.id ?? '')
-      ];
-
-    const specifics: Field[] = specBySlug ?? specById ?? [];
-
-    specifics.forEach((f) => {
-      if (!this.form.contains(f.key) && !this.form.contains(`${f.key}_min`)) {
-        this.addControlForField(this.form, f);
-      }
-    });
-
-    this.dynFields = [...this.commonFields, ...specifics];
-  }
-
-  private buildDynamicKeyBySlug(
-    slug: string,
-    formValues: any,
-    dyn: Record<string, any>
-  ) {
-    switch (slug) {
-      case 'musiciens':
-        const iam = this.findServiceById(
-          parseInt(formValues.serviceType as string)
-        ).slug;
-        const ilooking = this.findServiceById(
-          parseInt(formValues.searchServiceType as string)
-        ).slug;
-        dyn['tag'] = `${iam} cherche ${ilooking}`;
-    }
-  }
-
-  private buildCreateFormData(payload: any): FormData {
-    const fd = new FormData();
-    Object.entries(payload).forEach(([k, v]) => {
-      if (v === undefined || v === null) return;
-      fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-    });
-    for (const f of this.files) fd.append('fichiers', f);
-    return fd;
-  }
-
-  private buildUpdateFormData(payload: any): FormData {
-    const fd = new FormData();
-    Object.entries(payload).forEach(([k, v]) => {
-      if (v === undefined || v === null) return;
-      fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-    });
-
-    for (const f of this.files) fd.append('fichiers', f);
-
-    if (this.removedExisting.size) {
-      fd.append(
-        'removedFiles',
-        JSON.stringify(Array.from(this.removedExisting))
-      );
-    }
-    return fd;
-  }
-
-  private syncNativeFileInput() {
-    if (!this.fileInput) return;
-    const dt = new DataTransfer();
-    for (const f of this.files) dt.items.add(f);
-    this.fileInput.nativeElement.files = dt.files;
+    return 'Champ invalide';
   }
 }

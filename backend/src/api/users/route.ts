@@ -5,10 +5,7 @@ import { ValidateDtoMiddleware } from "@/middlewares/validate-dto.middleware";
 
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
-import {
-  CreateAnnouncementDto,
-  UpdateAnnouncementDto,
-} from "@/microservices/annoncements/ann.dto";
+
 import uploads from "@/multer-config";
 import {
   CreateMessageDTO,
@@ -16,6 +13,10 @@ import {
 } from "@/microservices/messages/message.dto";
 import { SubscribeDTO } from "@/microservices/subscriptions/dto/plan.dto";
 import { PaymentDTO } from "@/microservices/payments/payment.dto";
+import {
+  CreateAnnouncementDto,
+  UpdateAnnouncementDto,
+} from "@/microservices/annoncements/announcement.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -24,15 +25,15 @@ router.use(UserAndProviderMiddleware);
 
 // Announcements
 
-router.get("/announcements", async (req: AuthenticatedRequest, res: Response) =>
-  userController.findAnnouncements(req, res)
-);
+// router.get("/announcements", async (req: AuthenticatedRequest, res: Response) =>
+//   userController.findAnnouncements(req, res)
+// );
 
-router.get(
-  "/announcements/:id",
-  async (req: AuthenticatedRequest, res: Response) =>
-    userController.findAnnouncement(req, res)
-);
+// router.get(
+//   "/announcements/:id",
+//   async (req: AuthenticatedRequest, res: Response) =>
+//     userController.findAnnouncement(req, res)
+// );
 
 router.post(
   "/announcements",
@@ -54,6 +55,27 @@ router.delete(
   "/announcements/:id",
   async (req: AuthenticatedRequest, res: Response) =>
     userController.removeAnnouncement(req, res)
+);
+
+router.post(
+  "/announcements/:id/publish",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.publishAnnouncement(req, res)
+);
+router.post(
+  "/announcements/:id/archive",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.archiveAnnouncement(req, res)
+);
+
+router.get("/announcements", async (req: AuthenticatedRequest, res: Response) =>
+  userController.myAnnouncements(req, res)
+);
+
+router.get(
+  "/announcements/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.myAnnouncement(req, res)
 );
 
 router.get("/dashboard", async (req: AuthenticatedRequest, res: Response) =>

@@ -32,11 +32,11 @@ export class CatalogueRepository {
       where,
       orderBy: { name: Order.ASC },
       include: {
-        CategoryField: {
-          include: {
-            category: { select: { id: true, name: true, slug: true } },
-          },
-        },
+        // CategoryField: {
+        //   include: {
+        //     category: { select: { id: true, name: true, slug: true } },
+        //   },
+        // },
       },
     });
   }
@@ -45,11 +45,11 @@ export class CatalogueRepository {
     return await prisma.category.findUnique({
       where: { id },
       include: {
-        CategoryField: {
-          include: {
-            field: { include: { options: true } },
-          },
-        },
+        // CategoryField: {
+        //   include: {
+        //     field: { include: { options: true } },
+        //   },
+        // },
       },
     });
   }
@@ -76,8 +76,8 @@ export class CatalogueRepository {
         },
       },
       include: {
-        serviceType: { select: { id: true, name: true, slug: true } },
-        categories: { include: { category: true } },
+        // serviceType: { select: { id: true, name: true, slug: true } },
+        // categories: { include: { category: true } },
       },
     });
   }
@@ -104,8 +104,8 @@ export class CatalogueRepository {
         },
       },
       include: {
-        serviceType: { select: { id: true, name: true, slug: true } },
-        categories: { include: { category: true } },
+        // serviceType: { select: { id: true, name: true, slug: true } },
+        // categories: { include: { category: true } },
       },
     });
   }
@@ -123,42 +123,42 @@ export class CatalogueRepository {
 
   // Services Types
   async createServiceType(data: Omit<CreateServiceTypeDTO, "categoryIds">) {
-    return await prisma.serviceType.create({ data });
+    // return await prisma.serviceType.create({ data });
   }
 
   async removeServiceType(id: number) {
-    return await prisma.serviceType.delete({
-      where: { id },
-    });
+    // return await prisma.serviceType.delete({
+    //   where: { id },
+    // });
   }
 
   async addCategoryToServiceType(data: {
     categoryId: number;
     serviceTypeId: number;
   }) {
-    return await prisma.categoryServiceType.create({ data });
+    // return await prisma.categoryServiceType.create({ data });
   }
 
   async findOneServiceType(id: number) {
-    return await prisma.serviceType.findUnique({
-      where: { id },
-      include: {
-        categories: {
-          select: { category: { select: { id: true, name: true } } },
-        },
-      },
-    });
+    // return await prisma.serviceType.findUnique({
+    //   where: { id },
+    //   include: {
+    //     categories: {
+    //       select: { category: { select: { id: true, name: true } } },
+    //     },
+    //   },
+    // });
   }
 
   async findOneServiceTypeByParams(where: any) {
-    return await prisma.serviceType.findUnique({
-      where,
-      include: {
-        categories: {
-          select: { category: { select: { id: true, name: true } } },
-        },
-      },
-    });
+    // return await prisma.serviceType.findUnique({
+    //   where,
+    //   include: {
+    //     categories: {
+    //       select: { category: { select: { id: true, name: true } } },
+    //     },
+    //   },
+    // });
   }
 
   async listServiceType(params: {
@@ -168,32 +168,32 @@ export class CatalogueRepository {
     order?: Order;
   }) {
     const { skip, take, where, order } = params;
-    return await prisma.serviceType.findMany({
-      skip,
-      take,
-      where,
-      orderBy: { createdAt: order },
-      include: {
-        categories: {
-          select: { category: { select: { name: true, id: true } } },
-        },
-      },
-    });
+    // return await prisma.serviceType.findMany({
+    //   skip,
+    //   take,
+    //   where,
+    //   orderBy: { createdAt: order },
+    //   include: {
+    //     categories: {
+    //       select: { category: { select: { name: true, id: true } } },
+    //     },
+    //   },
+    // });
   }
 
   async countServiceType(where?: any) {
-    return await prisma.serviceType.count({ where });
+    // return await prisma.serviceType.count({ where });
   }
 
   async findServiceType(id: number) {
-    return await prisma.serviceType.findUnique({
-      where: { id },
-      include: {
-        categories: {
-          include: { category: { select: { name: true, id: true } } },
-        },
-      },
-    });
+    // return await prisma.serviceType.findUnique({
+    //   where: { id },
+    //   include: {
+    //     categories: {
+    //       include: { category: { select: { name: true, id: true } } },
+    //     },
+    //   },
+    // });
   }
 
   // Fields
@@ -245,17 +245,17 @@ export class CatalogueRepository {
   }
 
   async attachServiceCategory(data: any) {
-    return prisma.categoryServiceType.create({
-      data: {
-        ...data,
-      },
-    });
+    // return prisma.categoryServiceType.create({
+    //   data: {
+    //     ...data,
+    //   },
+    // });
   }
 
   async detachServiceToCategory(categoryId: number, serviceTypeId: number) {
-    return await prisma.categoryServiceType.delete({
-      where: { categoryId_serviceTypeId: { categoryId, serviceTypeId } },
-    });
+    // return await prisma.categoryServiceType.delete({
+    //   where: { categoryId_serviceTypeId: { categoryId, serviceTypeId } },
+    // });
   }
   async detachFieldToCategory(categoryId: number, fieldId: number) {
     return await prisma.categoryField.delete({
@@ -283,11 +283,11 @@ export class CatalogueRepository {
       where: { id },
       include: {
         options: true,
-        CategoryField: {
-          include: {
-            category: { select: { id: true, name: true, slug: true } },
-          },
-        },
+        // CategoryField: {
+        //   include: {
+        //     category: { select: { id: true, name: true, slug: true } },
+        //   },
+        // },
       },
     });
   }
@@ -303,19 +303,19 @@ export class CatalogueRepository {
   async findCategoryBySlug(slug: string) {
     return await prisma.category.findUnique({
       where: { slug },
-      include: {
-        services: {
-          select: {
-            serviceType: { select: { name: true, slug: true, id: true } },
-          },
-        },
-        CategoryField: {
-          include: {
-            category: { select: { id: true, name: true, slug: true } },
-            field: { include: { options: { orderBy: { order: Order.ASC } } } },
-          },
-        },
-      },
+      //   include: {
+      //     services: {
+      //       select: {
+      //         serviceType: { select: { name: true, slug: true, id: true } },
+      //       },
+      //     },
+      //     CategoryField: {
+      //       include: {
+      //         category: { select: { id: true, name: true, slug: true } },
+      //         field: { include: { options: { orderBy: { order: Order.ASC } } } },
+      //       },
+      //     },
+      //   },
     });
   }
 

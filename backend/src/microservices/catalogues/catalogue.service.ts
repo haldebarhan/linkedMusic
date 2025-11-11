@@ -107,15 +107,15 @@ export class CatalogueService {
         name,
         slug,
       });
-      await Promise.all(
-        categoryIds.map(
-          async (id) =>
-            await this.catalogueRepository.addCategoryToServiceType({
-              categoryId: id,
-              serviceTypeId: created.id,
-            })
-        )
-      );
+      //   await Promise.all(
+      //     categoryIds.map(
+      //       async (id) =>
+      //         await this.catalogueRepository.addCategoryToServiceType({
+      //           categoryId: id,
+      //           serviceTypeId: created.id,
+      //         })
+      //     )
+      //   );
       return created;
     } catch (error) {
       if (
@@ -151,20 +151,20 @@ export class CatalogueService {
       metadata: {
         total,
         page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
+        totalPage: Math.max(Math.ceil(10 / limit), 1),
       },
     };
   }
 
   async findOneServiceType(id: number) {
     const serviceType = await this.catalogueRepository.findOneServiceType(id);
-    if (!serviceType) throw createError(404, "service type not found");
+    // if (!serviceType) throw createError(404, "service type not found");
     return serviceType;
   }
 
   async removeServiceType(id: number) {
     const service = await this.findOneServiceType(id);
-    return await this.catalogueRepository.removeServiceType(service.id);
+    // return await this.catalogueRepository.removeServiceType(service.id);
   }
 
   async createField(data: CreateFieldDto) {
@@ -410,45 +410,45 @@ export class CatalogueService {
     }
   }
 
-  async getFilterSchema(slug: string) {
-    try {
-      const category = await this.findOneCategoryBySlug(slug);
-      const services = category.services.map((cf: any) => {
-        return {
-          name: cf.serviceType.name,
-          slug: cf.serviceType.slug,
-          id: cf.serviceType.id,
-        };
-      });
+  //   async getFilterSchema(slug: string) {
+  //     try {
+  //       const category = await this.findOneCategoryBySlug(slug);
+  //       const services = category.services.map((cf: any) => {
+  //         return {
+  //           name: cf.serviceType.name,
+  //           slug: cf.serviceType.slug,
+  //           id: cf.serviceType.id,
+  //         };
+  //       });
 
-      const fields = category.CategoryField.map((cf: any) => ({
-        key: cf.field.key,
-        label: cf.field.label,
-        type: cf.field.inputType,
-        placeholder: cf.field.placeholder || null,
-        options: cf.field.options.map((opt: any) => ({
-          label: opt.label,
-          value: opt.value,
-        })),
-      }));
-      return {
-        id: category.id,
-        category: category.name,
-        categorySlug: category.slug,
-        services: services,
-        fields,
-      };
-    } catch (error) {
-      throw createError(
-        error.status,
-        `Failed to get category schema: ${error.message}`
-      );
-    }
-  }
+  //       const fields = category.CategoryField.map((cf: any) => ({
+  //         key: cf.field.key,
+  //         label: cf.field.label,
+  //         type: cf.field.inputType,
+  //         placeholder: cf.field.placeholder || null,
+  //         options: cf.field.options.map((opt: any) => ({
+  //           label: opt.label,
+  //           value: opt.value,
+  //         })),
+  //       }));
+  //       return {
+  //         id: category.id,
+  //         category: category.name,
+  //         categorySlug: category.slug,
+  //         services: services,
+  //         fields,
+  //       };
+  //     } catch (error) {
+  //       throw createError(
+  //         error.status,
+  //         `Failed to get category schema: ${error.message}`
+  //       );
+  //     }
+  //   }
 
   private async checkServiceType(where: any) {
     const serviceType =
       await this.catalogueRepository.findOneServiceTypeByParams(where);
-    if (serviceType) throw createError(409, `Ce service existe deja`);
+    // if (serviceType) throw createError(409, `Ce service existe deja`);
   }
 }

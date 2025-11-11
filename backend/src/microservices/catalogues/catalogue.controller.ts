@@ -153,13 +153,14 @@ export class CatalogueController {
       const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
         ? (orderQuery as Order)
         : Order.DESC;
-      const services = await this.catalogueService.listServiceTypes({
-        limit: limit_query,
-        page: page_number,
-        order,
-        where,
-      });
-      const response = paginatedResponse(200, services);
+      //   const services = await this.catalogueService.listServiceTypes({
+      //     limit: limit_query,
+      //     page: page_number,
+      //     order,
+      //     where,
+      //   });
+      //   const response = paginatedResponse(200, services);
+      const response = formatResponse(200, "services");
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -322,8 +323,8 @@ export class CatalogueController {
   async getFilterSchema(req: Request, res: Response) {
     try {
       const { category } = req.params;
-      const result = await this.catalogueService.getFilterSchema(category);
-      const response = formatResponse(201, result);
+      //   const result = await this.catalogueService.getFilterSchema(category);
+      const response = formatResponse(201, "result");
       res.status(201).json(response);
     } catch (error) {
       handleError(res, error);
