@@ -13,6 +13,8 @@ import { Order } from "@/utils/enums/order.enum";
 import { saveAnnouncementFiles } from "@/utils/functions/save-file";
 import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
+import { AnnouncementStatus } from "@prisma/client";
+import { paginatedResponse } from "@/utils/helpers/paginated-response";
 const minioService: MinioService = MinioService.getInstance();
 
 @injectable()
@@ -56,7 +58,38 @@ export class AnnouncementController {
       const announcement = await this.announcementService.getAnnouncementById(
         id
       );
-      const response = formatResponse(200, announcement);
+      const ownerImage = announcement.owner.profileImage;
+      announcement.owner.profileImage = ownerImage
+        ? await minioService.generatePresignedUrl(
+            ENV.MINIO_BUCKET_NAME,
+            ownerImage
+          )
+        : undefined;
+      const fichiers = announcement.audios.concat(
+        announcement.images,
+        announcement.videos
+      );
+      const ownerTotalAnnouncements =
+        await this.announcementService.countUserTotalAnnoucements(
+          announcement.owner.id
+        );
+      const pressignedUrl = await Promise.all(
+        fichiers.map(async (f) => {
+          if (f.startsWith("https")) return f;
+          else {
+            const url = await minioService.generatePresignedUrl(
+              ENV.MINIO_BUCKET_NAME,
+              f
+            );
+            return url;
+          }
+        })
+      );
+      announcement.owner.totalAnnouncement = ownerTotalAnnouncements;
+      const response = formatResponse(200, {
+        ...announcement,
+        fichiers: pressignedUrl,
+      });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -215,6 +248,59 @@ export class AnnouncementController {
         ...result,
         fichiers: pressignedUrl,
       });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async listPendingAnnouncements(req: Request, res: Response) {
+    const { page: pageQuery, limit: limitQuery, order: orderQuery } = req.query;
+
+    const page = parseInt(pageQuery as string) || 1;
+    const limit = parseInt(limitQuery as string) || 10;
+
+    const page_number = Math.max(page, 1);
+    const limit_query = Math.max(limit, 10);
+    const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
+      ? (orderQuery as Order)
+      : Order.DESC;
+
+    const where: any = {
+      status: AnnouncementStatus.PENDING_APPROVAL,
+    };
+
+    try {
+      const announcements =
+        await this.announcementService.listPendingAnnouncements({
+          limit: limit_query,
+          page: page_number,
+          order,
+          where,
+        });
+      const response = paginatedResponse(200, announcements);
+      res.status(201).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async approveAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const status = await this.announcementService.approveAnnouncement(+id);
+      const response = formatResponse(200, status);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async rejectAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const status = await this.announcementService.rejectAnnouncement(+id);
+      const response = formatResponse(200, status);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

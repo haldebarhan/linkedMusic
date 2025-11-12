@@ -1,4 +1,9 @@
-import { PrismaClient, Announcement, Prisma } from "@prisma/client";
+import {
+  PrismaClient,
+  Announcement,
+  Prisma,
+  AnnouncementStatus,
+} from "@prisma/client";
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
 import {
   AnnouncementWithDetails,
@@ -12,6 +17,7 @@ import {
 } from "@/utils/interfaces/pagination";
 import { injectable } from "tsyringe";
 import DatabaseService from "@/utils/services/database.service";
+import { Order } from "@/utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -358,5 +364,42 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
       orderBy: { createdAt: "desc" },
       take: limit,
     }) as Promise<AnnouncementWithDetails[]>;
+  }
+
+  async ListPendingAnnouncements(params: {
+    skip?: number;
+    take?: number;
+    where?: any;
+    order?: Order;
+  }) {
+    const { skip, take, where, order } = params;
+    return await prisma.announcement.findMany({
+      skip,
+      take,
+      where,
+      orderBy: {
+        createdAt: order ?? Order.DESC,
+      },
+    });
+  }
+
+  async approveAnnouncement(id: number) {
+    return await prisma.announcement.update({
+      where: { id },
+      data: {
+        status: AnnouncementStatus.PUBLISHED,
+        isPublished: true,
+      },
+    });
+  }
+
+  async rejectAnnouncement(id: number) {
+    return await prisma.announcement.update({
+      where: { id },
+      data: {
+        status: AnnouncementStatus.REJECTED,
+        isPublished: false,
+      },
+    });
   }
 }

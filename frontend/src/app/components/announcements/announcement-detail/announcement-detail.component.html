@@ -1,118 +1,337 @@
 <ng-template #loadingTpl>
-  <div class="container py-5 text-center text-muted">Chargement…</div>
+  <div class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement…</span>
+    </div>
+  </div>
 </ng-template>
-<div class="container py-3" *ngIf="!loading && announcement; else loadingTpl">
-  <div class="row g-4">
-    <!-- Main -->
-    <div class="col-lg-8">
-      <div class="card bg-light text-dark p-3">
-        <h1 class="h4 mb-2">{{ announcement.title }}</h1>
-        <div class="row small text-muted">
-          <div class="col-4">Publié le</div>
-          <div class="col-8">
-            {{ announcement.createdAt | date : "d MMMM y" }}
-          </div>
-          <div class="col-4">Lieu</div>
-          <div class="col-8">{{ announcement.location || "—" }}</div>
-          <ng-container *ngIf="announcement.styles?.length">
-            <div class="col-4">Styles</div>
-            <div class="col-8">{{ announcement.styles.join(", ") }}</div>
-          </ng-container>
-          <div class="col-12 mt-2" *ngIf="announcement.tag">
-            <strong>{{ announcement.tag }}</strong>
-          </div>
-        </div>
 
-        <hr class="my-3" />
-        <p style="white-space: pre-line">{{ announcement.description }}</p>
-        <!-- Media -->
-        <app-media-gallery
-          [files]="announcement.fichiers || []"
-        ></app-media-gallery>
-        <div
-          class="text-end text-muted small"
-          *ngIf="announcement.views != null"
-        >
-          Cette annonce a &eacute;t&eacute; vue {{ announcement.views }} fois
+<div
+  class="announcement-detail-container"
+  *ngIf="!loading && announcement; else loadingTpl"
+>
+  <div class="container-fluid py-4">
+    <div class="row g-4">
+      <!-- Colonne principale - Détails de l'annonce -->
+      <div class="col-lg-8">
+        <div class="announcement-card">
+          <!-- En-tête avec titre et badges -->
+          <div class="announcement-header">
+            <h1 class="announcement-title">{{ announcement.title }}</h1>
+            <div class="announcement-badges">
+              <span class="badge badge-category" *ngIf="announcement.category">
+                <i class="fas fa-tag"></i> {{ announcement.category.name }}
+              </span>
+              <span
+                class="badge badge-highlight"
+                *ngIf="announcement.isHighlighted"
+              >
+                <i class="fas fa-star"></i> {{ announcement.highlightLevel }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="announcement-meta">
+            <div class="meta-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{ announcement.createdAt | date : "d MMMM y" }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.location">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ announcement.location }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.views != null">
+              <i class="fas fa-eye"></i>
+              <span>{{ announcement.views }} vues</span>
+            </div>
+          </div>
+
+          <!-- Prix si applicable -->
+          <div class="announcement-price" *ngIf="announcement.price">
+            <div class="price-value">
+              {{ announcement.price }} {{ announcement.priceUnit || "FCFA" }}
+              <span class="price-negotiable" *ngIf="announcement.negotiable">
+                <i class="fas fa-handshake"></i> Négociable
+              </span>
+            </div>
+          </div>
+
+          <!-- Galerie média -->
+          <div class="media-section" *ngIf="announcement.fichiers?.length">
+            <app-media-gallery
+              [files]="announcement.fichiers"
+            ></app-media-gallery>
+          </div>
+
+          <!-- Description -->
+          <div class="announcement-description">
+            <h2 class="section-title">Description</h2>
+            <p class="description-text">{{ announcement.description }}</p>
+          </div>
+
+          <!-- Champs dynamiques -->
+          <div
+            class="announcement-fields"
+            *ngIf="announcement.fieldValues?.length"
+          >
+            <h2 class="section-title">Détails</h2>
+            <div class="fields-grid">
+              <div
+                class="field-item"
+                *ngFor="let fieldValue of announcement.fieldValues"
+              >
+                <div class="field-label">
+                  <i class="fas fa-info-circle"></i>
+                  {{ fieldValue.field.label }}
+                </div>
+                <div class="field-value">
+                  <ng-container [ngSwitch]="fieldValue.field.inputType">
+                    <ng-container *ngSwitchCase="'SELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'MULTISELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'NUMBER'">
+                      {{ fieldValue.valueNumber }} {{ fieldValue.field.unit }}
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'CHECKBOX'">
+                      <i
+                        class="fas fa-check-circle text-success"
+                        *ngIf="fieldValue.valueBoolean"
+                      ></i>
+                      <i
+                        class="fas fa-times-circle text-muted"
+                        *ngIf="!fieldValue.valueBoolean"
+                      ></i>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'TOGGLE'">
+                      <span>{{ fieldValue.valueBoolean ? "OUI" : "NON" }}</span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'DATE'">
+                      {{ fieldValue.valueDate | date : "d MMMM y" }}
+                    </ng-container>
+                    <ng-container *ngSwitchDefault>
+                      {{ fieldValue.valueText }}
+                    </ng-container>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-      <div class="card bg-dark text-light p-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div>
-            <div class="fw-semibold">
-              {{ advertiser.Profile?.displayName || "—" }}
+
+      <!-- Sidebar - Contact -->
+      <div class="col-lg-4">
+        <div class="sidebar-sticky">
+          <!-- Card Annonceur -->
+          <div class="advertiser-card">
+            <div class="advertiser-header">
+              <div class="advertiser-info">
+                <img
+                  [src]="
+                    advertiser.profileImage ||
+                    'assets/images/default-avatar.png'
+                  "
+                  class="advertiser-avatar"
+                  [alt]="advertiser.displayName"
+                />
+                <div class="advertiser-details">
+                  <h3 class="advertiser-name">
+                    {{ advertiser.displayName || "Utilisateur" }}
+                  </h3>
+                  <p class="advertiser-stats">
+                    <i class="fas fa-bullhorn"></i>
+                    {{ advertiser.totalAnnouncement || 0 }} annonce{{
+                      (advertiser.totalAnnouncement || 0) === 1 ? "" : "s"
+                    }}
+                  </p>
+                  <p class="advertiser-location" *ngIf="advertiser.location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ advertiser.location }}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div class="small text-light">
-              {{ advertiser._count.announcements ?? 0 }} annonce{{
-                (advertiser._count.announcements ?? 0) === 1 ? "" : "s"
-              }}
+
+            <!-- Section Contact -->
+            <div class="contact-section">
+              <!-- Message si propriétaire -->
+              <div class="owner-message" *ngIf="isOwner()">
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i>
+                  Vous êtes le propriétaire de cette annonce.
+                </div>
+              </div>
+
+              <!-- Utilisateur non connecté -->
+              <ng-container *ngIf="!isOwner() && !(isLoggedIn$ | async)">
+                <button class="btn btn-primary btn-block" (click)="goToLogin()">
+                  <i class="fas fa-sign-in-alt"></i>
+                  Connectez-vous pour contacter
+                </button>
+              </ng-container>
+
+              <!-- Utilisateur connecté - Non propriétaire -->
+              <ng-container *ngIf="!isOwner() && (isLoggedIn$ | async)">
+                <!-- Aucune demande -->
+                <ng-container *ngIf="!currentUserRequest">
+                  <button
+                    class="btn btn-primary btn-block"
+                    (click)="onClickContactRequest()"
+                    *ngIf="canRequestContact()"
+                  >
+                    <i class="fas fa-paper-plane"></i>
+                    Demander une mise en relation
+                  </button>
+                </ng-container>
+
+                <!-- Demande en attente -->
+                <div
+                  class="request-status status-pending"
+                  *ngIf="hasRequestPending()"
+                >
+                  <div class="status-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="status-content">
+                    <h4>Demande en attente</h4>
+                    <p>
+                      Votre demande de mise en relation a été envoyée.
+                      L'annonceur vous répondra bientôt.
+                    </p>
+                    <button
+                      class="btn btn-outline-secondary btn-sm"
+                      (click)="cancelContactRequest()"
+                      [disabled]="sending"
+                    >
+                      <i class="fas fa-times"></i>
+                      Annuler la demande
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Demande acceptée -->
+                <div
+                  class="request-status status-accepted"
+                  *ngIf="hasRequestAccepted()"
+                >
+                  <div class="status-icon">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="status-content">
+                    <h4>Mise en relation acceptée</h4>
+                    <p>
+                      Vous pouvez maintenant échanger des messages avec
+                      l'annonceur.
+                    </p>
+                    <button
+                      class="btn btn-success btn-block"
+                      (click)="goToMessages()"
+                    >
+                      <i class="fas fa-comments"></i>
+                      Voir la conversation
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Demande rejetée -->
+                <div
+                  class="request-status status-rejected"
+                  *ngIf="currentUserRequest?.status === 'REJECTED'"
+                >
+                  <div class="status-icon">
+                    <i class="fas fa-times-circle"></i>
+                  </div>
+                  <div class="status-content">
+                    <h4>Demande refusée</h4>
+                    <p>
+                      L'annonceur a décliné votre demande de mise en relation.
+                    </p>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- Formulaire de demande de contact -->
+              <div class="contact-form-modal" *ngIf="showContactRequestForm">
+                <div
+                  class="modal-overlay"
+                  (click)="showContactRequestForm = false"
+                ></div>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3>Demande de mise en relation</h3>
+                    <button
+                      class="btn-close"
+                      (click)="showContactRequestForm = false"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <form
+                      [formGroup]="contactRequestForm"
+                      (ngSubmit)="submitContactRequest()"
+                    >
+                      <div class="form-group">
+                        <label class="form-label">
+                          Présentez-vous et expliquez votre intérêt
+                          <span class="text-danger">*</span>
+                        </label>
+                        <textarea
+                          class="form-control"
+                          rows="6"
+                          formControlName="message"
+                          placeholder="Bonjour, je suis intéressé(e) par votre annonce car..."
+                        ></textarea>
+                        <div class="form-text">
+                          Minimum 20 caractères - Soyez professionnel et précis
+                        </div>
+                        <div
+                          class="invalid-feedback"
+                          *ngIf="
+                            contactRequestForm.get('message')?.invalid &&
+                            contactRequestForm.get('message')?.touched
+                          "
+                        >
+                          Le message doit contenir entre 20 et 500 caractères
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          (click)="showContactRequestForm = false"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          class="btn btn-primary"
+                          [disabled]="contactRequestForm.invalid || sending"
+                        >
+                          <i class="fas fa-paper-plane"></i>
+                          {{ sending ? "Envoi..." : "Envoyer la demande" }}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <img
-            *ngIf="advertiser.profileImage"
-            [src]="advertiser.profileImage"
-            class="rounded-circle"
-            width="48"
-            height="48"
-            alt=""
-          />
-        </div>
-        <!-- Bouton répondre -->
-        <button
-          class="btn w-100 mb-2"
-          *ngIf="isLoggedIn$ | async as isLoggedIn; else loggedOutBtn"
-          [ngClass]="{
-            'btn-secondary': isLoggedIn && isLocked(),
-            'btn-primary': isLoggedIn && canContact()
-          }"
-          (click)="onClickReply()"
-          [disabled]="isLoggedIn && eligibility?.isOwner"
-        >
-          <ng-container *ngIf="isLocked(); else unlockedTpl">
-            <i class="fa-solid fa-lock"></i>
-            Répondre à cette annonce
-          </ng-container>
-          <ng-template #unlockedTpl>Répondre à cette annonce</ng-template>
-        </button>
-
-        <ng-template #loggedOutBtn>
-          <button
-            class="btn btn-outline-primary w-100 mb-2"
-            (click)="goToLogin()"
-          >
-            <i class="fa-solid fa-lock"></i>
-            Répondre à cette annonce
-          </button>
-        </ng-template>
-        <!-- Formulaire de contact (déverrouillé) -->
-        <div
-          *ngIf="showContactForm && canContact()"
-          class="card bg-secondary-subtle text-dark p-3 mt-2"
-        >
-          <label class="form-label">Votre message</label>
-          <form (ngSubmit)="submitMessage()" [formGroup]="form">
-            <textarea
-              class="form-control mb-2"
-              rows="5"
-              formControlName="content"
-              placeholder="Bonjour…"
-            ></textarea>
-            <div class="d-flex justify-content-end">
-              <button
-                class="btn btn-primary"
-                type="submit"
-                [disabled]="form.invalid || sending"
-              >
-                {{ sending ? "Envoi…" : "Envoyer" }}
-              </button>
-            </div>
-          </form>
-        </div>
-        <div class="small text-muted mt-2" *ngIf="eligibility?.isOwner">
-          Vous êtes le propriétaire de cette annonce.
         </div>
       </div>
     </div>

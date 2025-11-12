@@ -287,6 +287,19 @@ export class AnnouncementService {
       throw new Error("Vous n'êtes pas autorisé à supprimer cette annonce");
     }
 
+    const files = announcement.audios.concat(
+      announcement.videos,
+      announcement.images
+    );
+
+    await Promise.all(
+      files.map(async (file) => {
+        if (!file.startsWith("https")) {
+          await minioService.deleteFile(ENV.MINIO_BUCKET_NAME, file);
+        }
+      })
+    );
+
     await this.announcementRepository.delete(id);
   }
 
@@ -403,7 +416,7 @@ export class AnnouncementService {
     }
 
     const updateData: Prisma.AnnouncementUpdateInput = {
-      status: AnnouncementStatus.PUBLISHED,
+      status: AnnouncementStatus.PENDING_APPROVAL,
       isPublished: true,
       publishedAt: new Date(),
     };
@@ -442,6 +455,63 @@ export class AnnouncementService {
       await this.announcementRepository.updateWithFieldValues(id, updateData);
 
     return this.mapToResponseDto(updatedAnnouncement);
+  }
+
+  async approveAnnouncement(announcementId: number) {
+    const announcement = await this.announcementRepository.findByIdWithDetails(
+      announcementId
+    );
+
+    if (!announcement) {
+      throw new Error(`Annonce avec l'ID ${announcementId} introuvable`);
+    }
+    return await this.announcementRepository.approveAnnouncement(
+      announcementId
+    );
+  }
+
+  async rejectAnnouncement(announcementId: number) {
+    const announcement = await this.announcementRepository.findByIdWithDetails(
+      announcementId
+    );
+
+    if (!announcement) {
+      throw new Error(`Annonce avec l'ID ${announcementId} introuvable`);
+    }
+
+    return await this.announcementRepository.rejectAnnouncement(announcementId);
+  }
+
+  async listPendingAnnouncements(params: {
+    limit: number;
+    page: number;
+    order: Order;
+    where?: any;
+  }) {
+    const { limit, page, order, where } = params;
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.announcementRepository.ListPendingAnnouncements({
+        skip,
+        take: limit,
+        order: order,
+        where,
+      }),
+      this.announcementRepository.count(where),
+    ]);
+
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
+  }
+
+  async countUserTotalAnnoucements(userId: number) {
+    return await this.announcementRepository.count({ ownerId: userId });
   }
 
   /**

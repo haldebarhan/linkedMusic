@@ -10,7 +10,7 @@ import {
   SubscribeDTO,
   UpdatePlanDTO,
 } from "./dto/plan.dto";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
 import { Order } from "@/utils/enums/order.enum";
 import { PaymentRepository } from "../payments/payment.repository";
@@ -273,26 +273,51 @@ export class SubscriptionService {
   }
 
   private async createBenefitAndAssociateToPlan(
-    benefits: CreateBenefit[],
+    benefits: {
+      id?: number | null;
+      code: string;
+      label: string;
+      description?: string | null;
+    }[],
     planId: number,
-    tx: any
+    tx: Prisma.TransactionClient
   ) {
     if (!benefits?.length) return;
 
-    const createdBenefits = await Promise.all(
-      benefits.map((benefit: any) =>
-        tx.benefit.upsert({
-          where: { id: benefit.id || -1 },
-          update: {},
-          create: benefit,
-        })
-      )
+    // Sécurité : on évite de propager 'id' dans create/update
+    const createdOrUpdated = await Promise.all(
+      benefits.map(async (b) => {
+        const { id, code, label, description } = b;
+
+        if (!code || !code.trim()) {
+          throw new Error("Chaque benefit doit avoir un 'code' (unique).");
+        }
+
+        // Cibler un unique réel : si 'id' est fourni on l'utilise, sinon 'code'
+        const whereUnique: Prisma.BenefitWhereUniqueInput =
+          typeof id === "number" ? { id } : { code };
+
+        return tx.benefit.upsert({
+          where: whereUnique,
+          update: {
+            label,
+            description: description ?? null,
+          },
+          create: {
+            code,
+            label,
+            description: description ?? null,
+          },
+        });
+      })
     );
 
+    // Associer au plan (la FK est un Int vers Benefit.id)
     await tx.planBenefit.createMany({
-      data: createdBenefits.map((benefit) => ({
+      data: createdOrUpdated.map((benefit) => ({
         planId,
         benefitId: benefit.id,
+        // inherited: false // optionnel, false par défaut
       })),
       skipDuplicates: true,
     });

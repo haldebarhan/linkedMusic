@@ -106,4 +106,8 @@ export class AuthController {
   async searchAnnouncement(req: Request, res: Response) {
     return await this.annController.searchAnnouncements(req, res);
   }
+
+  async getAnnouncementDetails(req: Request, res: Response) {
+    return await this.annController.getById(req, res);
+  }
 }

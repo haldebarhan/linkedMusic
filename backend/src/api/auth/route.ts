@@ -24,6 +24,12 @@ const router: Router = Router();
 const authController = container.resolve(AuthController);
 
 // Announcements
+router.get(
+  "/announcements/details/:id",
+  cache,
+  async (req: Request, res: Response) =>
+    authController.getAnnouncementDetails(req, res)
+);
 
 router.get(
   "/announcements/search",

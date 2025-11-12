@@ -17,23 +17,12 @@ import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
 } from "@/microservices/annoncements/announcement.dto";
+import { CreateContactRequestDTO } from "@/microservices/contact-requests/contact-request.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
 
 router.use(UserAndProviderMiddleware);
-
-// Announcements
-
-// router.get("/announcements", async (req: AuthenticatedRequest, res: Response) =>
-//   userController.findAnnouncements(req, res)
-// );
-
-// router.get(
-//   "/announcements/:id",
-//   async (req: AuthenticatedRequest, res: Response) =>
-//     userController.findAnnouncement(req, res)
-// );
 
 router.post(
   "/announcements",
@@ -78,6 +67,46 @@ router.get(
     userController.myAnnouncement(req, res)
 );
 
+// Contact Requests
+
+router.post(
+  "/contact-requests",
+  ValidateDtoMiddleware(CreateContactRequestDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.createContract(req, res)
+);
+
+router.get(
+  "/contact-requests/my-request/:announcementId",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.getMyRequest(req, res)
+);
+
+router.get(
+  "/contact-requests/announcement/:announcementId",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.getAnnouncementRequests(req, res)
+);
+
+router.put(
+  "/contact-requests/accept/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.acceptRequest(req, res)
+);
+
+router.put(
+  "/contact-requests/reject/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.rejectRequest(req, res)
+);
+
+router.put(
+  "/contact-requests/cancel/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.cancelRequest(req, res)
+);
+
+// Dashboard
 router.get("/dashboard", async (req: AuthenticatedRequest, res: Response) =>
   userController.getDashboard(req, res)
 );

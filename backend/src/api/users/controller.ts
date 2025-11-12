@@ -7,6 +7,7 @@ import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import { Response, Request } from "express";
 import { injectable } from "tsyringe";
 import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
+import { ContactRequestController } from "@/microservices/contact-requests/contact-request.controller";
 
 @injectable()
 export class UserController {
@@ -16,7 +17,8 @@ export class UserController {
     private readonly subscriptionController: SubscriptionController,
     private readonly payementController: PaymentController,
     private readonly dashboardController: DashBoardController,
-    private readonly announcementController: AnnouncementController
+    private readonly announcementController: AnnouncementController,
+    private readonly contactController: ContactRequestController
   ) {}
 
   // Announcement New Version
@@ -89,5 +91,26 @@ export class UserController {
 
   async getDashboard(req: AuthenticatedRequest, res: Response) {
     return await this.dashboardController.getUserDashboard(req, res);
+  }
+
+  // Contact Request
+
+  async createContract(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.createRequest(req, res);
+  }
+  async getMyRequest(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.getMyRequest(req, res);
+  }
+  async getAnnouncementRequests(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.getAnnouncementRequests(req, res);
+  }
+  async acceptRequest(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.acceptRequest(req, res);
+  }
+  async rejectRequest(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.rejectRequest(req, res);
+  }
+  async cancelRequest(req: AuthenticatedRequest, res: Response) {
+    return await this.contactController.cancelRequest(req, res);
   }
 }

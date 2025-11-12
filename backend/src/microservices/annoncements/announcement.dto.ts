@@ -350,6 +350,7 @@ export class AnnouncementResponseDto {
     id: number;
     displayName?: string;
     profileImage?: string;
+    totalAnnouncement?: number;
   };
 
   fieldValues: Array<{

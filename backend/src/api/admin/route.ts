@@ -173,4 +173,17 @@ router.delete("/subscription-plans/:id", async (req: Request, res: Response) =>
   adminController.removePlan(req, res)
 );
 
+// Announcements
+
+router.get("/announcements", async (req: Request, res: Response) =>
+  adminController.listPendingAnnouncement(req, res)
+);
+
+router.put("/announcements/approuve/:id", async (req: Request, res: Response) =>
+  adminController.approuveAnnouncement(req, res)
+);
+router.put("/announcements/reject/:id", async (req: Request, res: Response) =>
+  adminController.rejectAnnouncement(req, res)
+);
+
 export default router;

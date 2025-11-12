@@ -1,78 +1,291 @@
 <ng-template #loadingTpl>
-  <div class="container py-5 text-center text-muted">Chargement…</div>
+  <div class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement…</span>
+    </div>
+  </div>
 </ng-template>
-<div class="container py-3" *ngIf="!loading && announcement; else loadingTpl">
-  <div class="row g-4">
-    <!-- Main -->
-    <div class="col-lg-8">
-      <div class="card bg-light text-dark p-3">
-        <h1 class="h4 mb-2">{{ announcement.title }}</h1>
-        <div class="row small text-muted">
-          <div class="col-4">Publié le</div>
-          <div class="col-8">
-            {{ announcement.createdAt | date : "d MMMM y" }}
-          </div>
-          <div class="col-4">Lieu</div>
-          <div class="col-8">{{ announcement.location || "—" }}</div>
-          <ng-container *ngIf="announcement.styles?.length">
-            <div class="col-4">Styles</div>
-            <div class="col-8">{{ announcement.styles.join(", ") }}</div>
-          </ng-container>
-          <div class="col-12 mt-2" *ngIf="announcement.tag">
-            <strong>{{ announcement.tag }}</strong>
-          </div>
-        </div>
 
-        <hr class="my-3" />
-        <p style="white-space: pre-line">{{ announcement.description }}</p>
-        <!-- Media -->
-        <app-media-gallery
-          [files]="announcement.fichiers || []"
-        ></app-media-gallery>
-        <div
-          class="text-end text-muted small"
-          *ngIf="announcement.views != null"
-        >
-          Cette annonce a &eacute;t&eacute; vue {{ announcement.views }} fois
+<div
+  class="announcement-detail-container"
+  *ngIf="!loading && announcement; else loadingTpl"
+>
+  <div class="container-fluid py-4">
+    <div class="row g-4">
+      <!-- Colonne principale - Détails de l'annonce -->
+      <div class="col-lg-8">
+        <div class="announcement-card">
+          <!-- En-tête avec titre et badges -->
+          <div class="announcement-header">
+            <h1 class="announcement-title">{{ announcement.title }}</h1>
+            <div class="announcement-badges">
+              <span class="badge badge-category" *ngIf="announcement.category">
+                <i class="fas fa-tag"></i> {{ announcement.category.name }}
+              </span>
+              <span
+                class="badge badge-highlight"
+                *ngIf="announcement.isHighlighted"
+              >
+                <i class="fas fa-star"></i> {{ announcement.highlightLevel }}
+              </span>
+              <span class="badge" [ngClass]="getStatusBadgeClass()">
+                <i class="fas fa-circle-info"></i> {{ getStatusLabel() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="announcement-meta">
+            <div class="meta-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{
+                announcement.createdAt | date : "d MMMM y 'à' HH:mm"
+              }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.location">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ announcement.location }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.views != null">
+              <i class="fas fa-eye"></i>
+              <span>{{ announcement.views }} vues</span>
+            </div>
+            <div
+              class="meta-item"
+              *ngIf="announcement.updatedAt !== announcement.createdAt"
+            >
+              <i class="fas fa-clock"></i>
+              <span
+                >Modifié le
+                {{ announcement.updatedAt | date : "d MMM y" }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Prix si applicable -->
+          <div class="announcement-price" *ngIf="announcement.price">
+            <div class="price-value">
+              {{ announcement.price }} {{ announcement.priceUnit || "FCFA" }}
+              <span class="price-negotiable" *ngIf="announcement.negotiable">
+                <i class="fas fa-handshake"></i> Négociable
+              </span>
+            </div>
+          </div>
+
+          <!-- Galerie média -->
+          <div class="media-section" *ngIf="announcement.fichiers?.length">
+            <app-media-gallery
+              [files]="announcement.fichiers"
+            ></app-media-gallery>
+          </div>
+
+          <!-- Description -->
+          <div class="announcement-description">
+            <h2 class="section-title">Description</h2>
+            <p class="description-text">{{ announcement.description }}</p>
+          </div>
+
+          <!-- Champs dynamiques -->
+          <div
+            class="announcement-fields"
+            *ngIf="announcement.fieldValues?.length"
+          >
+            <h2 class="section-title">Détails</h2>
+            <div class="fields-grid">
+              <div
+                class="field-item"
+                *ngFor="let fieldValue of announcement.fieldValues"
+              >
+                <div class="field-label">
+                  <i class="fas fa-info-circle"></i>
+                  {{ fieldValue.field.label }}
+                </div>
+                <div class="field-value">
+                  <ng-container [ngSwitch]="fieldValue.field.inputType">
+                    <ng-container *ngSwitchCase="'SELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'MULTISELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'NUMBER'">
+                      {{ fieldValue.valueNumber }} {{ fieldValue.field.unit }}
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'CHECKBOX'">
+                      <i
+                        class="fas fa-check-circle text-success"
+                        *ngIf="fieldValue.valueBoolean"
+                      ></i>
+                      <i
+                        class="fas fa-times-circle text-muted"
+                        *ngIf="!fieldValue.valueBoolean"
+                      ></i>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'TOGGLE'">
+                      <span>{{ fieldValue.valueBoolean ? "OUI" : "NON" }}</span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'DATE'">
+                      {{ fieldValue.valueDate | date : "d MMMM y" }}
+                    </ng-container>
+                    <ng-container *ngSwitchDefault>
+                      {{ fieldValue.valueText }}
+                    </ng-container>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Styles musicaux -->
+          <div class="announcement-tags" *ngIf="announcement.styles?.length">
+            <h2 class="section-title">Styles musicaux</h2>
+            <div class="tags-container">
+              <span class="tag-item" *ngFor="let style of announcement.styles">
+                <i class="fas fa-music"></i> {{ style }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-      <div class="card bg-light text-dark p-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div>
-            <div class="fw-semibold">
-              {{ advertiser.displayName || "—" }}
+
+      <!-- Sidebar - Modération -->
+      <div class="col-lg-4">
+        <div class="sidebar-sticky">
+          <!-- Card Modération -->
+          <div class="advertiser-card">
+            <!-- Badge Admin -->
+            <div class="admin-badge">
+              <i class="fas fa-shield-halved"></i>
+              Modération
             </div>
-            <div class="small text-dark">
-              {{ advertiser._count.announcements ?? 0 }} annonce{{
-                (advertiser._count.announcements ?? 0) === 1 ? "" : "s"
-              }}
+
+            <!-- Info Annonceur -->
+            <div class="advertiser-section">
+              <h4 class="section-subtitle">Annonceur</h4>
+              <div class="advertiser-info">
+                <img
+                  [src]="
+                    advertiser?.profileImage ||
+                    'assets/images/default-avatar.png'
+                  "
+                  class="advertiser-avatar"
+                  [alt]="advertiser?.displayName"
+                />
+                <div class="advertiser-details">
+                  <h3 class="advertiser-name">
+                    {{ advertiser?.displayName || "Utilisateur" }}
+                  </h3>
+                  <p class="advertiser-email" *ngIf="advertiser?.email">
+                    <i class="fas fa-envelope"></i>
+                    {{ advertiser?.email }}
+                  </p>
+                  <p class="advertiser-stats">
+                    <i class="fas fa-bullhorn"></i>
+                    {{ advertiser.totalAnnouncement || 0 }} annonce{{
+                      (advertiser.totalAnnouncement || 0) === 1 ? "" : "s"
+                    }}
+                  </p>
+                  <p class="advertiser-location" *ngIf="advertiser?.location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ advertiser?.location }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Statut actuel -->
+            <div class="status-section">
+              <h4 class="section-subtitle">Statut actuel</h4>
+              <div class="current-status" [ngClass]="getStatusBadgeClass()">
+                <i class="fas fa-circle-info"></i>
+                <span>{{ getStatusLabel() }}</span>
+              </div>
+            </div>
+
+            <!-- Actions de modération -->
+            <div class="moderation-actions">
+              <h4 class="section-subtitle">Actions</h4>
+
+              <button
+                class="btn btn-success btn-block"
+                (click)="approuve(announcement.id)"
+                [disabled]="processing || announcement.status === 'PUBLISHED'"
+              >
+                <i class="fas fa-check-circle"></i>
+                {{ processing ? "Traitement..." : "Approuver" }}
+              </button>
+
+              <button
+                class="btn btn-danger btn-block"
+                (click)="reject(announcement.id)"
+                [disabled]="processing || announcement.status === 'REJECTED'"
+              >
+                <i class="fas fa-times-circle"></i>
+                {{ processing ? "Traitement..." : "Rejeter" }}
+              </button>
+
+              <button
+                class="btn btn-outline-secondary btn-block"
+                (click)="goBack()"
+                [disabled]="processing"
+              >
+                <i class="fas fa-arrow-left"></i>
+                Retour à la liste
+              </button>
+            </div>
+
+            <!-- Informations complémentaires -->
+            <div class="additional-info">
+              <h4 class="section-subtitle">Informations</h4>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">ID</span>
+                  <span class="info-value">#{{ announcement.id }}</span>
+                </div>
+                <div class="info-item" *ngIf="announcement.publishedAt">
+                  <span class="info-label">Publiée le</span>
+                  <span class="info-value">{{
+                    announcement.publishedAt | date : "d MMM y 'à' HH:mm"
+                  }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Mise en avant</span>
+                  <span class="info-value">
+                    <i
+                      class="fas fa-check text-success"
+                      *ngIf="announcement.isHighlighted"
+                    ></i>
+                    <i
+                      class="fas fa-times text-muted"
+                      *ngIf="!announcement.isHighlighted"
+                    ></i>
+                  </span>
+                </div>
+                <div
+                  class="info-item"
+                  *ngIf="
+                    announcement.highlightLevel && announcement.isHighlighted
+                  "
+                >
+                  <span class="info-label">Niveau</span>
+                  <span class="info-value">{{
+                    announcement.highlightLevel
+                  }}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <img
-            *ngIf="advertiser.profileImage"
-            [src]="advertiser.profileImage"
-            class="rounded-circle"
-            width="48"
-            height="48"
-            alt=""
-          />
         </div>
-        <!-- Bouton répondre -->
-        <button
-          class="btn w-100 mb-2 btn-success"
-          (click)="approuve(announcement.id)"
-        >
-          <i class="fa-regular fa-thumbs-up"></i> Approuver
-        </button>
-        <button
-          class="btn w-100 mb-2 btn-danger"
-          (click)="reject(announcement.id)"
-        >
-          <i class="fa-regular fa-thumbs-down"></i> Rejeter
-        </button>
       </div>
     </div>
   </div>
