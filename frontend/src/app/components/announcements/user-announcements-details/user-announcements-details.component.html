@@ -1,100 +1,317 @@
-<div class="container py-3" *ngIf="announcement">
-  <div class="row g-4">
-    <!-- Bloc principal -->
-    <div class="col-lg-8">
-      <div class="card bg-light p-3">
-        <h1 class="display-6">{{ announcement.title }}</h1>
-
-        <div class="row mt-3">
-          <div class="col-4 text-muted">Le</div>
-          <div class="col-8">
-            {{ announcement.createdAt | date : "d MMMM y" }}
-          </div>
-
-          <div class="col-4 text-muted">Lieu</div>
-          <div class="col-8">{{ announcement.location || "—" }}</div>
-
-          <div class="col-4 text-muted" *ngIf="styles().length">Styles</div>
-          <div class="col-8" *ngIf="styles().length">
-            {{ styles().join(", ") }}
-          </div>
-
-          <div class="col-12 mt-2" *ngIf="tag() as t">
-            <strong>{{ t }}</strong>
-          </div>
-        </div>
-
-        <hr class="my-3" />
-
-        <p class="mb-3" style="white-space: pre-line">
-          {{ announcement.description }}
-        </p>
-
-        <!-- Lecteur médias (images + audio + vidéo) -->
-        <app-media-gallery
-          [files]="announcement.fichiers || []"
-          [autoplay]="{ audio: false, video: false }"
-        ></app-media-gallery>
-
-        <div
-          class="text-end text-muted small"
-          *ngIf="announcement.views != null"
-        >
-          Cette annonce a été lue {{ announcement.views }} fois
-        </div>
-      </div>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-      <div class="card bg-light text-light p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <!-- place un bouton "Actualiser" si besoin -->
-        </div>
-
-        <button
-          class="btn btn-secondary w-100 mb-2"
-          (click)="editAnnouncement(announcement.id)"
-        >
-          Modifier mon annonce
-        </button>
-        <button
-          class="btn btn-outline-danger w-100 mb-3"
-          (click)="removeAnnouncement(announcement.id)"
-        >
-          Supprimer mon annonce
-        </button>
-
-        <!-- <div class="card bg-secondary-subtle p-3">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <div class="fw-semibold">
-                {{ user.Profile?.displayName || "—" }}
-              </div>
+<div class="announcement-detail-container" *ngIf="announcement">
+  <div class="container-fluid py-4">
+    <div class="row g-4">
+      <!-- Colonne principale - Détails de l'annonce -->
+      <div class="col-lg-8">
+        <div class="announcement-card">
+          <!-- En-tête avec titre et badges -->
+          <div class="announcement-header">
+            <h1 class="announcement-title">{{ announcement.title }}</h1>
+            <div class="announcement-badges">
+              <span class="badge badge-category" *ngIf="announcement.category">
+                <i class="fas fa-tag"></i> {{ announcement.category.name }}
+              </span>
               <span
-                class="badge bg-success"
-                *ngIf="announcement.owner?.role === 'PRO'"
-                >MUSICIEN PRO</span
+                class="badge badge-highlight"
+                *ngIf="announcement.isHighlighted"
               >
+                <i class="fas fa-star"></i> {{ announcement.highlightLevel }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="announcement-meta">
+            <div class="meta-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{ announcement.createdAt | date : "d MMMM y" }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.location">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ announcement.location }}</span>
+            </div>
+            <div class="meta-item" *ngIf="announcement.views != null">
+              <i class="fas fa-eye"></i>
+              <span>{{ announcement.views }} vues</span>
+            </div>
+          </div>
+
+          <!-- Prix si applicable -->
+          <div class="announcement-price" *ngIf="announcement.price">
+            <div class="price-value">
+              {{ announcement.price }} {{ announcement.priceUnit || "FCFA" }}
+              <span class="price-negotiable" *ngIf="announcement.negotiable">
+                <i class="fas fa-handshake"></i> Négociable
+              </span>
+            </div>
+          </div>
+
+          <!-- Galerie média -->
+          <div class="media-section" *ngIf="announcement.fichiers?.length">
+            <app-media-gallery
+              [files]="announcement.fichiers"
+              [autoplay]="{ audio: false, video: false }"
+            >
+            </app-media-gallery>
+          </div>
+
+          <!-- Description -->
+          <div class="announcement-description">
+            <h2 class="section-title">Description</h2>
+            <p class="description-text">{{ announcement.description }}</p>
+          </div>
+
+          <!-- Champs dynamiques -->
+          <div
+            class="announcement-fields"
+            *ngIf="announcement.fieldValues?.length"
+          >
+            <h2 class="section-title">Détails</h2>
+            <div class="fields-grid">
               <div
-                class="small mt-1"
-                *ngIf="announcement.owner?.adsCount != null"
+                class="field-item"
+                *ngFor="let fieldValue of announcement.fieldValues"
               >
-                {{ announcement.owner?.adsCount }} annonce{{
-                  announcement.owner?.adsCount === 1 ? "" : "s"
-                }}
+                <div class="field-label">
+                  <i class="fas fa-info-circle"></i>
+                  {{ fieldValue.field.label }}
+                </div>
+                <div class="field-value">
+                  <ng-container [ngSwitch]="fieldValue.field.inputType">
+                    <ng-container *ngSwitchCase="'SELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'MULTISELECT'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'TOGGLE'">
+                      <span class="badge badge-secondary me-1">
+                        {{ fieldValue.valueBoolean ? "OUI" : "NON" }}
+                      </span>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'NUMBER'">
+                      {{ fieldValue.valueNumber }} {{ fieldValue.field.unit }}
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'CHECKBOX'">
+                      <i
+                        class="fas fa-check-circle text-success"
+                        *ngIf="fieldValue.valueBoolean"
+                      ></i>
+                      <i
+                        class="fas fa-times-circle text-muted"
+                        *ngIf="!fieldValue.valueBoolean"
+                      ></i>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'DATE'">
+                      {{ fieldValue.valueDate | date : "d MMMM y" }}
+                    </ng-container>
+                    <ng-container *ngSwitchDefault>
+                      {{ fieldValue.valueText }}
+                    </ng-container>
+                  </ng-container>
+                </div>
               </div>
             </div>
-            <img
-              *ngIf="announcement.owner?.avatarUrl"
-              [src]="announcement.owner?.avatarUrl"
-              alt=""
-              class="rounded-circle"
-              width="48"
-              height="48"
-            />
           </div>
-        </div> -->
+
+          <!-- Styles musicaux -->
+          <div class="announcement-tags" *ngIf="styles().length">
+            <h2 class="section-title">Styles musicaux</h2>
+            <div class="tags-container">
+              <span class="tag-item" *ngFor="let style of styles()">
+                <i class="fas fa-music"></i> {{ style }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar - Gestion -->
+      <div class="col-lg-4">
+        <div class="sidebar-sticky">
+          <!-- Card Gestion de l'annonce -->
+          <div class="advertiser-card">
+            <!-- Badge Propriétaire -->
+            <div class="owner-badge">
+              <i class="fas fa-crown"></i>
+              Votre annonce
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="owner-actions">
+              <button
+                class="btn btn-secondary btn-block"
+                (click)="editAnnouncement(announcement.id)"
+              >
+                <i class="fas fa-edit"></i>
+                Modifier l'annonce
+              </button>
+              <button
+                class="btn btn-outline-danger btn-block"
+                (click)="removeAnnouncement(announcement.id)"
+              >
+                <i class="fas fa-trash"></i>
+                Supprimer l'annonce
+              </button>
+            </div>
+
+            <!-- Notification des demandes en attente -->
+            <button
+              class="btn btn-outline-primary btn-block requests-toggle"
+              (click)="toggleRequestsList()"
+              *ngIf="contactRequests.length > 0"
+            >
+              <i class="fas fa-inbox"></i>
+              {{ pendingRequestsCount }} demande{{
+                pendingRequestsCount === 1 ? "" : "s"
+              }}
+              en attente
+              <i
+                class="fas"
+                [ngClass]="
+                  showRequestsList ? 'fa-chevron-up' : 'fa-chevron-down'
+                "
+              ></i>
+            </button>
+
+            <!-- Message si aucune demande -->
+            <div
+              class="no-requests-message"
+              *ngIf="contactRequests.length === 0 && !loadingRequests"
+            >
+              <i class="fas fa-inbox"></i>
+              <p>Aucune demande de mise en relation pour le moment</p>
+            </div>
+
+            <!-- Liste des demandes -->
+            <div class="requests-list" *ngIf="showRequestsList">
+              <div class="requests-header">
+                <h4>Demandes de mise en relation</h4>
+              </div>
+
+              <!-- Message si pas d'abonnement actif -->
+              <div
+                class="subscription-warning"
+                *ngIf="!hasActiveSubscription && contactRequests.length > 0"
+              >
+                <div class="warning-icon">
+                  <i class="fas fa-lock"></i>
+                </div>
+                <div class="warning-content">
+                  <h5>Abonnement requis</h5>
+                  <p>
+                    Vous devez avoir un abonnement actif pour voir les détails
+                    des demandeurs et accepter les mises en relation.
+                  </p>
+                  <button
+                    class="btn btn-warning btn-sm"
+                    (click)="goToSubscription()"
+                  >
+                    <i class="fas fa-crown"></i>
+                    Voir les offres
+                  </button>
+                </div>
+              </div>
+
+              <!-- Liste des demandes -->
+              <div
+                class="request-item"
+                *ngFor="let request of contactRequests"
+                [ngClass]="'request-' + request.status.toLowerCase()"
+              >
+                <div
+                  class="request-content"
+                  [class.blurred]="
+                    !hasActiveSubscription && request.status === 'PENDING'
+                  "
+                >
+                  <div class="request-header">
+                    <img
+                      [src]="
+                        request.requester.profileImage ||
+                        'assets/images/default-avatar.png'
+                      "
+                      class="request-avatar"
+                      [alt]="request.requester.displayName"
+                    />
+                    <div class="request-info">
+                      <h5 class="request-name">
+                        {{ request.requester.displayName }}
+                      </h5>
+                      <p
+                        class="request-location"
+                        *ngIf="request.requester.location"
+                      >
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ request.requester.location }}
+                      </p>
+                      <p class="request-date">
+                        <i class="fas fa-clock"></i>
+                        {{ request.createdAt | date : "d MMM y 'à' HH:mm" }}
+                      </p>
+                    </div>
+                    <span
+                      class="request-badge"
+                      [ngClass]="'badge-' + request.status.toLowerCase()"
+                    >
+                      {{
+                        request.status === "PENDING"
+                          ? "En attente"
+                          : request.status === "ACCEPTED"
+                          ? "Acceptée"
+                          : request.status === "REJECTED"
+                          ? "Refusée"
+                          : "Annulée"
+                      }}
+                    </span>
+                  </div>
+                  <div class="request-message" *ngIf="request.message">
+                    <p>"{{ request.message }}"</p>
+                  </div>
+                </div>
+
+                <!-- Actions pour les demandes en attente -->
+                <div
+                  class="request-actions"
+                  *ngIf="request.status === 'PENDING' && hasActiveSubscription"
+                >
+                  <button
+                    class="btn btn-success btn-sm"
+                    (click)="respondToRequest(request.id, 'accept')"
+                    [disabled]="processingRequest === request.id"
+                  >
+                    <i class="fas fa-check"></i>
+                    Accepter
+                  </button>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    (click)="respondToRequest(request.id, 'reject')"
+                    [disabled]="processingRequest === request.id"
+                  >
+                    <i class="fas fa-times"></i>
+                    Refuser
+                  </button>
+                </div>
+              </div>
+
+              <!-- Message si aucune demande -->
+              <div class="no-requests" *ngIf="contactRequests.length === 0">
+                <i class="fas fa-inbox"></i>
+                <p>Aucune demande de mise en relation pour le moment</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

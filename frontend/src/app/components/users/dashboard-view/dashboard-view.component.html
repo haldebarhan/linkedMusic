@@ -11,7 +11,7 @@
         <i class="fa-solid fa-file-lines"></i>
       </div>
       <div class="stat-info">
-        <h3 class="stat-value">{{ totalActive }}</h3>
+        <h3 class="stat-value">{{ totalActive || 0 }}</h3>
         <p class="stat-title">Publication actives</p>
       </div>
     </div>
@@ -20,7 +20,7 @@
         <i class="fa-solid fa-eye"></i>
       </div>
       <div class="stat-info">
-        <h3 class="stat-value">{{ totalViews }}</h3>
+        <h3 class="stat-value">{{ totalViews || 0 }}</h3>
         <p class="stat-title">Vue total</p>
       </div>
     </div>
@@ -29,7 +29,7 @@
         <i class="fa-solid fa-inbox"></i>
       </div>
       <div class="stat-info">
-        <h3 class="stat-value">{{ requestReceived }}</h3>
+        <h3 class="stat-value">{{ requestReceived || 0 }}</h3>
         <p class="stat-title">Demande reçues</p>
       </div>
     </div>
@@ -38,7 +38,7 @@
         <i class="fa-solid fa-paper-plane"></i>
       </div>
       <div class="stat-info">
-        <h3 class="stat-value">{{ requestSent }}</h3>
+        <h3 class="stat-value">{{ requestSent || 0 }}</h3>
         <p class="stat-title">Demande formulées</p>
       </div>
     </div>
