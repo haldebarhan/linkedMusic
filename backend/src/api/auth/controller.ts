@@ -33,7 +33,7 @@ export class AuthController {
     return await this.userController.activateAccount(req, res);
   }
 
-  async refreshToken(req: Request, res: Response) {
+  async refreshToken(req: AuthenticatedRequest, res: Response) {
     return await this.userController.refreshToken(req, res);
   }
 

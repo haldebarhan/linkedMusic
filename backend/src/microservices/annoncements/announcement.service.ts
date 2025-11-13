@@ -6,7 +6,12 @@ import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
 } from "./announcement.dto";
-import { AnnouncementStatus, Prisma } from "@prisma/client";
+import {
+  AnnouncementStatus,
+  NotificationType,
+  Prisma,
+  PrismaClient,
+} from "@prisma/client";
 import {
   AnnouncementWithDetails,
   FieldValueInput,
@@ -23,12 +28,18 @@ import {
   definedEntries,
   mergeFileList,
 } from "@/utils/functions/merge-fileList";
+import { BrevoMailService } from "@/utils/services/brevo-mail.service";
+import { NotificationRepository } from "../notifications/notification.repository";
+import DatabaseService from "@/utils/services/database.service";
 const minioService: MinioService = MinioService.getInstance();
+const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
 export class AnnouncementService {
   constructor(
-    private readonly announcementRepository: AnnouncementRepository
+    private readonly announcementRepository: AnnouncementRepository,
+    private readonly mailService: BrevoMailService,
+    private readonly notificationRepository: NotificationRepository
   ) {}
 
   /**
@@ -465,12 +476,28 @@ export class AnnouncementService {
     if (!announcement) {
       throw new Error(`Annonce avec l'ID ${announcementId} introuvable`);
     }
-    return await this.announcementRepository.approveAnnouncement(
+    const approved = await this.announcementRepository.approveAnnouncement(
       announcementId
     );
+
+    const user = await prisma.user.findUnique({
+      where: { id: announcement.ownerId },
+    });
+    if (user) {
+      await this.mailService.sendAnnouncementApprovedMail({
+        to: user.email,
+        userName:
+          user.displayName ??
+          `${user.firstName?.concat(" ", user.lastName ?? "")}`,
+        announcementId: announcement.id,
+        announcementTitle: announcement.title,
+      });
+    }
+
+    return approved;
   }
 
-  async rejectAnnouncement(announcementId: number) {
+  async rejectAnnouncement(announcementId: number, reason: string) {
     const announcement = await this.announcementRepository.findByIdWithDetails(
       announcementId
     );
@@ -478,8 +505,23 @@ export class AnnouncementService {
     if (!announcement) {
       throw new Error(`Annonce avec l'ID ${announcementId} introuvable`);
     }
+    const rejected = await this.announcementRepository.rejectAnnouncement(
+      announcementId
+    );
 
-    return await this.announcementRepository.rejectAnnouncement(announcementId);
+    const user = await prisma.user.findUnique({
+      where: { id: announcement.ownerId },
+    });
+    if (user) {
+      await this.mailService.sendAnnouncementRejectedMail({
+        to: user.email!,
+        userName: user.displayName!,
+        announcementId: announcement.id,
+        announcementTitle: announcement.title,
+        reason,
+      });
+    }
+    return rejected;
   }
 
   async listPendingAnnouncements(params: {

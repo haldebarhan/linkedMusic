@@ -299,7 +299,11 @@ export class AnnouncementController {
   async rejectAnnouncement(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const status = await this.announcementService.rejectAnnouncement(+id);
+      const reason: string = req.body;
+      const status = await this.announcementService.rejectAnnouncement(
+        +id,
+        reason
+      );
       const response = formatResponse(200, status);
       res.status(200).json(response);
     } catch (error) {

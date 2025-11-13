@@ -70,6 +70,7 @@ const refreshTokenMiddleware = async (
     }
     const refreshToken = await firebaseService.loginWithUid(payload.user_id);
     req.token = refreshToken;
+    req.user = user;
     next();
   } catch (error) {
     logger.error("Authentication Error:", error);

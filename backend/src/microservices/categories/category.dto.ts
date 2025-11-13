@@ -12,8 +12,10 @@ import {
   IsNotEmpty,
   MinLength,
   MaxLength,
+  ValidateNested,
 } from "class-validator";
 import { FieldInputType } from "@prisma/client";
+import { Type } from "class-transformer";
 
 // ============================================================================
 // CATEGORY DTOS
@@ -155,6 +157,15 @@ export class CreateFieldDto {
   @IsOptional()
   @IsString()
   externalTable?: string;
+
+  @IsOptional()
+  @IsArray()
+  options?: Array<{
+    id?: number;
+    label: string;
+    value: string;
+    order: number;
+  }>;
 }
 
 export class UpdateFieldDto {
@@ -227,6 +238,24 @@ export class UpdateFieldDto {
   @IsOptional()
   @IsString()
   externalTable?: string;
+
+  @IsOptional()
+  @IsArray()
+  options?: Array<{
+    id?: number;
+    label: string;
+    value: string;
+    order: number;
+  }>;
+
+  @IsOptional()
+  @IsArray()
+  optionsToRemove?: Array<{
+    id: number;
+    label: string;
+    value: string;
+    order: number;
+  }>;
 }
 
 // ============================================================================
@@ -290,6 +319,13 @@ export class UpdateFieldOptionDto {
 // ============================================================================
 // CATEGORY FIELD (RELATION) DTOS
 // ============================================================================
+
+export class LinkFieldsToCategoryDTO {
+  @IsArray({ message: "fields must be an array" })
+  @ValidateNested({ each: true })
+  @Type(() => CreateCategoryFieldDto)
+  fields: CreateCategoryFieldDto[];
+}
 
 export class CreateCategoryFieldDto {
   @IsNumber()

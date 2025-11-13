@@ -99,10 +99,10 @@ export class UserAnnouncementsDetailsComponent implements OnInit {
         next: ({ announcement: annRes, eligibility: elRes, requests }) => {
           this.announcement = annRes.data;
           this.eligibility = elRes?.data || null;
+          this.hasActiveSubscription = this.eligibility?.hasActivePass ?? false;
           this.contactRequests = requests?.data || null;
         },
         error: (err) => {
-          //   this.error = 'Impossible de charger cette annonce';
           console.error(err);
         },
       });

@@ -11,6 +11,7 @@ import {
   CreateCategoryFieldDto,
   CreateFieldDto,
   CreateFieldOptionDto,
+  LinkFieldsToCategoryDTO,
   UpdateCategoryDto,
   UpdateCategoryFieldDto,
   UpdateFieldDto,
@@ -78,7 +79,21 @@ export class CategoryService {
   }
 
   async createField(dto: CreateFieldDto) {
-    return this.fieldRepository.create(dto);
+    const { options, ...fieldData } = dto;
+    const field = await this.fieldRepository.create(fieldData);
+
+    if (options && options.length > 0) {
+      for (const option of options) {
+        await this.fieldOptionRepository.create({
+          fieldId: field.id,
+          label: option.label,
+          value: option.value,
+          order: option.order,
+          active: true,
+        });
+      }
+    }
+    return this.fieldRepository.findById(field.id);
   }
 
   /**
@@ -90,7 +105,40 @@ export class CategoryService {
       throw new AppError(ErrorCode.NOT_FOUND, "Champ non trouvé", 404);
     }
 
-    return this.fieldRepository.update(id, dto);
+    const { options, optionsToRemove, ...fieldData } = dto;
+    await this.fieldRepository.update(id, fieldData);
+
+    if (optionsToRemove && optionsToRemove.length > 0) {
+      for (const option of optionsToRemove) {
+        if (option.id) {
+          await this.fieldOptionRepository.delete(option.id);
+        }
+      }
+    }
+
+    if (options && options.length > 0) {
+      for (const option of options) {
+        if (option.id && option.id > 0) {
+          // Option existante : mettre à jour
+          await this.fieldOptionRepository.update(option.id, {
+            label: option.label,
+            value: option.value,
+            order: option.order,
+          });
+        } else {
+          // Nouvelle option : créer
+          await this.fieldOptionRepository.create({
+            fieldId: id,
+            label: option.label,
+            value: option.value,
+            order: option.order,
+            active: true,
+          });
+        }
+      }
+    }
+
+    return this.fieldRepository.findById(id);
   }
 
   /**
@@ -124,8 +172,43 @@ export class CategoryService {
   /**
    * Associe un champ à une catégorie
    */
-  async addFieldToCategory(dto: CreateCategoryFieldDto) {
-    return this.categoryFieldRepository.create(dto);
+  async addFieldToCategory(dto: LinkFieldsToCategoryDTO) {
+    try {
+      if (!dto.fields || dto.fields.length === 0) {
+        throw new AppError(ErrorCode.BAD_REQUEST, "No fields to attach", 400);
+      }
+      const results = await Promise.allSettled(
+        dto.fields.map((field) => this.categoryFieldRepository.create(field))
+      );
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        console.error(`${failed.length} fields failed to attach:`, failed);
+
+        // Si toutes ont échoué, lever une erreur
+        if (successful === 0) {
+          throw new AppError(
+            ErrorCode.INTERNAL_ERROR,
+            "All field attachments failed",
+            500
+          );
+        }
+        return {
+          successful,
+          failed: failed.length,
+          results: results.map((r) =>
+            r.status === "fulfilled" ? r.value : { error: r.reason.message }
+          ),
+        };
+      }
+      return results.map((r) => r);
+    } catch (error) {
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        `Failed to attach fields to category: ${error.message}`,
+        error.status || 500
+      );
+    }
   }
 
   /**
@@ -144,5 +227,16 @@ export class CategoryService {
    */
   async removeFieldFromCategory(categoryId: number, fieldId: number) {
     return this.categoryFieldRepository.delete(categoryId, fieldId);
+  }
+
+  async findFieldById(fieldId: number) {
+    const include = {
+      categoryFields: { select: { category: true } },
+      options: true,
+    };
+    const field = await this.fieldRepository.findById(fieldId, include);
+    if (!field)
+      throw new AppError(ErrorCode.NOT_FOUND, "Champ non trouvé", 404);
+    return field;
   }
 }

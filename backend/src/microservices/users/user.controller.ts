@@ -144,7 +144,8 @@ export class UserController {
   async refreshToken(req: AuthenticatedRequest, res: Response) {
     try {
       const token = req.token;
-      const response = formatResponse(200, { accessToken: token });
+      const user = req.user;
+      const response = formatResponse(200, { accessToken: token, user });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

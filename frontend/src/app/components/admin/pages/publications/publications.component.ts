@@ -65,7 +65,6 @@ export class PublicationsComponent implements OnInit {
   }
 
   goTodetail(id: number) {
-    // alert(id);
     this.router.navigate(['/admin/publications', id]);
   }
 
