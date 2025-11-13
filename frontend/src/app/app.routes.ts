@@ -29,7 +29,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'announcemnts/edit/:id',
+    path: 'announcements/edit/:id',
     canMatch: [authCanMatch],
     canActivate: [authCanActivate],
     data: { guestPolicy: 'allow' },

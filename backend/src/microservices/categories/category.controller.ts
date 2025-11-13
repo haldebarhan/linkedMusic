@@ -8,6 +8,7 @@ import {
   CreateCategoryFieldDto,
   CreateFieldDto,
   CreateFieldOptionDto,
+  LinkFieldsToCategoryDTO,
   UpdateCategoryDto,
   UpdateCategoryFieldDto,
   UpdateFieldDto,
@@ -127,6 +128,17 @@ export class CategoryController {
     }
   }
 
+  async findFieldById(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const field = await this.categoryService.findFieldById(id);
+      const response = formatResponse(200, field);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
   // ========== FIELD OPTIONS ==========
 
   async createFieldOption(req: Request, res: Response) {
@@ -174,8 +186,8 @@ export class CategoryController {
 
   async addFieldToCategory(req: Request, res: Response) {
     try {
-      const dto: CreateCategoryFieldDto = Object.assign(
-        new CreateCategoryFieldDto(),
+      const dto: LinkFieldsToCategoryDTO = Object.assign(
+        new LinkFieldsToCategoryDTO(),
         req.body
       );
       const result = await this.categoryService.addFieldToCategory(dto);
@@ -208,8 +220,11 @@ export class CategoryController {
 
   async removeFieldFromCategory(req: Request, res: Response) {
     try {
-      const categoryId = parseInt(req.params.categoryId);
-      const fieldId = parseInt(req.params.fieldId);
+      const dto: CreateCategoryFieldDto = Object.assign(
+        new CreateCategoryFieldDto(),
+        req.body
+      );
+      const { categoryId, fieldId } = dto;
       await this.categoryService.removeFieldFromCategory(categoryId, fieldId);
       const result = { message: "Champ dissocié de la catégorie avec succès" };
       const response = formatResponse(200, result);

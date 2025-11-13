@@ -22,6 +22,10 @@ import {
   CreatePlanDTO,
   UpdatePlanDTO,
 } from "@/microservices/subscriptions/dto/plan.dto";
+import {
+  CreateCategoryFieldDto,
+  LinkFieldsToCategoryDTO,
+} from "@/microservices/categories/category.dto";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -138,13 +142,13 @@ router.post(
 
 router.post(
   "/catalog/attach-fields",
-  ValidateDtoMiddleware(AttachFieldsDTO),
+  ValidateDtoMiddleware(LinkFieldsToCategoryDTO),
   async (req: Request, res: Response) => adminController.attachField(req, res)
 );
 
 router.post(
   "/catalog/detach-fields",
-  ValidateDtoMiddleware(AttachFieldDTO),
+  ValidateDtoMiddleware(CreateCategoryFieldDto),
   async (req: Request, res: Response) => adminController.detachField(req, res)
 );
 

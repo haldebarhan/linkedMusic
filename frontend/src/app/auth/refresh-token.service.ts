@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { Observable, Subject, of, timer } from 'rxjs';
+import { Observable, ReplaySubject, Subject, of, timer } from 'rxjs';
 import {
   catchError,
   filter,
@@ -14,10 +14,42 @@ import { ApiAuthService } from './api-auth.service';
 @Injectable({ providedIn: 'root' })
 export class RefreshTokenService {
   private inFlight = false;
-  private tokenRefreshed$ = new Subject<string>();
+  private tokenRefreshed$ = new ReplaySubject<string>(1);
   private scheduleHandle: any;
 
   constructor(private auth: AuthService, private api: ApiAuthService) {}
+
+  refreshToken(): Observable<string> {
+    if (this.inFlight) return this.tokenRefreshed$.pipe(first());
+
+    this.inFlight = true;
+    return this.api.refreshToken().pipe(
+      switchMap((res) => {
+        this.auth.updateToken(res.token);
+        this.tokenRefreshed$.next(res.token);
+        return of(res.token);
+      }),
+      finalize(() => {
+        this.inFlight = false;
+      }),
+      catchError((err) => {
+        // reset le subject pour prochains listeners
+        this.tokenRefreshed$.error?.(err);
+        this.tokenRefreshed$ = new ReplaySubject<string>(1);
+        this.auth.logout();
+        throw err;
+      })
+    );
+  }
+
+  refreshIfExpiringSoon(thresholdSec = 60): Observable<string | null> {
+    const t = this.auth.token;
+    if (!t) return of(null);
+    const exp = this.getExp(t);
+    if (!exp) return of(null);
+    const now = Math.floor(Date.now() / 1000);
+    return exp - now <= thresholdSec ? this.refreshToken() : of(null);
+  }
 
   /** Démarre la planification proactive au boot */
   startAutoRefresh() {
@@ -28,45 +60,8 @@ export class RefreshTokenService {
     });
   }
 
-  /** Rafraîchit si nécessaire AVANT une requête (optionnel) */
-  refreshIfExpiringSoon(thresholdSec = 60): Observable<string | null> {
-    const t = this.auth.token;
-    if (!t) return of(null);
-    const exp = this.getExp(t);
-    if (!exp) return of(null);
-
-    const nowSec = Math.floor(Date.now() / 1000);
-    if (exp - nowSec <= thresholdSec) {
-      return this.refreshToken();
-    }
-    return of(null);
-  }
-
-  /** Appelé par l’interceptor quand 401, avec anti-concurrence + retry */
-  refreshToken(): Observable<string> {
-    if (this.inFlight) {
-      return this.tokenRefreshed$.pipe(first());
-    }
-    this.inFlight = true;
-
-    return this.api.refreshToken().pipe(
-      // map pour extraire le token de la réponse
-      switchMap((res) => {
-        // Backend renvoie un nouveau JWT dans res.token
-        this.auth.updateToken(res.token);
-        this.tokenRefreshed$.next(res.token);
-        return of(res.token);
-      }),
-      finalize(() => {
-        this.inFlight = false;
-      }),
-      catchError((err) => {
-        this.tokenRefreshed$.error?.(err);
-        // Nettoie l’état si refresh impossible
-        this.auth.logout();
-        throw err;
-      })
-    );
+  getAuth() {
+    return this.auth;
   }
 
   // ---------- Planification proactive ----------

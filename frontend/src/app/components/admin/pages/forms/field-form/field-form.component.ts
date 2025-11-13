@@ -58,6 +58,7 @@ export class FieldFormComponent implements OnInit {
       unit: [''],
       searchable: [true],
       filterable: [true],
+      sortable: [true],
       options: this.fb.array([] as FormGroup[]),
     });
   }
@@ -77,6 +78,7 @@ export class FieldFormComponent implements OnInit {
           unit: '',
           searchable: true,
           filterable: true,
+          sortable: true,
         });
         this.options.clear();
         this.originalOptions.clear();

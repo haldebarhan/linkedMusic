@@ -22,6 +22,12 @@
           [class.text-muted]="!field?.filterable"
           >filterable</span
         >
+        ·
+        <span
+          [class.text-success]="field?.sortable"
+          [class.text-muted]="!field?.sortable"
+          >triable</span
+        >
       </div>
     </div>
     <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">

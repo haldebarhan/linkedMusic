@@ -13,6 +13,17 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum NotificationType {
+    ANNOUNCEMENT_APPROVED
+    ANNOUNCEMENT_REJECTED
+    CONTACT_REQUEST_RECEIVED
+    CONTACT_REQUEST_ACCEPTED
+    CONTACT_REQUEST_REJECTED
+    MESSAGE_RECEIVED
+    SUBSCRIPTION_EXPIRING
+    SUBSCRIPTION_EXPIRED
+}
+
 enum Role {
     USER
     ADMIN
@@ -125,34 +136,36 @@ enum ConfigType {
 }
 
 model User {
-    id                    Int                @id @default(autoincrement())
-    uid                   String             @unique
-    email                 String             @unique
-    phone                 String?            @unique
-    displayName           String?            @map("display_name")
-    firstName             String?            @map("first_name")
-    lastName              String?            @map("last_name")
-    role                  Role               @default(USER)
-    status                Status             @default(ACTIVATED)
-    profileImage          String             @map("profile_image")
-    comments              String?
-    location              String?
-    country               String?
-    city                  String?
-    zipCode               String?            @map("zip_code")
-    createdAt             DateTime           @default(now()) @map("created_at")
-    updatedAt             DateTime           @updatedAt @map("updated_at")
-    files                 File[]
-    Favorites             Favorite[]
-    messages              Message[]
-    sentConversations     Conversation[]     @relation("ConversationSender")
-    receivedConversations Conversation[]     @relation("ConversationReceiver")
-    announcements         Announcement[]
-    Payment               Payment[]
-    MatchingAccess        MatchingAccess[]
-    subscriptions         UserSubscription[]
-    FreeClaim             FreeClaim?
-    contactRequests       ContactRequest[]   @relation("ContactRequests")
+    id                     Int                     @id @default(autoincrement())
+    uid                    String                  @unique
+    email                  String                  @unique
+    phone                  String?                 @unique
+    displayName            String?                 @map("display_name")
+    firstName              String?                 @map("first_name")
+    lastName               String?                 @map("last_name")
+    role                   Role                    @default(USER)
+    status                 Status                  @default(ACTIVATED)
+    profileImage           String                  @map("profile_image")
+    comments               String?
+    location               String?
+    country                String?
+    city                   String?
+    zipCode                String?                 @map("zip_code")
+    createdAt              DateTime                @default(now()) @map("created_at")
+    updatedAt              DateTime                @updatedAt @map("updated_at")
+    files                  File[]
+    Favorites              Favorite[]
+    messages               Message[]
+    sentConversations      Conversation[]          @relation("ConversationSender")
+    receivedConversations  Conversation[]          @relation("ConversationReceiver")
+    announcements          Announcement[]
+    Payment                Payment[]
+    MatchingAccess         MatchingAccess[]
+    subscriptions          UserSubscription[]
+    FreeClaim              FreeClaim?
+    contactRequests        ContactRequest[]        @relation("ContactRequests")
+    notifications          Notification[]
+    notificationPreference NotificationPreference?
 
     @@map("users")
 }
@@ -579,4 +592,36 @@ model FreeClaim {
     userId    Int      @unique
     claimedAt DateTime @default(now())
     user      User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+    id        Int              @id @default(autoincrement())
+    userId    Int              @map("user_id")
+    type      NotificationType
+    title     String
+    message   String
+    actionUrl String?          @map("action_url")
+    metadata  Json?
+    isRead    Boolean          @default(false) @map("is_read")
+    emailSent Boolean          @default(false) @map("email_sent")
+    createdAt DateTime         @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, isRead])
+    @@index([userId, createdAt])
+    @@map("notifications")
+}
+
+model NotificationPreference {
+    id                   Int     @id @default(autoincrement())
+    userId               Int     @unique @map("user_id")
+    emailAnnouncements   Boolean @default(true)
+    emailContactRequests Boolean @default(true)
+    emailMessages        Boolean @default(false)
+    emailMarketing       Boolean @default(true)
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@map("notification_preferences")
 }

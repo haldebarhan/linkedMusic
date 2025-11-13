@@ -1,5 +1,6 @@
 import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
+import { CategoryController } from "@/microservices/categories/category.controller";
 import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
 import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
 import { UserController } from "@/microservices/users/user.controller";
@@ -13,7 +14,8 @@ export class AdminController {
     private readonly configController: ConfigurationController,
     private readonly catalogueController: CatalogueController,
     private readonly subscriptionController: SubscriptionController,
-    private readonly announcementController: AnnouncementController
+    private readonly announcementController: AnnouncementController,
+    private readonly categoryController: CategoryController
   ) {}
 
   // Users
@@ -77,9 +79,6 @@ export class AdminController {
     return await this.catalogueController.findServiceTypes(req, res);
   }
 
-  async createField(req: Request, res: Response) {
-    return await this.catalogueController.createField(req, res);
-  }
   async updateField(req: Request, res: Response) {
     return await this.catalogueController.updateField(req, res);
   }
@@ -92,24 +91,12 @@ export class AdminController {
     return await this.catalogueController.listFields(req, res);
   }
 
-  async findField(req: Request, res: Response) {
-    return await this.catalogueController.findField(req, res);
-  }
-
   async removeField(req: Request, res: Response) {
     return await this.catalogueController.removeFields(req, res);
   }
 
   async attachService(req: Request, res: Response) {
     return await this.catalogueController.attachService(req, res);
-  }
-
-  async attachField(req: Request, res: Response) {
-    return await this.catalogueController.attachField(req, res);
-  }
-
-  async detachField(req: Request, res: Response) {
-    return await this.catalogueController.detachField(req, res);
   }
 
   async createPlan(req: Request, res: Response) {
@@ -142,5 +129,23 @@ export class AdminController {
 
   async rejectAnnouncement(req: Request, res: Response) {
     return await this.announcementController.rejectAnnouncement(req, res);
+  }
+
+  // Fields
+
+  async createField(req: Request, res: Response) {
+    return await this.categoryController.createField(req, res);
+  }
+
+  async findField(req: Request, res: Response) {
+    return await this.categoryController.findFieldById(req, res);
+  }
+
+  async attachField(req: Request, res: Response) {
+    return await this.categoryController.addFieldToCategory(req, res);
+  }
+
+  async detachField(req: Request, res: Response) {
+    return await this.categoryController.removeFieldFromCategory(req, res);
   }
 }

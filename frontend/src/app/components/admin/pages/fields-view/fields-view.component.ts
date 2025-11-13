@@ -57,8 +57,8 @@ export class FieldsViewComponent implements OnInit {
       next: (res) => {
         const response = res.data;
         this.field = res.data;
-        const attached = Array.isArray(response.CategoryField)
-          ? response.CategoryField
+        const attached = Array.isArray(response.categoryFields)
+          ? response.categoryFields
           : [];
         this.attached = attached.map((cf: any) => {
           const id = cf.category.id;
