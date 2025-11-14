@@ -453,7 +453,7 @@ export class BrevoMailService {
     </div>
     
     <div class="footer">
-      <p>Cet email a été envoyé par <strong>MusicMarketplace</strong></p>
+      <p>Cet email a été envoyé par <strong>ZikMuzik</strong></p>
       <p>
         <a href="${ENV.FRONTEND_URL}/profile/announcements">Gérer mes annonces</a> • 
       </p>
@@ -663,16 +663,14 @@ export class BrevoMailService {
 
       <div class="support-box">
         Si vous avez des questions concernant ce rejet, n'hésitez pas à contacter notre support à 
-        <strong><a href="mailto:${
-          ENV.SUPPORT_EMAIL || "support@musicmarketplace.com"
-        }" style="color: #667eea;">
-          ${ENV.SUPPORT_EMAIL || "support@musicmarketplace.com"}
+        <strong><a href="mailto:${ENV.SUPPORT_EMAIL}" style="color: #667eea;">
+          ${ENV.SUPPORT_EMAIL}
         </a></strong>
       </div>
     </div>
     
     <div class="footer">
-      <p>Cet email a été envoyé par <strong>MusicMarketplace</strong></p>
+      <p>Cet email a été envoyé par <strong>ZikMuzik</strong></p>
       <p>
         <a href="${ENV.FRONTEND_URL}/profile/announcements">Mes annonces</a> • 
         <a href="${
@@ -837,7 +835,7 @@ export class BrevoMailService {
     </div>
     
     <div class="footer">
-      <p>Cet email a été envoyé par <strong>MusicMarketplace</strong></p>
+      <p>Cet email a été envoyé par <strong>ZikMuzik</strong></p>
     </div>
   </div>
 </body>
@@ -985,7 +983,7 @@ export class BrevoMailService {
     </div>
     
     <div class="footer">
-      <p>Cet email a été envoyé par <strong>MusicMarketplace</strong></p>
+      <p>Cet email a été envoyé par <strong>ZikMuzik</strong></p>
     </div>
   </div>
 </body>
@@ -1083,7 +1081,7 @@ export class BrevoMailService {
     </div>
     
     <div class="footer">
-      <p>Cet email a été envoyé par <strong>MusicMarketplace</strong></p>
+      <p>Cet email a été envoyé par <strong>ZikMuzik</strong></p>
     </div>
   </div>
 </body>

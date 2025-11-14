@@ -2,10 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Subscription } from '../admin/pages/subscription-plans/subscription-plans.component';
 import { ApiService } from '../../shared/services/api.service';
-import { Observable } from 'rxjs';
+import { map, Observable, take } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { AuthUser } from '../../shared/interfaces/auth';
 import { Router } from '@angular/router';
+import { userProfile } from '../users/user-profile/user-profile.component';
+import { SweetAlert } from '../../helpers/sweet-alert';
 
 export enum PlanPeriod {
   FREE = 'FREE',
@@ -27,6 +29,18 @@ export class PricingPlanComponent implements OnInit {
   rows: any[] = [];
   user$: Observable<AuthUser | null>;
   isLoggedIn$: Observable<boolean>;
+  completed$: Observable<boolean>;
+
+  completProfile: userProfile = {
+    email: '',
+    displayName: null,
+    phone: null,
+    lastName: null,
+    firstName: null,
+    country: null,
+    zipCode: null,
+    city: null,
+  };
   constructor(
     private api: ApiService<any>,
     private auth: AuthService,
@@ -34,6 +48,21 @@ export class PricingPlanComponent implements OnInit {
   ) {
     this.user$ = this.auth.user$;
     this.isLoggedIn$ = this.auth.isLoggedIn$;
+
+    this.completed$ = this.user$.pipe(
+      map((u) => {
+        return !!(
+          u?.email &&
+          u.displayName &&
+          u.phone &&
+          u.lastName &&
+          u.firstName &&
+          u.country &&
+          u.zipCode &&
+          u.city
+        );
+      })
+    );
   }
   ngOnInit(): void {
     this.loadSubscriptionPlans();
@@ -92,6 +121,17 @@ export class PricingPlanComponent implements OnInit {
       });
       return;
     }
-    this.router.navigate(['/checkout', plan.id]);
+    this.completed$.pipe(take(1)).subscribe((completed) => {
+      if (!completed) {
+        SweetAlert.fire({
+          icon: 'warning',
+          title: 'Profile non terminé',
+          text: 'Certaines Infos manquent sur votre profile. Veuillez les renseigner avant de proceder aux paiements',
+          didClose: () => {
+            this.router.navigate(['/users/profile']);
+          },
+        });
+      } else this.router.navigate(['/checkout', plan.id]);
+    });
   }
 }

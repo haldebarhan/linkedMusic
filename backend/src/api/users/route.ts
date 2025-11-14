@@ -151,6 +151,11 @@ router.post(
   async (req: AuthenticatedRequest, res: Response) =>
     userController.makePayment(req, res)
 );
+
+router.get("/payments", async (req: AuthenticatedRequest, res: Response) =>
+  userController.myPayments(req, res)
+);
+
 router.get(
   "/payments/:reference",
   async (req: AuthenticatedRequest, res: Response) =>

@@ -202,4 +202,27 @@ export class ApiService<T> {
       }
     );
   }
+
+  getUserTransactions(data: {
+    status: string;
+    sortBy?: 'date' | 'amount';
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }) {
+    const { limit, page, sortBy, sortOrder, status } = data;
+    const pageQuery = page ?? 1;
+    const limitQuery = limit ?? 10;
+    let params = new HttpParams()
+      .set('page', pageQuery.toString())
+      .set('limit', limitQuery.toString())
+      .set('sortBy', sortBy ?? 'date')
+      .set('status', status.toUpperCase())
+      .set('sortOrder', sortOrder ?? 'desc');
+
+    return this.http.get<ApiListResponse<any>>(
+      `${this.API_URL}/users/payments`,
+      { params }
+    );
+  }
 }

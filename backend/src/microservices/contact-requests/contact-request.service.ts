@@ -98,7 +98,7 @@ export class ContactRequestService {
     if (request.status !== ContactRequestStatus.PENDING)
       throw createError(400, "Cette demande a déjà été traitée");
     const hasActiveSubscription = await this.checkActiveSubscription(userId);
-    if (hasActiveSubscription)
+    if (!hasActiveSubscription)
       throw createError(
         403,
         "Vous devez avoir un abonnement actif pour accepter des demandes de mise en relation"
@@ -153,6 +153,13 @@ export class ContactRequestService {
       } else {
         conversation = existingConversation;
       }
+      await tx.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderId: updatedRequest.requesterId,
+          content: updatedRequest.message || "Mise en relation acceptée",
+        },
+      });
       return { request: updatedRequest, conversation };
     });
     return result.request;

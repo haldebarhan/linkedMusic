@@ -5,7 +5,12 @@ import { SubscriptionRepository } from "../subscriptions/subscription.repository
 import { PaymentDTO } from "./payment.dto";
 import createError from "http-errors";
 import { generateRandomUUID } from "@/utils/functions/utilities";
-import { PaymentStatus, PrismaClient } from "@prisma/client";
+import {
+  PaymentStatus,
+  Prisma,
+  PrismaClient,
+  SubscriptionStatus,
+} from "@prisma/client";
 import { CinetPayClient } from "@/core/payments/cinet-pay/cinet-pay";
 import { ENV } from "@/config/env";
 import { enqueuePaymentPendingJob } from "@/events/jobs/payment-pending.job";
@@ -13,8 +18,11 @@ import DatabaseService from "@/utils/services/database.service";
 import { addDays } from "date-fns";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
 import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
+import { Order } from "@/utils/enums/order.enum";
+import { MinioService } from "@/utils/services/minio.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
+const minioService: MinioService = MinioService.getInstance();
 
 @injectable()
 export class PaymentService {
@@ -77,14 +85,25 @@ export class PaymentService {
       }
     }
 
-    prisma.$transaction(async (tx) => {
-      await this.ensureSubscriptionActivated(tx, userId, plan, opts);
+    const user = await prisma.$transaction(async (tx) => {
+      const { user } = await this.ensureSubscriptionActivated(
+        tx,
+        userId,
+        plan,
+        opts
+      );
+      return user;
     });
+    user.profileImage = await minioService.generatePresignedUrl(
+      ENV.MINIO_BUCKET_NAME,
+      user.profileImage
+    );
 
     return {
       success: true,
       returnUrl: ENV.PAYMENT_PROVIDER_RETURN_URL,
       transactionId: reference,
+      user,
     };
   }
 
@@ -95,9 +114,34 @@ export class PaymentService {
     }
     return payment;
   }
+  async findUserPayments(
+    userId: number,
+    params: {
+      page: number;
+      limit: number;
+      sortBy: string;
+      status: string;
+      sortOrder: Order;
+    }
+  ) {
+    const { page, limit, sortBy, status, sortOrder } = params;
+    const { data, total } = await this.paymentRepository.getUserPayments(
+      userId,
+      { status },
+      { page, limit, sortBy, sortOrder }
+    );
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
+  }
 
   private async ensureSubscriptionActivated(
-    tx: any,
+    tx: Prisma.TransactionClient,
     userId: number,
     plan: any,
     opts?: SubscribeOption
@@ -122,7 +166,30 @@ export class PaymentService {
         : Promise.resolve(),
     ]);
 
-    return sub;
+    const user = await tx.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: {
+        subscriptions: {
+          where: { status: SubscriptionStatus.ACTIVE },
+          select: {
+            startAt: true,
+            endAt: true,
+            autoRenew: true,
+            status: true,
+            plan: {
+              select: {
+                name: true,
+                period: true,
+                priceCents: true,
+                benefits: { select: { benefit: { select: { label: true } } } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return { sub, user };
   }
 
   private computeEndAt(durationDays?: number | null): Date | null {

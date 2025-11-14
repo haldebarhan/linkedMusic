@@ -116,6 +116,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
     this.loadingThreads = true;
     this.socket.emit(EV.THREADS_LIST);
     this.socket.on<ThreadRow[]>(EV.THREADS_DATA, (rows: any) => {
+      console.log('test: ', rows);
       this.threads = rows.data || [];
       this.loadingThreads = false;
       this.joinAllThreadRooms();

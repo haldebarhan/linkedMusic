@@ -49,6 +49,9 @@ export class UpdateUserDTO {
 
   @IsString()
   zipCode: string;
+
+  @IsString()
+  city: string;
 }
 
 export class VerifyToken {

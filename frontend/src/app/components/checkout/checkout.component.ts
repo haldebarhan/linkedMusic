@@ -25,6 +25,7 @@ import {
 import { fr } from 'intl-tel-input/i18n';
 import Swal from 'sweetalert2';
 import { ApiResponse } from '../../shared/interfaces/response-formatter';
+import { UserUpdateService } from '../../auth/user-update.service';
 
 declare var intlTelInput: any;
 
@@ -62,7 +63,8 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private api: ApiService<any>,
     private auth: AuthService,
     private fb: FormBuilder,
-    private zone: NgZone
+    private zone: NgZone,
+    private userUpdateService: UserUpdateService
   ) {
     this.user$ = this.auth.user$;
     this.form = this.fb.group({
@@ -160,10 +162,9 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.user$.subscribe((user) => {
       if (user) {
         this.user = user;
-        const [address, city] = this.splitLocation(user.location);
         this.form.patchValue({
-          address: address || '',
-          city: city || '',
+          address: user.location || '',
+          city: user.city || '',
           zipCode: user.zipCode,
           country: user.country,
           phone: user.phone,
@@ -176,10 +177,6 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.auth.user$.subscribe((user) => {
       this.user = user;
     });
-  }
-
-  private splitLocation(location: string) {
-    return location ? location.split(' :') : [];
   }
 
   loadPlanDetails(planId: number) {
@@ -270,6 +267,7 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     payload.country = this.isoCountry;
     this.api.create('users/payments', payload).subscribe({
       next: (res) => {
+        this.userUpdateService.notifyUserUpdate(res.data.user);
         if (res.data.returnUrl) {
           this.router.navigate(['/payments/return'], {
             queryParams: {

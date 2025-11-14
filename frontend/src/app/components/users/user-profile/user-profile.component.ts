@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ApiAuthService } from '../../../auth/api-auth.service';
 import { Router } from '@angular/router';
 
-type userProfile = {
+export type userProfile = {
   email: string;
   displayName: string | null;
   phone: string | null;
   lastName: string | null;
   firstName: string | null;
   country: string | null;
+  city: string | null;
   zipCode: string | null;
 };
 
@@ -28,6 +29,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     lastName: null,
     firstName: null,
     country: null,
+    city: null,
     zipCode: null,
   };
   completed: boolean = false;
@@ -53,6 +55,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           email: this.data.email,
           country: this.data.country,
           zipCode: this.data.zipCode,
+          city: this.data.city,
         };
         this.completed = Object.values(this.completProfile).every(
           (value) => value !== null

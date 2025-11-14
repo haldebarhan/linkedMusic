@@ -82,14 +82,14 @@
           <div class="detail-item">
             <label>Date de début</label>
             <div class="value">
-              {{ subscription.startDate | date : "dd/MM/yyyy" }}
+              {{ subscription.startDate | date : "dd-MM-yyyy" }}
             </div>
           </div>
 
           <div class="detail-item">
-            <label>Date de f</label>
+            <label>Date de fin</label>
             <div class="value">
-              {{ subscription.endDate | date : "dd/MM/yyyy" }}
+              {{ subscription.endDate | date : "dd-MM-yyyy" }}
             </div>
           </div>
 
@@ -171,10 +171,10 @@
           </div>
           <div class="pub-actions">
             <span class="status-badge" [ngClass]="getStatusClass(pub.status)">{{
-              pub.status
+              getPublicationLabel(pub.status)
             }}</span>
-            <button class="more-btn" (click)="$event.stopPropagation()">
-              <i class="fa-solid fa-arrow-down"></i>
+            <button class="more-btn" (click)="goToPublicationDetails(pub.id)">
+              <i class="fa-solid fa-eye"></i>
             </button>
           </div>
         </div>

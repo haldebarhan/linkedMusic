@@ -1,6 +1,13 @@
 import { Order } from "@/utils/enums/order.enum";
+import { PaginationParams } from "@/utils/interfaces/pagination";
 import DatabaseService from "@/utils/services/database.service";
-import { PaymentProvider, PaymentStatus, PrismaClient } from "@prisma/client";
+import { PaymentFilter } from "@/utils/types/payment";
+import {
+  PaymentProvider,
+  PaymentStatus,
+  Prisma,
+  PrismaClient,
+} from "@prisma/client";
 import { injectable } from "tsyringe";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
@@ -30,11 +37,11 @@ export class PaymentRepository {
     return await prisma.payment.findUnique({ where: { reference } });
   }
 
-  async getUserLastPayments(userId: number) {
+  async getUserLastPayments(userId: number, limit = 5) {
     return await prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: Order.DESC },
-      take: 5,
+      take: limit,
       select: {
         id: true,
         reference: true,
@@ -47,5 +54,37 @@ export class PaymentRepository {
         provider: true,
       },
     });
+  }
+
+  async getUserPayments(
+    userId: number,
+    filters: PaymentFilter,
+    pagination: PaginationParams
+  ) {
+    const where: Prisma.PaymentWhereInput = { userId };
+    if (filters.status && filters.status !== "ALL") {
+      where.status = filters.status as PaymentStatus;
+    }
+
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const finalOrderBy: Prisma.PaymentOrderByWithRelationInput | undefined =
+      pagination.sortBy
+        ? ({
+            [pagination.sortBy]: pagination.sortOrder || Order.DESC,
+          } as Prisma.PaymentOrderByWithRelationInput)
+        : undefined;
+    const [data, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        take: limit,
+        skip,
+        orderBy: finalOrderBy,
+      }),
+      prisma.payment.count({ where }),
+    ]);
+    return { data, total };
   }
 }
