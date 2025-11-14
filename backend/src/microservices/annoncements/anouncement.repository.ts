@@ -402,4 +402,29 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
       },
     });
   }
+
+  async getUserMostViewAnnouncement(userId: number, limit = 5) {
+    return await prisma.announcement.findMany({
+      where: { ownerId: userId },
+      orderBy: { views: Order.DESC },
+      take: limit,
+    });
+  }
+
+  async countUserTotalAnnouncementViews(userId: number) {
+    return await prisma.announcement.aggregate({
+      _sum: { views: true },
+      where: { ownerId: userId },
+    });
+  }
+
+  async countUserTotalActivePublications(userId: number) {
+    return await prisma.announcement.count({
+      where: {
+        ownerId: userId,
+        status: AnnouncementStatus.PUBLISHED,
+        isPublished: true,
+      },
+    });
+  }
 }

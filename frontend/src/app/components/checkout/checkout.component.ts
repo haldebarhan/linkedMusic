@@ -160,10 +160,9 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.user$.subscribe((user) => {
       if (user) {
         this.user = user;
-        const [address, city] = this.splitLocation(user.location);
         this.form.patchValue({
-          address: address || '',
-          city: city || '',
+          address: user.location || '',
+          city: user.city || '',
           zipCode: user.zipCode,
           country: user.country,
           phone: user.phone,
@@ -176,10 +175,6 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.auth.user$.subscribe((user) => {
       this.user = user;
     });
-  }
-
-  private splitLocation(location: string) {
-    return location ? location.split(' :') : [];
   }
 
   loadPlanDetails(planId: number) {

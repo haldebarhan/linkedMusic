@@ -85,4 +85,22 @@ export class ContactRequestRepository {
       },
     });
   }
+
+  async countUserTotalAnnouncementRequest(userId: number) {
+    return await prisma.contactRequest.count({
+      where: {
+        announcement: { ownerId: userId },
+        requesterId: { not: userId },
+      },
+    });
+  }
+
+  async countUserTotalContactRequestSent(userId: number) {
+    return await prisma.contactRequest.count({
+      where: {
+        announcement: { ownerId: { not: userId } },
+        requesterId: userId,
+      },
+    });
+  }
 }

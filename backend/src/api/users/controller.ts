@@ -18,7 +18,8 @@ export class UserController {
     private readonly payementController: PaymentController,
     private readonly dashboardController: DashBoardController,
     private readonly announcementController: AnnouncementController,
-    private readonly contactController: ContactRequestController
+    private readonly contactController: ContactRequestController,
+    private readonly paimentController: PaymentController
   ) {}
 
   // Announcement New Version
@@ -112,5 +113,10 @@ export class UserController {
   }
   async cancelRequest(req: AuthenticatedRequest, res: Response) {
     return await this.contactController.cancelRequest(req, res);
+  }
+
+  // Paiments
+  async myPayments(req: AuthenticatedRequest, res: Response) {
+    return await this.paimentController.getUserPayments(req, res);
   }
 }

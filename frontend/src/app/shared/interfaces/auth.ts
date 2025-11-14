@@ -11,6 +11,7 @@ export interface AuthUser {
   location: string;
   zipCode: string;
   country: string;
+  city: string;
   profileImage: string;
   phone: string;
   subscriptions: any;

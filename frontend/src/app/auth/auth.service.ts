@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { fbAuth } from '../core/firebase';
 import { ApiAuthService } from './api-auth.service';
+import { UserUpdateService } from './user-update.service';
 
 const STORAGE_KEY = 'app_auth_state_v1';
 @Injectable({
@@ -22,9 +23,16 @@ export class AuthService {
     source: null,
   });
 
-  constructor(private api: ApiAuthService) {
+  constructor(
+    private api: ApiAuthService,
+    private userUpdateService: UserUpdateService
+  ) {
     // si tu veux gérer le flow redirect (iOS/Safari)
     getRedirectResult(fbAuth).catch(() => {});
+
+    this.userUpdateService.userUpdates$.subscribe((userData) => {
+      this.patchUser(userData);
+    });
   }
 
   /** Flux public à utiliser avec l'async pipe */
@@ -149,12 +157,9 @@ export class AuthService {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  // === Optionnel: version redirect (utile pour iOS/Safari) ===
   async loginWithGoogleRedirect(): Promise<void> {
     const provider = new GoogleAuthProvider();
     await signInWithRedirect(fbAuth, provider);
-    // après redirection, getRedirectResult() se fera dans le ctor
-    // et tu peux déclencher _completeSocialLogin() si besoin.
   }
 
   /** Met à jour le token backend (ex: après refresh) */

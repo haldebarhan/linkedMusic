@@ -19,6 +19,13 @@ export const USER_ROUTES: Routes = [
           ),
       },
       {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./transactions/transactions.component').then(
+            (m) => m.TransactionsComponent
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./user-profile/user-profile.component').then(
