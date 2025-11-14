@@ -100,6 +100,7 @@ export class SocketService {
     this.socket?.off(event, cb);
   }
   emit(event: string, payload?: any) {
+    console.log('test emit');
     this.socket?.emit(event, payload);
   }
   unreadCount$(): Observable<number> {

@@ -11,7 +11,7 @@ export const buildThreadRows = async (data: any[], userId: number) => {
   const threadRow = await Promise.all(
     data.map(async (c) => {
       const id = c.id;
-      const last = c.Messages[0];
+      const last = c.messages[0];
       const peer = c.senderId === userId ? c.receiver : c.sender;
       const peerName = isSub ? peer?.displayName : "Utilisateur (masqué)";
       const peerAvatar = isSub
@@ -22,8 +22,7 @@ export const buildThreadRows = async (data: any[], userId: number) => {
             )
           : ""
         : "https://placehold.co/60x60";
-      const count = c._count.Messages ?? 0;
-
+      const count = c._count.messages ?? 0;
       return {
         id,
         peerName,

@@ -25,6 +25,7 @@ import {
 import { fr } from 'intl-tel-input/i18n';
 import Swal from 'sweetalert2';
 import { ApiResponse } from '../../shared/interfaces/response-formatter';
+import { UserUpdateService } from '../../auth/user-update.service';
 
 declare var intlTelInput: any;
 
@@ -62,7 +63,8 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private api: ApiService<any>,
     private auth: AuthService,
     private fb: FormBuilder,
-    private zone: NgZone
+    private zone: NgZone,
+    private userUpdateService: UserUpdateService
   ) {
     this.user$ = this.auth.user$;
     this.form = this.fb.group({
@@ -265,6 +267,7 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     payload.country = this.isoCountry;
     this.api.create('users/payments', payload).subscribe({
       next: (res) => {
+        this.userUpdateService.notifyUserUpdate(res.data.user);
         if (res.data.returnUrl) {
           this.router.navigate(['/payments/return'], {
             queryParams: {
