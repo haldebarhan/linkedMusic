@@ -5,6 +5,8 @@ import { injectable } from "tsyringe";
 import { PaymentDTO } from "./payment.dto";
 import { PaymentService } from "./payment.service";
 import { formatResponse } from "@/utils/helpers/response-formatter";
+import { Order } from "@/utils/enums/order.enum";
+import { paginatedResponse } from "@/utils/helpers/paginated-response";
 
 @injectable()
 export class PaymentController {
@@ -38,6 +40,38 @@ export class PaymentController {
         user.id
       );
       const response = formatResponse(200, payment);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async getUserPayments(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { user } = req;
+      const {
+        page: pageQuery,
+        limit: limitQuery,
+        sortBy: sortQuery,
+        status: statusQuery,
+        sortOrder: orderQuery,
+      } = req.query;
+      const page = parseInt(pageQuery as string) || 1;
+      const limit = parseInt(limitQuery as string) || 10;
+      const sortOrder = (orderQuery as Order) || Order.DESC;
+      let sortBy = sortQuery as string;
+      const status = statusQuery as string;
+      if (sortBy === "date") sortBy = "createdAt";
+
+      const result = await this.paymentService.findUserPayments(user.id, {
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        status,
+      });
+
+      const response = paginatedResponse(200, result);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

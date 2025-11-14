@@ -29,7 +29,7 @@ interface Publication {
   date: string;
 }
 
-interface Payment {
+export interface Payment {
   id: number;
   transactionId: string;
   amount: number;
@@ -102,12 +102,12 @@ export class DashboardViewComponent implements OnInit {
     this.api.getDashboard().subscribe({
       next: (res) => {
         const data = res.data;
-        this.topPublications = data.publications;
-        this.recentPayments = data.payments;
-        this.totalActive = data.totalActive;
-        this.totalViews = data.totalViews;
-        this.requestReceived = data.requestReceived;
-        this.requestSent = data.requestSent;
+        this.topPublications = data.publications || [];
+        this.recentPayments = data.payments || [];
+        this.totalActive = data.totalActive || 0;
+        this.totalViews = data.totalViews || 0;
+        this.requestReceived = data.requestReceived || 0;
+        this.requestSent = data.requestSent || 0;
       },
       error: (err) => console.error(err),
     });
@@ -118,7 +118,7 @@ export class DashboardViewComponent implements OnInit {
   }
 
   viewAllPayments(): void {
-    this.router.navigate(['/user/payments']);
+    this.router.navigate(['/users/transactions']);
   }
 
   viewPublication(id: number): void {
@@ -133,21 +133,36 @@ export class DashboardViewComponent implements OnInit {
     this.router.navigate(['/pack/pricing-plan']);
   }
 
+  goToPublicationDetails(id: number) {
+    this.router.navigate(['/profile/announcements', id]);
+  }
+
   getStatusClass(status: string): string {
     const classes: { [key: string]: string } = {
-      completed: 'status-completed',
-      pending: 'status-pending',
-      failed: 'status-failed',
+      SUCCEEDED: 'status-completed',
+      PENDING: 'status-pending',
+      FAILED: 'status-failed',
       Actif: 'status-active',
+      PUBLISHED: 'status-completed',
     };
     return classes[status] || '';
   }
 
+  getPublicationLabel(status: string) {
+    const label: { [key: string]: string } = {
+      PUBLISHED: 'Publié',
+      DRAFT: 'Brouillon',
+      ARCHIVED: 'Archivé',
+      PENDING_APPROVAL: 'En attente',
+    };
+    return label[status] || status;
+  }
+
   getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
-      completed: 'Complété',
-      pending: 'En attente',
-      failed: 'Échoué',
+      SUCCEEDED: 'Complété',
+      PENDING: 'En attente',
+      FAILED: 'Échoué',
       active: 'Actif',
       expired: 'Expiré',
       cancelled: 'Annulé',

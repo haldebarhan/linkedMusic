@@ -13,6 +13,7 @@ import DatabaseService from "@/utils/services/database.service";
 import { addDays } from "date-fns";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
 import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
+import { Order } from "@/utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -94,6 +95,31 @@ export class PaymentService {
       throw createError(404, "Reference not found");
     }
     return payment;
+  }
+  async findUserPayments(
+    userId: number,
+    params: {
+      page: number;
+      limit: number;
+      sortBy: string;
+      status: string;
+      sortOrder: Order;
+    }
+  ) {
+    const { page, limit, sortBy, status, sortOrder } = params;
+    const { data, total } = await this.paymentRepository.getUserPayments(
+      userId,
+      { status },
+      { page, limit, sortBy, sortOrder }
+    );
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
   }
 
   private async ensureSubscriptionActivated(

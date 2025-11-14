@@ -22,6 +22,7 @@ import { CommonModule } from '@angular/common';
 import { fr } from 'intl-tel-input/i18n';
 import { ApiService } from '../../../shared/services/api.service';
 import { SweetAlert, Toast } from '../../../helpers/sweet-alert';
+import { UserUpdateService } from '../../../auth/user-update.service';
 
 declare var intlTelInput: any;
 
@@ -51,7 +52,8 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private auth: ApiAuthService,
     private zone: NgZone,
-    private api: ApiService<any>
+    private api: ApiService<any>,
+    private userUpdateService: UserUpdateService
   ) {
     this.form = this.fb.group({
       email: [
@@ -196,12 +198,14 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
       firstName,
       displayName,
       zipCode,
-      location: `${address} : ${city}`,
+      location: address,
       country,
+      city,
     };
 
     this.api.updateProfile('auth/me/update-profile', payload).subscribe({
-      next: () => {
+      next: (res) => {
+        this.userUpdateService.notifyUserUpdate(res.data);
         Toast.fire({
           icon: 'success',
           title: 'Changements effectués',

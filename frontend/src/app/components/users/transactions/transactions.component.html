@@ -1,0 +1,298 @@
+<div class="transactions-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div>
+        <h1>Mes Transactions</h1>
+        <p class="subtitle">Historique complet de vos paiements</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ totalAmount | number : "1.0-0" }} FCFA</h3>
+        <p class="stat-title">Total payé</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <i class="fa-solid fa-check-double"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ successfulCount }}</h3>
+        <p class="stat-title">Transactions réussies</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <i class="fa-solid fa-clock"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ pendingCount }}</h3>
+        <p class="stat-title">En attente</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon red">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ failedCount }}</h3>
+        <p class="stat-title">Échouées</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <div class="search-box"></div>
+
+      <div class="filter-group">
+        <label>Statut</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="onStatusChange(selectedStatus)"
+        >
+          <option *ngFor="let opt of statusOptions" [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Trier par</label>
+        <button
+          class="sort-btn"
+          [class.active]="sortBy === 'date'"
+          (click)="toggleSort('date')"
+        >
+          Date
+          <i
+            class="fa-solid"
+            [class.fa-arrow-up]="sortBy === 'date' && sortOrder === 'asc'"
+            [class.fa-arrow-down]="sortBy === 'date' && sortOrder === 'desc'"
+          ></i>
+        </button>
+        <button
+          class="sort-btn"
+          [class.active]="sortBy === 'amount'"
+          (click)="toggleSort('amount')"
+        >
+          Montant
+          <i
+            class="fa-solid"
+            [class.fa-arrow-up]="sortBy === 'amount' && sortOrder === 'asc'"
+            [class.fa-arrow-down]="sortBy === 'amount' && sortOrder === 'desc'"
+          ></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="results-info">
+      <span>{{ filteredPayments.length }} transaction(s) trouvée(s)</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des transactions...</p>
+  </div>
+
+  <!-- Transactions List -->
+  <div *ngIf="!loading" class="transactions-list">
+    <div class="list-card">
+      <div class="table-responsive">
+        <table class="transactions-table">
+          <thead>
+            <tr>
+              <th>Transaction</th>
+              <th>Description</th>
+              <th>Méthode</th>
+              <th>Date</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let payment of paginatedPayments"
+              class="transaction-row"
+              (click)="viewDetails(payment)"
+            >
+              <td>
+                <div class="transaction-id">
+                  <i class="fa-solid fa-receipt"></i>
+                  <span>{{ payment.id }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="description">{{ payment.purpose }}</div>
+              </td>
+              <td>
+                <div class="method-badge">
+                  <i class="fa-solid fa-credit-card"></i>
+                  {{ payment.provider }}
+                </div>
+              </td>
+              <td>
+                <div class="date-info">
+                  {{ payment.createdAt | date : "dd/MM/yyyy" }}
+                  <span class="time">{{
+                    payment.createdAt | date : "HH:mm"
+                  }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="amount">
+                  <strong>{{ payment.amount | number : "1.0-0" }}</strong>
+                  <span class="currency">{{ payment.currency }}</span>
+                </div>
+              </td>
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="getStatusClass(payment.status)"
+                >
+                  <i
+                    class="fa-solid"
+                    [ngClass]="getStatusIcon(payment.status)"
+                  ></i>
+                  {{ getStatusLabel(payment.status) }}
+                </span>
+              </td>
+              <td>
+                <div class="actions-group" (click)="$event.stopPropagation()">
+                  <button
+                    class="action-btn primary"
+                    (click)="viewDetails(payment)"
+                    title="Voir détails"
+                  >
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="paginatedPayments.length === 0">
+              <td colspan="7" class="empty-state">
+                <div class="empty-content">
+                  <i class="fa-solid fa-inbox"></i>
+                  <h3>Aucune transaction trouvée</h3>
+                  <p>
+                    Aucune transaction ne correspond à vos critères de
+                    recherche.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button
+          class="page-btn"
+          [disabled]="currentPage === 1"
+          (click)="changePage(currentPage - 1)"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <div class="page-numbers">
+          <button
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            class="page-btn"
+            [class.active]="currentPage === i + 1"
+            (click)="changePage(i + 1)"
+          >
+            {{ i + 1 }}
+          </button>
+        </div>
+
+        <button
+          class="page-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="changePage(currentPage + 1)"
+        >
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Détails de la transaction</h2>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedPayment">
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="label">Reference </span>
+          <span class="value">{{ selectedPayment.reference }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Description</span>
+          <span class="value">{{ selectedPayment.purpose }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Montant</span>
+          <span class="value amount-value">
+            {{ selectedPayment.amount | number : "1.0-0" }}
+            {{ selectedPayment.currency }}
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Méthode de paiement</span>
+          <span class="value">{{ selectedPayment.provider }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Date</span>
+          <span class="value">
+            {{ selectedPayment.createdAt | date : "dd MMMM yyyy à HH:mm" }}
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Statut</span>
+          <span
+            class="status-badge"
+            [ngClass]="getStatusClass(selectedPayment.status)"
+          >
+            <i
+              class="fa-solid"
+              [ngClass]="getStatusIcon(selectedPayment.status)"
+            ></i>
+            {{ getStatusLabel(selectedPayment.status) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
