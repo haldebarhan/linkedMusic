@@ -1,42 +1,129 @@
-<!-- Bannière image -->
-<div class="position-relative overflow-hidden">
-  <img
-    src="https://www.baltana.com/files/wallpapers-11/Imagine-Dragons-Wallpaper-HD-30579.jpg"
-    class="w-100"
-    style="height: 500px; object-fit: cover"
-    alt="Bannière promotionnelle"
-  />
+<!-- Bannière Carousel -->
+<div
+  class="position-relative overflow-hidden banner-carousel"
+  (mouseenter)="pauseAutoSlide()"
+  (mouseleave)="resumeAutoSlide()"
+>
+  <!-- Slides -->
+  <div class="carousel-container" *ngIf="bannerSlides.length > 0">
+    <div
+      *ngFor="let slide of bannerSlides; let i = index"
+      class="carousel-slide"
+      [class.active]="i === currentSlideIndex"
+      [attr.data-slide-index]="i"
+    >
+      <!-- Image -->
+      <img
+        *ngIf="slide.mediaType === 'image'"
+        [src]="slide.mediaUrl"
+        class="w-100 carousel-media"
+        [alt]="slide.title || 'Bannière'"
+        loading="lazy"
+      />
 
-  <!-- Overlay optionnel avec contenu -->
-  <div
-    class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center"
-    style="background: rgba(0, 0, 0, 0.4)"
-  >
-    <div class="container text-white">
-      <div class="row">
-        <div class="col-lg-6"></div>
+      <!-- Vidéo -->
+      <video
+        *ngIf="slide.mediaType === 'video'"
+        class="w-100 carousel-media"
+        [src]="slide.mediaUrl"
+        muted
+        loop
+        playsinline
+        (loadeddata)="onVideoLoaded($event, i)"
+      ></video>
+
+      <!-- Overlay avec texte -->
+      <div class="carousel-overlay">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-6 carousel-content">
+              <h2 *ngIf="slide.title" class="carousel-title animate-fade-in-up">
+                {{ slide.title }}
+              </h2>
+              <p
+                *ngIf="slide.description"
+                class="carousel-description animate-fade-in-up"
+              >
+                {{ slide.description }}
+              </p>
+
+              <a
+                *ngIf="slide.link"
+                [href]="slide.link"
+                [routerLink]="slide.link.startsWith('http') ? null : slide.link"
+                class="btn btn-primary btn-lg carousel-cta animate-fade-in-up"
+              >
+                En savoir plus
+                <i class="fas fa-arrow-right ms-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Fallback si pas de bannières -->
+  <div class="carousel-fallback" *ngIf="bannerSlides.length === 0">
+    <div class="carousel-overlay">
+      <div class="container text-center">
+        <h2 class="text-white">Bienvenue sur notre plateforme musicale</h2>
+        <p class="text-white-50">Découvrez tous nos services</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contrôles Navigation -->
+  <div class="carousel-controls" *ngIf="bannerSlides.length > 1">
+    <button
+      class="carousel-control carousel-control-prev"
+      (click)="prevSlide()"
+      aria-label="Bannière précédente"
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button
+      class="carousel-control carousel-control-next"
+      (click)="nextSlide()"
+      aria-label="Bannière suivante"
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <!-- Indicateurs -->
+  <div class="carousel-indicators" *ngIf="bannerSlides.length > 1">
+    <button
+      *ngFor="let slide of bannerSlides; let i = index"
+      class="carousel-indicator"
+      [class.active]="i === currentSlideIndex"
+      (click)="goToSlide(i)"
+      [attr.aria-label]="'Aller à la bannière ' + (i + 1)"
+      [attr.aria-current]="i === currentSlideIndex ? 'true' : 'false'"
+    ></button>
+  </div>
 </div>
 
-<!-- Contenu de démonstration -->
-<div class="container mt-4">
+<!-- Contenu principal -->
+<div class="container mt-5 mb-5">
   <div class="row">
     <div class="col-12">
-      <h1 class="text-center">Vous recherchez un acteur de la musique ?</h1>
+      <div class="text-center mb-4">
+        <h1 class="main-title">Vous recherchez un acteur de la musique ?</h1>
+        <p class="text-muted">
+          Explorez nos catégories et trouvez ce dont vous avez besoin
+        </p>
+      </div>
+
       <div class="main-content">
-        <div
-          class="d-flex justify-content-center align-items-center"
-          style="padding: 20px"
-        >
+        <div class="categories-grid">
           <div
             class="card-custom"
             *ngFor="let category of categories"
-            [routerLink]="['/announcemnts', category.slug]"
+            [routerLink]="['/announcements', category.slug]"
           >
             <div class="icon-text">
-              <i class="{{ getIcon(category.slug) }}"></i>
+              <i [class]="getIcon(category.slug)"></i>
               <p>{{ category.name }}</p>
             </div>
           </div>

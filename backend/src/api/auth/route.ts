@@ -135,6 +135,10 @@ router.get(
     authController.getMe(req, res)
 );
 
+router.get("/banner-slides", async (req: Request, res: Response) =>
+  authController.findActiveSlides(req, res)
+);
+
 router.get(
   "/catalog/categories/:category/filters",
   async (req: Request, res: Response) =>

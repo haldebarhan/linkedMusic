@@ -69,3 +69,14 @@ export const saveAnnouncementFiles = async (
 
   return { images, audios, videos };
 };
+
+export const saveSlideFiles = async (file: Express.Multer.File) => {
+  const bucketName = ENV.MINIO_BUCKET_NAME;
+  const objectName = `zikdev/slides/${file.originalname}`;
+  const metaData = {
+    "Content-Type": file.mimetype,
+  };
+  const fileBuffer = file.buffer;
+  await minioService.uploadFile(bucketName, objectName, fileBuffer, metaData);
+  return { mediaType: file.mimetype, mediaUrl: objectName };
+};

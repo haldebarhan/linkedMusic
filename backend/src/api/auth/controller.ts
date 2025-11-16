@@ -6,6 +6,7 @@ import { CatalogueController } from "@/microservices/catalogues/catalogue.contro
 import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
 import { CategoryController } from "@/microservices/categories/category.controller";
 import { AnnouncementController as AnnController } from "@/microservices/annoncements/announcement.controller";
+import { BannerSlideController } from "@/microservices/banner-slides/banner-slide.controller";
 
 @injectable()
 export class AuthController {
@@ -14,7 +15,8 @@ export class AuthController {
     private readonly catalogController: CatalogueController,
     private readonly subscriptionController: SubscriptionController,
     private readonly categoryController: CategoryController,
-    private readonly annController: AnnController
+    private readonly annController: AnnController,
+    private readonly bannerSlideController: BannerSlideController
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response) {
@@ -109,5 +111,11 @@ export class AuthController {
 
   async getAnnouncementDetails(req: Request, res: Response) {
     return await this.annController.getById(req, res);
+  }
+
+  // Banner Slides
+
+  async findActiveSlides(req: Request, res: Response) {
+    return await this.bannerSlideController.findActive(req, res);
   }
 }

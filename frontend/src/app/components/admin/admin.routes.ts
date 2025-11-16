@@ -9,6 +9,7 @@ import { SubscriptionPlansComponent } from './pages/subscription-plans/subscript
 import { SubscriptionFormComponent } from './pages/forms/subscription-form/subscription-form.component';
 import { PublicationsComponent } from './pages/publications/publications.component';
 import { PublicationDetailsComponent } from './pages/publication-details/publication-details.component';
+import { BannerSlidesComponent } from './pages/banner-slides/banner-slides.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -23,6 +24,10 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'categories',
         loadComponent: () => CategoriePageComponent,
+      },
+      {
+        path: 'banner-slides',
+        loadComponent: () => BannerSlidesComponent,
       },
       {
         path: 'publications',
