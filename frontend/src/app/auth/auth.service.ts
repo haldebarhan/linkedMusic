@@ -12,6 +12,7 @@ import { ApiAuthService } from './api-auth.service';
 import { UserUpdateService } from './user-update.service';
 
 const STORAGE_KEY = 'app_auth_state_v1';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -27,9 +28,10 @@ export class AuthService {
     private api: ApiAuthService,
     private userUpdateService: UserUpdateService
   ) {
-    // si tu veux gérer le flow redirect (iOS/Safari)
+    // Gérer le flow redirect (iOS/Safari)
     getRedirectResult(fbAuth).catch(() => {});
 
+    // Écouter les mises à jour utilisateur (profil, etc.)
     this.userUpdateService.userUpdates$.subscribe((userData) => {
       this.patchUser(userData);
     });
@@ -44,6 +46,10 @@ export class AuthService {
     return this._auth$.value.accessToken;
   }
 
+  get snapshot() {
+    return this._auth$.value;
+  }
+
   init(): void {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -51,10 +57,6 @@ export class AuthService {
         this._auth$.next(JSON.parse(raw));
       } catch {}
     }
-  }
-
-  get snapshot() {
-    return this._auth$.value;
   }
 
   async loginWithPassword(email: string, password: string): Promise<void> {
@@ -83,32 +85,6 @@ export class AuthService {
     this.persist(state);
   }
 
-  /** Mise à jour du profil en mémoire (ex: après édition) */
-  patchUser(patch: Partial<AuthUser>): void {
-    const { user, ...rest } = this.snapshot;
-    const nextUser = { ...(user || {}), ...patch } as AuthUser;
-    const next: AuthState = {
-      ...rest,
-      user: nextUser,
-      isAuthenticated: !!rest.accessToken,
-    };
-    this._auth$.next(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
-
-  /** Remplace uniquement le token (après refresh) */
-  updateToken(accessToken: string) {
-    const cur = this._auth$.value;
-    const next: AuthState = {
-      ...cur,
-      accessToken,
-      isAuthenticated: !!accessToken && !!cur.user,
-    };
-    this._auth$.next(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
-
-  // ====== 2) Login Google via Firebase ======
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(fbAuth, provider);
@@ -139,6 +115,11 @@ export class AuthService {
     this.persist(state);
   }
 
+  async loginWithGoogleRedirect(): Promise<void> {
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(fbAuth, provider);
+  }
+
   async getMe() {
     return await firstValueFrom(this.api.getMe());
   }
@@ -157,24 +138,33 @@ export class AuthService {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  async loginWithGoogleRedirect(): Promise<void> {
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(fbAuth, provider);
+  /** Mise à jour du profil en mémoire (ex: après édition) */
+  patchUser(patch: Partial<AuthUser>): void {
+    const { user, ...rest } = this.snapshot;
+    const nextUser = { ...(user || {}), ...patch } as AuthUser;
+    const next: AuthState = {
+      ...rest,
+      user: nextUser,
+      isAuthenticated: !!rest.accessToken,
+    };
+    this.persist(next);
   }
 
-  /** Met à jour le token backend (ex: après refresh) */
-  setAccessToken(accessToken: string | null) {
+  /**
+   * Met à jour UNIQUEMENT le token (utilisé par le refresh)
+   * Cette méthode trigger le BehaviorSubject pour notifier tous les listeners (dont le socket)
+   */
+  setAccessToken(accessToken: string | null): void {
     const cur = this._auth$.value;
-    const next = {
+    const next: AuthState = {
       ...cur,
       accessToken,
       isAuthenticated: !!accessToken && !!cur.user,
     };
-    this._auth$.next(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    this.persist(next);
   }
 
-  private persist(state: AuthState) {
+  private persist(state: AuthState): void {
     this._auth$.next(state);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }

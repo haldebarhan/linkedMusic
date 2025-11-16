@@ -4,7 +4,6 @@ import { container } from "tsyringe";
 import { AdminController } from "./controller";
 import { ValidateDtoMiddleware } from "@/middlewares/validate-dto.middleware";
 import { UpdateUserDTO } from "@/microservices/users/user.dto";
-import { cache } from "@/middlewares/cache.middleware";
 import { CreateConfigDTO } from "@/microservices/configurations/configuration.dto";
 import {
   AttachServicesDTO,
@@ -31,7 +30,7 @@ const adminController = container.resolve(AdminController);
 router.use(adminMiddleware);
 
 // Users
-router.get("/users", cache, async (req: Request, res: Response) =>
+router.get("/users", async (req: Request, res: Response) =>
   adminController.getAllUsers(req, res)
 );
 

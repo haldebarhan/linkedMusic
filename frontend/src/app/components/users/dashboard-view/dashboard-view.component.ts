@@ -102,7 +102,11 @@ export class DashboardViewComponent implements OnInit {
     this.api.getDashboard().subscribe({
       next: (res) => {
         const data = res.data;
-        this.topPublications = data.publications || [];
+        const publications = data.publications as any[];
+        const formatedPub = publications.map((pub) => {
+          return { ...pub, requests: pub._count.contactRequests };
+        });
+        this.topPublications = formatedPub;
         this.recentPayments = data.payments || [];
         this.totalActive = data.totalActive || 0;
         this.totalViews = data.totalViews || 0;

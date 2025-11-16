@@ -18,24 +18,17 @@ import refreshTokenMiddleware from "@/middlewares/refresh-token";
 import uploads from "@/multer-config";
 import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
 import { firebaseMiddleware } from "@/middlewares/firebase.middleware";
-import { cache } from "@/middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
 
 // Announcements
-router.get(
-  "/announcements/details/:id",
-  cache,
-  async (req: Request, res: Response) =>
-    authController.getAnnouncementDetails(req, res)
+router.get("/announcements/details/:id", async (req: Request, res: Response) =>
+  authController.getAnnouncementDetails(req, res)
 );
 
-router.get(
-  "/announcements/search",
-  cache,
-  async (req: Request, res: Response) =>
-    authController.searchAnnouncement(req, res)
+router.get("/announcements/search", async (req: Request, res: Response) =>
+  authController.searchAnnouncement(req, res)
 );
 
 // Subscription plans
@@ -158,11 +151,11 @@ router.get("/catalog/service-types", async (req: Request, res: Response) =>
 );
 
 // Categories
-router.get("/categories", cache, async (req: Request, res: Response) =>
+router.get("/categories", async (req: Request, res: Response) =>
   authController.getCategories(req, res)
 );
 
-router.get("/categories/:slug", cache, async (req: Request, res: Response) =>
+router.get("/categories/:slug", async (req: Request, res: Response) =>
   authController.getCategoryBySlug(req, res)
 );
 

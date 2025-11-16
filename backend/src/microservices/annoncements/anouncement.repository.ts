@@ -408,6 +408,7 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
       where: { ownerId: userId },
       orderBy: { views: Order.DESC },
       take: limit,
+      include: { _count: { select: { contactRequests: true } } },
     });
   }
 
