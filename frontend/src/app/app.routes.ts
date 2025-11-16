@@ -44,7 +44,7 @@ export const routes: Routes = [
       import('./components/home/home.component').then((m) => m.HomeComponent),
   },
   {
-    path: 'announcemnts/:category',
+    path: 'announcements/:category',
     canMatch: [guestCanMatch],
     canActivate: [guestCanActivate],
     data: { guestPolicy: 'allow' },

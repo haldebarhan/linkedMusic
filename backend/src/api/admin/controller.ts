@@ -1,4 +1,5 @@
 import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
+import { BannerSlideController } from "@/microservices/banner-slides/banner-slide.controller";
 import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
 import { CategoryController } from "@/microservices/categories/category.controller";
 import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
@@ -15,7 +16,8 @@ export class AdminController {
     private readonly catalogueController: CatalogueController,
     private readonly subscriptionController: SubscriptionController,
     private readonly announcementController: AnnouncementController,
-    private readonly categoryController: CategoryController
+    private readonly categoryController: CategoryController,
+    private readonly bannerSlideController: BannerSlideController
   ) {}
 
   // Users
@@ -147,5 +149,24 @@ export class AdminController {
 
   async detachField(req: Request, res: Response) {
     return await this.categoryController.removeFieldFromCategory(req, res);
+  }
+
+  // Banner Slides
+
+  async createSlides(req: Request, res: Response) {
+    return await this.bannerSlideController.create(req, res);
+  }
+  async findSlides(req: Request, res: Response) {
+    return await this.bannerSlideController.findAll(req, res);
+  }
+  async removeSlide(req: Request, res: Response) {
+    return await this.bannerSlideController.remove(req, res);
+  }
+  async reOrderSlide(req: Request, res: Response) {
+    return await this.bannerSlideController.reorder(req, res);
+  }
+
+  async toggleSlideStatus(req: Request, res: Response) {
+    return await this.bannerSlideController.toggleStatus(req, res);
   }
 }

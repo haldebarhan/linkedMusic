@@ -7,9 +7,6 @@ import { UpdateUserDTO } from "@/microservices/users/user.dto";
 import { cache } from "@/middlewares/cache.middleware";
 import { CreateConfigDTO } from "@/microservices/configurations/configuration.dto";
 import {
-  AttachFieldDTO,
-  AttachFieldsDTO,
-  AttachServicedDTO,
   AttachServicesDTO,
   CreateCategoryDTO,
   CreateFieldDto,
@@ -26,6 +23,7 @@ import {
   CreateCategoryFieldDto,
   LinkFieldsToCategoryDTO,
 } from "@/microservices/categories/category.dto";
+import uploads from "@/multer-config";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -188,6 +186,30 @@ router.put("/announcements/approuve/:id", async (req: Request, res: Response) =>
 );
 router.put("/announcements/reject/:id", async (req: Request, res: Response) =>
   adminController.rejectAnnouncement(req, res)
+);
+
+// Banner Slides
+
+router.post(
+  "/banner-slides",
+  uploads.single("file"),
+  async (req: Request, res: Response) => adminController.createSlides(req, res)
+);
+
+router.get("/banner-slides", async (req: Request, res: Response) =>
+  adminController.findSlides(req, res)
+);
+
+router.put("/banner-slides/reorder/:id", async (req: Request, res: Response) =>
+  adminController.reOrderSlide(req, res)
+);
+
+router.put("/banner-slides/status/:id", async (req: Request, res: Response) =>
+  adminController.toggleSlideStatus(req, res)
+);
+
+router.delete("/banner-slides/:id", async (req: Request, res: Response) =>
+  adminController.removeSlide(req, res)
 );
 
 export default router;

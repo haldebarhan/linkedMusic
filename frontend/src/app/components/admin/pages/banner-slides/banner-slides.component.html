@@ -1,0 +1,422 @@
+<div class="admin-card">
+  <!-- Header -->
+  <div class="card-head d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h5 class="mb-1">
+        <i class="fas fa-images me-2"></i>Gestion des Bannières
+      </h5>
+      <div class="text-muted small">Gérer les bannières du carousel</div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openUploadModal()">
+      <i class="fas fa-plus me-1"></i>Ajouter une bannière
+    </button>
+  </div>
+
+  <!-- Bannières Actives -->
+  <div class="section-block mb-4" *ngIf="activeSlides.length > 0">
+    <div class="section-header">
+      <i class="fas fa-check-circle text-success me-2"></i>
+      <h6 class="mb-0">Bannières Actives ({{ activeSlides.length }})</h6>
+    </div>
+
+    <div class="slides-grid">
+      <div class="slide-card active-slide" *ngFor="let slide of activeSlides">
+        <!-- Badge Active -->
+        <div class="slide-badge badge-active">
+          <i class="fas fa-check-circle me-1"></i>Active
+        </div>
+
+        <!-- Ordre -->
+        <div class="slide-order">#{{ slide.order }}</div>
+
+        <!-- Preview Media -->
+        <div class="slide-preview" (click)="openPreview(slide)">
+          <img
+            *ngIf="slide.mediaType === 'image'"
+            [src]="slide.mediaUrl"
+            [alt]="slide.title || 'Bannière'"
+          />
+          <video
+            *ngIf="slide.mediaType === 'video'"
+            [src]="slide.mediaUrl"
+            muted
+            loop
+          ></video>
+          <div class="preview-overlay">
+            <i class="fas fa-eye fa-2x"></i>
+          </div>
+          <div class="media-type-badge">
+            <i
+              class="fas"
+              [class.fa-image]="slide.mediaType === 'image'"
+              [class.fa-video]="slide.mediaType === 'video'"
+            ></i>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="slide-info">
+          <h6 class="slide-title">{{ slide.title || "Sans titre" }}</h6>
+          <p class="slide-description" *ngIf="slide.description">
+            {{ slide.description }}
+          </p>
+          <div class="slide-meta">
+            <small class="text-muted">
+              <i class="far fa-calendar me-1"></i>
+              {{ slide.createdAt | date : "dd/MM/yyyy" }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="slide-actions">
+          <button
+            class="btn-action btn-preview"
+            (click)="openPreview(slide)"
+            title="Aperçu"
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+          <button
+            class="btn-action btn-toggle"
+            (click)="toggleActive(slide)"
+            title="Désactiver"
+          >
+            <i class="fas fa-toggle-on"></i>
+          </button>
+          <button
+            class="btn-action btn-delete"
+            (click)="deleteSlide(slide)"
+            title="Supprimer"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="my-4" />
+
+  <!-- Toutes les Bannières -->
+  <div class="section-block">
+    <div class="section-header">
+      <i class="fas fa-th-large me-2"></i>
+      <h6 class="mb-0">Toutes les Bannières ({{ allSlides.length }})</h6>
+    </div>
+
+    <div class="slides-grid" *ngIf="allSlides.length > 0">
+      <div class="slide-card" *ngFor="let slide of allSlides">
+        <!-- Badge Statut -->
+        <div
+          class="slide-badge"
+          [class.badge-active]="slide.isActive"
+          [class.badge-inactive]="!slide.isActive"
+        >
+          <i
+            class="fas"
+            [class.fa-check-circle]="slide.isActive"
+            [class.fa-times-circle]="!slide.isActive"
+            class="me-1"
+          ></i>
+          {{ slide.isActive ? "Active" : "Inactive" }}
+        </div>
+
+        <!-- Ordre -->
+        <div class="slide-order">#{{ slide.order }}</div>
+
+        <!-- Preview Media -->
+        <div class="slide-preview" (click)="openPreview(slide)">
+          <img
+            *ngIf="slide.mediaType === 'image'"
+            [src]="slide.mediaUrl"
+            [alt]="slide.title || 'Bannière'"
+          />
+          <video
+            *ngIf="slide.mediaType === 'video'"
+            [src]="slide.mediaUrl"
+            muted
+            loop
+          ></video>
+          <div class="preview-overlay">
+            <i class="fas fa-eye fa-2x"></i>
+          </div>
+          <div class="media-type-badge">
+            <i
+              class="fas"
+              [class.fa-image]="slide.mediaType === 'image'"
+              [class.fa-video]="slide.mediaType === 'video'"
+            ></i>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="slide-info">
+          <h6 class="slide-title">{{ slide.title || "Sans titre" }}</h6>
+          <p class="slide-description" *ngIf="slide.description">
+            {{ slide.description }}
+          </p>
+          <div class="slide-meta">
+            <small class="text-muted">
+              <i class="far fa-calendar me-1"></i>
+              {{ slide.createdAt | date : "dd/MM/yyyy" }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="slide-actions">
+          <button
+            class="btn-action btn-preview"
+            (click)="openPreview(slide)"
+            title="Aperçu"
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+          <button
+            class="btn-action btn-toggle"
+            [class.active]="slide.isActive"
+            (click)="toggleActive(slide)"
+            [title]="slide.isActive ? 'Désactiver' : 'Activer'"
+          >
+            <i
+              class="fas"
+              [class.fa-toggle-on]="slide.isActive"
+              [class.fa-toggle-off]="!slide.isActive"
+            ></i>
+          </button>
+          <button
+            class="btn-action btn-delete"
+            (click)="deleteSlide(slide)"
+            title="Supprimer"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="allSlides.length === 0">
+      <i class="fas fa-images fa-4x mb-3 text-muted"></i>
+      <h5>Aucune bannière</h5>
+      <p class="text-muted">Commencez par ajouter votre première bannière</p>
+      <button class="btn btn-primary" (click)="openUploadModal()">
+        <i class="fas fa-plus me-1"></i>Ajouter une bannière
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Upload -->
+<div
+  class="modal-overlay"
+  [class.show]="showUploadModal"
+  (click)="closeUploadModal()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <i class="fas fa-upload me-2"></i>Ajouter une Bannière
+      </h5>
+      <button class="btn-close-modal" (click)="closeUploadModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Upload Zone -->
+      <div class="upload-zone" [class.has-file]="selectedFile">
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/*,video/*"
+          (change)="onfileChange($event)"
+          style="display: none"
+        />
+
+        <div
+          *ngIf="!selectedFile"
+          class="upload-prompt"
+          (click)="triggerFileInput()"
+        >
+          <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+          <h6>Glissez un fichier ou cliquez pour sélectionner</h6>
+          <p class="text-muted small mb-0">
+            Images: JPEG, PNG, GIF, WEBP<br />
+            Vidéos: MP4, WEBM (max 15 secondes)
+          </p>
+        </div>
+
+        <div *ngIf="selectedFile" class="file-preview">
+          <div class="preview-container">
+            <img
+              *ngIf="formData.mediaType === 'image'"
+              [src]="filePreviewUrl"
+              alt="Aperçu"
+            />
+            <video
+              *ngIf="formData.mediaType === 'video'"
+              [src]="filePreviewUrl"
+              controls
+            ></video>
+          </div>
+          <div class="file-info">
+            <p class="mb-1">
+              <strong>{{ selectedFile.name }}</strong>
+            </p>
+            <p class="text-muted small mb-1">
+              {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB
+            </p>
+            <!-- ✅ Affichage des dimensions -->
+            <p class="text-success small mb-0" *ngIf="fileDimensions">
+              <i class="fas fa-check-circle me-1"></i>
+              <strong>{{ fileDimensions }}</strong>
+            </p>
+          </div>
+          <button
+            class="btn btn-sm btn-outline-danger"
+            (click)="
+              selectedFile = null; filePreviewUrl = null; fileDimensions = null
+            "
+          >
+            <i class="fas fa-times me-1"></i>Retirer
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="upload-progress" *ngIf="isUploading">
+        <div class="progress">
+          <div
+            class="progress-bar progress-bar-striped progress-bar-animated"
+            [style.width.%]="uploadProgress"
+          >
+            {{ uploadProgress }}%
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Fields -->
+      <div class="form-group">
+        <label for="title">Titre (optionnel)</label>
+        <input
+          type="text"
+          id="title"
+          class="form-control"
+          [(ngModel)]="formData.title"
+          placeholder="Titre de la bannière"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description (optionnel)</label>
+        <textarea
+          id="description"
+          class="form-control"
+          rows="3"
+          [(ngModel)]="formData.description"
+          placeholder="Description de la bannière"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="link">Lien (optionnel)</label>
+        <input
+          type="url"
+          id="link"
+          class="form-control"
+          [(ngModel)]="formData.link"
+          placeholder="https://example.com"
+        />
+        <small class="text-muted">Lien de redirection au clic</small>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        class="btn btn-secondary"
+        (click)="closeUploadModal()"
+        [disabled]="isUploading"
+      >
+        Annuler
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="uploadSlide()"
+        [disabled]="!selectedFile || isUploading"
+      >
+        <i class="fas fa-upload me-1"></i>
+        {{ isUploading ? "Upload en cours..." : "Ajouter" }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Preview -->
+<div
+  class="modal-overlay preview-modal"
+  [class.show]="showPreviewModal"
+  (click)="closePreview()"
+>
+  <div class="modal-content modal-preview" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <i class="fas fa-eye me-2"></i>Aperçu de la Bannière
+      </h5>
+      <button class="btn-close-modal" (click)="closePreview()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body p-0" *ngIf="previewSlide">
+      <div class="preview-media-full">
+        <img
+          *ngIf="previewSlide.mediaType === 'image'"
+          [src]="previewSlide.mediaUrl"
+          [alt]="previewSlide.title || 'Bannière'"
+        />
+        <video
+          *ngIf="previewSlide.mediaType === 'video'"
+          [src]="previewSlide.mediaUrl"
+          controls
+          autoplay
+          loop
+        ></video>
+      </div>
+
+      <div class="preview-details">
+        <h5 *ngIf="previewSlide.title">{{ previewSlide.title }}</h5>
+        <p *ngIf="previewSlide.description">{{ previewSlide.description }}</p>
+        <div class="preview-meta">
+          <span
+            class="badge"
+            [class.bg-success]="previewSlide.isActive"
+            [class.bg-secondary]="!previewSlide.isActive"
+          >
+            {{ previewSlide.isActive ? "Active" : "Inactive" }}
+          </span>
+          <span class="badge bg-info">
+            <i
+              class="fas"
+              [class.fa-image]="previewSlide.mediaType === 'image'"
+              [class.fa-video]="previewSlide.mediaType === 'video'"
+            ></i>
+            {{ previewSlide.mediaType === "image" ? "Image" : "Vidéo" }}
+          </span>
+          <span class="badge bg-secondary"
+            >Ordre: #{{ previewSlide.order }}</span
+          >
+        </div>
+        <div class="preview-link" *ngIf="previewSlide.link">
+          <small class="text-muted">
+            <i class="fas fa-link me-1"></i>
+            <a [href]="previewSlide.link" target="_blank">{{
+              previewSlide.link
+            }}</a>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

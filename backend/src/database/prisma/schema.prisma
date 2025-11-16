@@ -625,3 +625,18 @@ model NotificationPreference {
 
     @@map("notification_preferences")
 }
+
+model BannerSlide {
+    id          Int      @id @default(autoincrement())
+    title       String?
+    description String?
+    mediaType   String // 'image' ou 'video'
+    mediaUrl    String // URL du fichier
+    link        String? // Lien optionnel au clic
+    order       Int      @default(0)
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@map("banner_slides")
+}
