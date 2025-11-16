@@ -11,6 +11,9 @@ import {
 import DatabaseService from "@/utils/services/database.service";
 import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
+import { BrevoMailService } from "@/utils/services/brevo-mail.service";
+import { MatchingService } from "../matching/matching.service";
+import { UserRepository } from "../users/user.repository";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: MinioService = MinioService.getInstance();
@@ -19,12 +22,14 @@ const minioService: MinioService = MinioService.getInstance();
 export class ContactRequestService {
   constructor(
     private readonly contactRepository: ContactRequestRepository,
-    private readonly announcementRepository: AnnouncementRepository
+    private readonly announcementRepository: AnnouncementRepository,
+    private readonly mailService: BrevoMailService,
+    private readonly matchingService: MatchingService
   ) {}
 
   async create(userId: number, dto: CreateContactRequestDTO) {
     const { announcementId } = dto;
-    const annoncement = await this.announcementRepository.findById(
+    const annoncement = await this.announcementRepository.findByIdWithDetails(
       announcementId
     );
     if (!annoncement) {
@@ -54,8 +59,25 @@ export class ContactRequestService {
         throw createError(400, "Votre demande a déjà été acceptée");
       }
     }
+    const create = await this.contactRepository.create(userId, dto);
+    const [userHasSubscription, requester] = await Promise.all([
+      this.matchingService.hasActiveSubscription(annoncement.ownerId),
+      prisma.user.findUniqueOrThrow({ where: { id: userId } }),
+    ]);
 
-    return await this.contactRepository.create(userId, dto);
+    await this.mailService.sendContactRequestReceivedMail({
+      to: annoncement.user.email!,
+      ownerName: annoncement.user.displayName!,
+      requesterName: userHasSubscription
+        ? requester.displayName!
+        : "Un utilisateur de Zikmusic",
+      announcementTitle: annoncement.title,
+      announcementId: annoncement.id,
+      message: userHasSubscription
+        ? dto.message || ""
+        : "Contenu réservé aux abonnés. Abonnez-vous pour voir le message complet.",
+    });
+    return create;
   }
 
   async getAnnouncementRequests(userId: number, announcementId: number) {

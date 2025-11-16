@@ -191,7 +191,7 @@
   width: 100%;
   display: flex;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 2.5rem;
   z-index: 10;
   pointer-events: none;
 }
@@ -235,9 +235,11 @@
 .carousel-indicators {
   position: absolute;
   bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  /* transform: translateX(-50%); */
   display: flex;
+  justify-content: center;
   gap: 0.75rem;
   z-index: 10;
 }

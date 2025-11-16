@@ -1,99 +1,171 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { Observable, ReplaySubject, Subject, of, timer } from 'rxjs';
-import {
-  catchError,
-  filter,
-  first,
-  finalize,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { Observable, Subject, of, throwError, timer } from 'rxjs';
+import { catchError, switchMap, tap, shareReplay } from 'rxjs/operators';
 import { ApiAuthService } from './api-auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class RefreshTokenService {
-  private inFlight = false;
-  private tokenRefreshed$ = new ReplaySubject<string>(1);
+  private refreshInProgress$: Observable<string> | null = null;
   private scheduleHandle: any;
 
   constructor(private auth: AuthService, private api: ApiAuthService) {}
 
+  /**
+   * Refresh le token de manière sécurisée
+   * Si un refresh est déjà en cours, retourne l'observable existant
+   */
   refreshToken(): Observable<string> {
-    if (this.inFlight) return this.tokenRefreshed$.pipe(first());
+    // Si un refresh est déjà en cours, on partage le même observable
+    if (this.refreshInProgress$) {
+      return this.refreshInProgress$;
+    }
 
-    this.inFlight = true;
-    return this.api.refreshToken().pipe(
-      switchMap((res) => {
-        this.auth.updateToken(res.token);
-        this.tokenRefreshed$.next(res.token);
-        return of(res.token);
+    console.log('[RefreshToken] Starting token refresh...');
+
+    this.refreshInProgress$ = this.api.refreshToken().pipe(
+      tap((res) => {
+        console.log('[RefreshToken] Token refreshed successfully');
+        // Met à jour le token dans auth.service
+        // Cela va trigger le BehaviorSubject auth$ qui notifiera le socket
+        this.auth.setAccessToken(res.token);
       }),
-      finalize(() => {
-        this.inFlight = false;
-      }),
+      switchMap((res) => of(res.token)),
       catchError((err) => {
-        // reset le subject pour prochains listeners
-        this.tokenRefreshed$.error?.(err);
-        this.tokenRefreshed$ = new ReplaySubject<string>(1);
+        console.error('[RefreshToken] Refresh failed:', err);
+        // En cas d'erreur, déconnecter l'utilisateur
         this.auth.logout();
-        throw err;
+        return throwError(() => err);
+      }),
+      // Important: partager le résultat entre tous les abonnés
+      shareReplay(1),
+      // Nettoyer après un court délai
+      tap({
+        finalize: () => {
+          setTimeout(() => {
+            this.refreshInProgress$ = null;
+          }, 1000);
+        },
       })
     );
+
+    return this.refreshInProgress$;
   }
 
+  /**
+   * Vérifie si le token expire bientôt et le refresh si nécessaire
+   */
   refreshIfExpiringSoon(thresholdSec = 60): Observable<string | null> {
-    const t = this.auth.token;
-    if (!t) return of(null);
-    const exp = this.getExp(t);
-    if (!exp) return of(null);
+    const token = this.auth.token;
+    if (!token) {
+      return of(null);
+    }
+
+    const exp = this.getTokenExpiration(token);
+    if (!exp) {
+      return of(null);
+    }
+
     const now = Math.floor(Date.now() / 1000);
-    return exp - now <= thresholdSec ? this.refreshToken() : of(null);
+    const timeUntilExpiry = exp - now;
+
+    // Si le token expire dans moins de thresholdSec, le refresh
+    if (timeUntilExpiry <= thresholdSec) {
+      console.log(
+        `[RefreshToken] Token expires in ${timeUntilExpiry}s, refreshing...`
+      );
+      return this.refreshToken();
+    }
+
+    return of(null);
   }
 
-  /** Démarre la planification proactive au boot */
-  startAutoRefresh() {
-    // replanifie à chaque changement de token (login/refresh/logout)
+  /**
+   * Démarre le refresh automatique proactif
+   * À appeler au démarrage de l'application
+   */
+  startAutoRefresh(): void {
+    console.log('[RefreshToken] Starting auto-refresh scheduler');
+
+    // S'abonner aux changements d'état d'authentification
     this.auth.auth$.subscribe((state) => {
       this.clearSchedule();
-      if (state.accessToken) this.scheduleProactive(state.accessToken);
+
+      if (state.accessToken && state.isAuthenticated) {
+        this.scheduleProactiveRefresh(state.accessToken);
+      }
     });
   }
 
-  getAuth() {
-    return this.auth;
-  }
+  /**
+   * Planifie un refresh proactif avant l'expiration du token
+   */
+  private scheduleProactiveRefresh(token: string, thresholdSec = 60): void {
+    const exp = this.getTokenExpiration(token);
+    if (!exp) {
+      console.warn(
+        '[RefreshToken] Cannot schedule refresh: invalid token expiration'
+      );
+      return;
+    }
 
-  // ---------- Planification proactive ----------
-
-  private scheduleProactive(token: string, thresholdSec = 60) {
-    const exp = this.getExp(token);
-    if (!exp) return;
     const nowMs = Date.now();
-    const refreshAtMs = (exp - thresholdSec) * 1000; // 60s avant exp
+    const expMs = exp * 1000;
+    const refreshAtMs = expMs - thresholdSec * 1000; // Refresh 60s avant expiration
     const delay = Math.max(0, refreshAtMs - nowMs);
+
+    console.log(
+      `[RefreshToken] Scheduling proactive refresh in ${Math.floor(
+        delay / 1000
+      )}s`
+    );
 
     this.scheduleHandle = timer(delay)
       .pipe(
-        switchMap(() => this.refreshToken()),
-        catchError(() => of(null)) // en cas d’échec, on laisse l’interceptor gérer via 401
+        switchMap(() => {
+          console.log('[RefreshToken] Proactive refresh triggered');
+          return this.refreshToken();
+        }),
+        catchError((err) => {
+          console.error('[RefreshToken] Proactive refresh failed:', err);
+          // En cas d'échec, l'interceptor gérera le 401
+          return of(null);
+        })
       )
       .subscribe();
   }
 
-  private clearSchedule() {
-    if (this.scheduleHandle?.unsubscribe) this.scheduleHandle.unsubscribe();
-    this.scheduleHandle = null;
+  /**
+   * Annule le refresh planifié
+   */
+  private clearSchedule(): void {
+    if (this.scheduleHandle) {
+      this.scheduleHandle.unsubscribe();
+      this.scheduleHandle = null;
+      console.log('[RefreshToken] Cleared scheduled refresh');
+    }
   }
 
-  // ---------- Utilitaires ----------
-
-  private getExp(token: string): number | null {
+  /**
+   * Extrait la date d'expiration du token JWT
+   */
+  private getTokenExpiration(token: string): number | null {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return typeof payload?.exp === 'number' ? payload.exp : null;
-    } catch {
+    } catch (err) {
+      console.error('[RefreshToken] Failed to parse token:', err);
       return null;
     }
+  }
+
+  /**
+   * Vérifie si le token est expiré
+   */
+  isTokenExpired(token: string): boolean {
+    const exp = this.getTokenExpiration(token);
+    if (!exp) return true;
+    const now = Math.floor(Date.now() / 1000);
+    return now >= exp;
   }
 }

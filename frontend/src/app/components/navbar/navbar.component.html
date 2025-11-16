@@ -156,7 +156,7 @@
       </div>
 
       <!-- Bouton connexion mobile (dans menu collapsible) - UNIQUEMENT si non connecté -->
-      <div class="d-lg-none mt-3" *ngIf="isLoggedIn$ | async">
+      <div class="d-lg-none mt-3" *ngIf="!(isLoggedIn$ | async)">
         <button class="btn btn-primary w-100" (click)="goToLogin()">
           Se connecter
         </button>
