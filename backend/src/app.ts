@@ -24,7 +24,6 @@ import {
   startSubscriptionDailyCron,
   startCheckSubscriptionStatus,
 } from "./events/schedulers/scheduler";
-// import { ConfigService } from "./utils/services/configuration.service";
 
 const allowed = getAllowedOrigins();
 const wsAllowed = [...allowed, "ws:", "wss:"];
@@ -264,7 +263,6 @@ class Server {
 }
 
 (async () => {
-  // await ConfigService.loadConfigs();
   const server = new Server();
   server.start();
 })();
