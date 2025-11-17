@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8000/api',
-  socketUrl: 'http://localhost:8000',
+  apiUrl: '/api',
+  socketUrl: '',
   firebase: {
     apiKey: 'AIzaSyBne_6c4t0jXd90lWc2birA6CpkAfEVSiU',
     authDomain: 'linkedmusic-4d9bb.firebaseapp.com',

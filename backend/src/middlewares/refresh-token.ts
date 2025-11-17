@@ -64,7 +64,7 @@ const refreshTokenMiddleware = async (
             "Connexion suspecte détectée: possible usurpation de compte",
         },
       });
-      return res.status(403).json({
+      return res.status(401).json({
         message: "Connexion suspecte détectée. Veuillez contacter le support.",
       });
     }

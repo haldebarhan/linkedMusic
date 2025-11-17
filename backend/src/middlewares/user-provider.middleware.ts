@@ -103,10 +103,10 @@ const UserAndProviderMiddleware = async (
             "Connexion suspecte détectée: possible usurpation de compte",
         },
       });
-      response = formatResponse(403, {
+      response = formatResponse(401, {
         message: "Connexion suspecte détectée. Veuillez contacter le support.",
       });
-      return res.status(403).json(response);
+      return res.status(401).json(response);
     }
 
     req.user = user;
