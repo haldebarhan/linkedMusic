@@ -12,12 +12,12 @@
   height: 100%;
 }
 
-/* Colonne gauche — threads avec flexbox */
+/* Colonne gauche – threads avec flexbox */
 .messages-shell .col-md-4 {
   height: 100%;
 }
 
-/* Colonne droite — conversation avec flexbox */
+/* Colonne droite – conversation avec flexbox */
 .messages-shell .col-md-8 {
   height: 100%;
 }
@@ -48,7 +48,7 @@
   user-select: none;
 }
 
-/* Entêtes - hauteur fixe */
+/* En-têtes - hauteur fixe */
 .settings-tray {
   background: #eee;
   padding: 10px 15px;
@@ -83,6 +83,32 @@
   color: var(--blue);
 }
 
+/* Bouton retour mobile */
+.back-button {
+  color: #333;
+  font-size: 1.25rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.back-button:hover,
+.back-button:focus {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.back-button i {
+  transition: transform 0.2s ease;
+}
+
+.back-button:hover i {
+  transform: translateX(-3px);
+}
+
 /* Thread item */
 .friend-drawer {
   padding: 10px 15px;
@@ -93,6 +119,7 @@
   transition: 0.25s ease;
   border-radius: 6px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 .friend-drawer--grey {
   background: #eee;
@@ -325,6 +352,13 @@ hr {
     height: 80vh;
   }
 
+  /* Sur mobile, les colonnes prennent toute la largeur */
+  .messages-shell .col-12 {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Ajustements pour l'overlay d'abonnement sur mobile */
   .lock-title {
     font-size: 1.5rem;
   }
@@ -344,5 +378,14 @@ hr {
 
   .subscription-lock-container {
     padding: 2rem 1.5rem;
+  }
+
+  /* Ajuster la hauteur de scroll sur mobile */
+  .threads-scroll {
+    max-height: calc(80vh - 6rem);
+  }
+
+  .chat-scroll {
+    max-height: calc(80vh - 10.5rem);
   }
 }

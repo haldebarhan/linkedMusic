@@ -21,18 +21,14 @@ export class RefreshTokenService {
       return this.refreshInProgress$;
     }
 
-    console.log('[RefreshToken] Starting token refresh...');
-
     this.refreshInProgress$ = this.api.refreshToken().pipe(
       tap((res) => {
-        console.log('[RefreshToken] Token refreshed successfully');
         // Met à jour le token dans auth.service
         // Cela va trigger le BehaviorSubject auth$ qui notifiera le socket
         this.auth.setAccessToken(res.token);
       }),
       switchMap((res) => of(res.token)),
       catchError((err) => {
-        console.error('[RefreshToken] Refresh failed:', err);
         // En cas d'erreur, déconnecter l'utilisateur
         this.auth.logout();
         return throwError(() => err);
@@ -71,9 +67,6 @@ export class RefreshTokenService {
 
     // Si le token expire dans moins de thresholdSec, le refresh
     if (timeUntilExpiry <= thresholdSec) {
-      console.log(
-        `[RefreshToken] Token expires in ${timeUntilExpiry}s, refreshing...`
-      );
       return this.refreshToken();
     }
 
@@ -85,8 +78,6 @@ export class RefreshTokenService {
    * À appeler au démarrage de l'application
    */
   startAutoRefresh(): void {
-    console.log('[RefreshToken] Starting auto-refresh scheduler');
-
     // S'abonner aux changements d'état d'authentification
     this.auth.auth$.subscribe((state) => {
       this.clearSchedule();
@@ -103,9 +94,6 @@ export class RefreshTokenService {
   private scheduleProactiveRefresh(token: string, thresholdSec = 60): void {
     const exp = this.getTokenExpiration(token);
     if (!exp) {
-      console.warn(
-        '[RefreshToken] Cannot schedule refresh: invalid token expiration'
-      );
       return;
     }
 
@@ -114,20 +102,12 @@ export class RefreshTokenService {
     const refreshAtMs = expMs - thresholdSec * 1000; // Refresh 60s avant expiration
     const delay = Math.max(0, refreshAtMs - nowMs);
 
-    console.log(
-      `[RefreshToken] Scheduling proactive refresh in ${Math.floor(
-        delay / 1000
-      )}s`
-    );
-
     this.scheduleHandle = timer(delay)
       .pipe(
         switchMap(() => {
-          console.log('[RefreshToken] Proactive refresh triggered');
           return this.refreshToken();
         }),
         catchError((err) => {
-          console.error('[RefreshToken] Proactive refresh failed:', err);
           // En cas d'échec, l'interceptor gérera le 401
           return of(null);
         })
@@ -142,7 +122,6 @@ export class RefreshTokenService {
     if (this.scheduleHandle) {
       this.scheduleHandle.unsubscribe();
       this.scheduleHandle = null;
-      console.log('[RefreshToken] Cleared scheduled refresh');
     }
   }
 
@@ -154,7 +133,6 @@ export class RefreshTokenService {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return typeof payload?.exp === 'number' ? payload.exp : null;
     } catch (err) {
-      console.error('[RefreshToken] Failed to parse token:', err);
       return null;
     }
   }

@@ -24,6 +24,7 @@ import {
   startSubscriptionDailyCron,
   startCheckSubscriptionStatus,
 } from "./events/schedulers/scheduler";
+import path from "path";
 
 const allowed = getAllowedOrigins();
 const wsAllowed = [...allowed, "ws:", "wss:"];
@@ -82,8 +83,6 @@ class Server {
   }
 
   config() {
-    // CORS sécurisé
-
     const corsConfig: cors.CorsOptions = {
       origin: getAllowedOrigins(),
       credentials: true,
@@ -92,40 +91,18 @@ class Server {
 
     this.app.use(cors(corsConfig));
     this.app.use((req, res, next) => {
-      if (req.method === "OPTIONS") return res.sendStatus(204); // preflight OK
+      if (req.method === "OPTIONS") return res.sendStatus(204);
       return next();
     });
 
-    // Sécurité - Headers de sécurité
-    this.app.use(
-      helmet({
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: [
-              "'self'",
-              "'unsafe-inline'",
-              "https://fonts.googleapis.com",
-            ],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            scriptSrc: ["'self'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", ...wsAllowed, ...allowed],
-          },
-        },
-        crossOriginEmbedderPolicy: false, // Pour Swagger UI
-      })
-    );
-
     this.app.use(compression());
 
-    // Parsing des requêtes
     this.app.use(express.json({ limit: "10mb" }));
     this.app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
-    this.app.use(globalLimiter as any);
+    // this.app.use(globalLimiter as any);
     this.app.use(logMiddleware);
-    this.app.set("PORT", ENV.PORT ?? 4000);
+    this.app.set("PORT", ENV.PORT ?? 8000);
   }
 
   routes() {
@@ -158,17 +135,38 @@ class Server {
       swaggerUi.setup(swaggerOptions, { explorer: true })
     );
 
-    // this.app.use("/api", authLimiter, authRoutes);
-    // this.app.use("/api/admin", adminLimiter, adminRoutes);
-    // this.app.use("/api/users", authLimiter, userRoutes);
-    // this.app.use("/webhooks/psp", pspRoutes);
+    this.app.use("/api", authRoutes);
+    this.app.use("/api/admin", adminRoutes);
+    this.app.use("/api/users", userRoutes);
+    this.app.use("/webhooks/psp", pspRoutes);
     this.app.use("/api", authRoutes);
     this.app.use("/api/admin", adminRoutes);
     this.app.use("/api/users", userRoutes);
     this.app.use("/webhooks/psp", pspRoutes);
 
-    this.app.use((req, res) => {
-      res.status(404).json({ error: "Route non trouvée" });
+    const distPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "frontend",
+      "dist",
+      "frontend",
+      "browser"
+    );
+
+    this.app.use(express.static(distPath));
+    this.app.use((req: Request, res: Response) => {
+      if (
+        req.path.startsWith("/api") ||
+        req.path.startsWith("/webhooks") ||
+        req.path.startsWith("/health") ||
+        req.path.startsWith("/payment") ||
+        req.path.startsWith("/socket.io")
+      ) {
+        res.status(404).json({ error: "Route non trouvée" });
+      }
+
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
@@ -182,7 +180,6 @@ class Server {
       logger.info(`🔧 Environnement: ${ENV.NODE_ENV}`);
     });
 
-    // Gestion gracieuse de l'arrêt
     process.on("SIGTERM", () => {
       logger.info("Signal SIGTERM reçu, arrêt du serveur...");
       process.exit(0);
@@ -195,7 +192,6 @@ class Server {
   }
 
   setupErrorHandling(): void {
-    // Gestion des erreurs globales
     this.app.use(
       (err: Error, req: Request, res: Response, next: NextFunction) => {
         logger.error("Erreur serveur:", {
@@ -220,7 +216,6 @@ class Server {
         res.status(500).json(payload);
       }
     );
-    // Do **not** kill the server in dev for unhandled promise rejections
     const shouldExit = ENV.NODE_ENV === "production";
     process.on("unhandledRejection", (reason: any, p) => {
       const msg = reason instanceof Error ? reason.message : String(reason);

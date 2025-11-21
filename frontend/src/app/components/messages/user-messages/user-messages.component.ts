@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   ElementRef,
+  HostListener,
   OnChanges,
   OnDestroy,
   OnInit,
@@ -24,7 +25,7 @@ type ThreadRow = {
   peerName: string;
   peerAvatar?: string | null;
   lastSnippet?: string;
-  lastAt?: string; // ISO
+  lastAt?: string;
   unreadCount?: number;
 };
 
@@ -33,7 +34,7 @@ type MessageRow = {
   threadId: number;
   senderId: number;
   content: string;
-  createdAt: string; // ISO
+  createdAt: string;
 };
 
 const EV = {
@@ -59,6 +60,11 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
   loadingMessages = false;
   sending = false;
 
+  // ========== NOUVEAUX ÉTATS POUR LA NAVIGATION MOBILE ==========
+  isMobileView: boolean = false;
+  showConversation: boolean = false;
+  // ==============================================================
+
   // Data
   threads: ThreadRow[] = [];
 
@@ -72,7 +78,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
 
   hasActiveSubscription: boolean = false;
 
-  // pagination (faÃ§on Gmail)
+  // pagination (façon Gmail)
   page = 1;
   limit = 50;
   totalMsgs = 0;
@@ -112,11 +118,14 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
+    // ========== DÉTECTION MODE MOBILE ==========
+    this.checkMobileView();
+    // ===========================================
+
     this.initForm();
     this.loadingThreads = true;
     this.socket.emit(EV.THREADS_LIST);
     this.socket.on<ThreadRow[]>(EV.THREADS_DATA, (rows: any) => {
-      console.log('test: ', rows);
       this.threads = rows.data || [];
       this.loadingThreads = false;
       this.joinAllThreadRooms();
@@ -178,14 +187,42 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
     this.socket.off(EV.MESSAGE_NEW);
   }
 
+  // ========== DÉTECTION RESPONSIVE ==========
+  /**
+   * Détecte automatiquement si on est sur mobile (< 768px)
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize(event?: Event): void {
+    this.checkMobileView();
+  }
+
+  private checkMobileView(): void {
+    this.isMobileView = window.innerWidth < 768;
+
+    // Si on passe en mode desktop, toujours afficher la conversation
+    if (!this.isMobileView) {
+      this.showConversation = true;
+    }
+  }
+  // ==========================================
+
   isMine = (m: { senderId: number }) => m.senderId === this.currentUserId;
 
   selectThread(threadId: number) {
     if (!this.hasActiveSubscription) return;
+
     if (this.activeThreadId === threadId) {
       this.socket.emit(EV.CONVO_LOAD, { threadId, page: 1, limit: 200 });
+
+      // ========== AFFICHER LA CONVERSATION SUR MOBILE ==========
+      if (this.isMobileView) {
+        this.showConversation = true;
+      }
+      // =========================================================
+
       return;
     }
+
     this.activeThreadId = threadId;
 
     const row = this.threads.find((t) => t.id === threadId);
@@ -200,8 +237,28 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
 
     // marquer lu (redondant mais idempotent)
     this.socket.emit(EV.MESSAGE_MARK_READ, { threadId });
+
+    // ========== AFFICHER LA CONVERSATION SUR MOBILE ==========
+    if (this.isMobileView) {
+      this.showConversation = true;
+    }
+    // =========================================================
+
     queueMicrotask(() => this.scrollToBottom());
   }
+
+  // ========== NOUVELLE MÉTHODE: RETOUR À LA LISTE DES THREADS ==========
+  /**
+   * Retour à la liste des threads (mobile uniquement)
+   */
+  backToThreads(): void {
+    this.showConversation = false;
+    // Note: on garde activeThreadId pour que le thread reste sélectionné
+    // Si vous voulez réinitialiser, décommentez les lignes ci-dessous:
+    // this.activeThreadId = null;
+    // this.messages = [];
+  }
+  // ======================================================================
 
   /** ----------------- Actions ----------------- */
   send() {

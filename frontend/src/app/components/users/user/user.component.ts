@@ -22,6 +22,7 @@ export class UserComponent implements OnInit, OnDestroy {
   user$: Observable<AuthUser | null>;
   show: boolean = false;
   unread = 0;
+  isSidebarOpen = false;
   private sub?: Subscription;
 
   constructor(
@@ -37,13 +38,21 @@ export class UserComponent implements OnInit, OnDestroy {
     });
     this.user$.subscribe({
       next: (usr: any) => {
-        this.show = usr.provider === 'password';
+        this.show = usr?.provider === 'password';
       },
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    this.isSidebarOpen = false;
   }
 
   logout() {

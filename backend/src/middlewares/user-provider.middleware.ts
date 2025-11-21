@@ -85,30 +85,6 @@ const UserAndProviderMiddleware = async (
       });
       return res.status(403).json(response);
     }
-
-    if (decodedToken.userAgent !== userAgent || decodedToken.ip !== ip) {
-      logger.warn("Connexion suspecte détectée", {
-        uid: decodedToken.uid,
-        currentIP: req.ip,
-        expectedIP: decodedToken.ip,
-        currentUA: userAgent,
-        expectedUA: decodedToken.userAgent,
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          status: Status.SUSPENDED,
-          comments:
-            "Connexion suspecte détectée: possible usurpation de compte",
-        },
-      });
-      response = formatResponse(401, {
-        message: "Connexion suspecte détectée. Veuillez contacter le support.",
-      });
-      return res.status(401).json(response);
-    }
-
     req.user = user;
     req.token = token;
     next();
