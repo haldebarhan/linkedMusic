@@ -41,22 +41,22 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <a class="dropdown-item" href="#"
+              <a class="dropdown-item" routerLink="/users"
                 ><i class="fas fa-user me-2"></i>Profil</a
               >
             </li>
             <li>
-              <a class="dropdown-item" href="#"
+              <a class="dropdown-item" href="/users/profile"
                 ><i class="fas fa-cog me-2"></i>Paramètres</a
               >
             </li>
             <li>
-              <a class="dropdown-item" routerLink="profile/messages"
+              <a class="dropdown-item" routerLink="/profile/messages"
                 ><i class="fas fa-bell me-2"></i>Notifications</a
               >
             </li>
             <li *ngIf="user.role === 'ADMIN'">
-              <a class="dropdown-item" href="#"
+              <a class="dropdown-item" routerLink="/admin"
                 ><i class="fas fa-cog me-2"></i>Administration</a
               >
             </li>

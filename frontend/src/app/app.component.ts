@@ -29,39 +29,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private refresh: RefreshTokenService,
     private socketService: SocketService
-  ) {
-    console.log('[App] Application constructeur appelé');
-  }
+  ) {}
 
   ngOnInit(): void {
-    console.log("[App] Initialisation de l'application...");
     this.auth.init();
-
     this.refresh.startAutoRefresh();
-    console.log('[App] ✅ Système de refresh automatique démarré');
-
-    // 3. (Optionnel) S'abonner aux changements d'authentification
-    this.subscriptions.add(
-      this.auth.auth$.subscribe((state) => {
-        if (state.isAuthenticated) {
-          console.log('[App] Utilisateur authentifié:', state.user?.email);
-        } else {
-          console.log('[App] Utilisateur non authentifié');
-        }
-      })
-    );
-
-    // 4. (Optionnel) S'abonner au nombre de notifications
-    this.subscriptions.add(
-      this.socketService.unreadCount$().subscribe((count) => {
-        console.log('[App] Notifications non lues:', count);
-      })
-    );
-
-    console.log('[App] ✅ Application initialisée avec succès');
   }
   ngOnDestroy(): void {
-    // Nettoyer les subscriptions
     this.subscriptions.unsubscribe();
   }
 
@@ -79,6 +53,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   desableNavBarAndFooter(): boolean {
     const currentRoute = this.router.url;
-    return currentRoute === '/admin' || currentRoute.startsWith('/admin');
+    return (
+      currentRoute === '/admin' ||
+      currentRoute.startsWith('/admin') ||
+      currentRoute.startsWith('/users')
+    );
   }
 }

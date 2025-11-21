@@ -46,28 +46,6 @@ const refreshTokenMiddleware = async (
         message: "Token invalid or expired",
       });
     }
-
-    if (payload.userAgent !== userAgent || payload.ip !== ip) {
-      logger.warn("Connexion suspecte détectée", {
-        uid: payload.uid,
-        currentIP: req.ip,
-        expectedIP: payload.ip,
-        currentUA: userAgent,
-        expectedUA: payload.userAgent,
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          status: Status.SUSPENDED,
-          comments:
-            "Connexion suspecte détectée: possible usurpation de compte",
-        },
-      });
-      return res.status(401).json({
-        message: "Connexion suspecte détectée. Veuillez contacter le support.",
-      });
-    }
     const refreshToken = await firebaseService.loginWithUid(payload.user_id);
     req.token = refreshToken;
     req.user = user;

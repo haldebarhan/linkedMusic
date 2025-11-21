@@ -27,7 +27,6 @@ export const authCanActivate: CanActivateFn = (_route, state) => {
   // Si pas de token du tout, rediriger immédiatement vers login
   const token = auth.token;
   if (!token) {
-    console.log('[AuthGuard] No token found, redirecting to login');
     return router.createUrlTree(['/login'], {
       queryParams: { redirect: state.url },
     });
@@ -35,15 +34,8 @@ export const authCanActivate: CanActivateFn = (_route, state) => {
 
   // Si le token est expiré, tenter un refresh AVANT de rediriger
   if (refreshSvc.isTokenExpired(token)) {
-    console.log(
-      '[AuthGuard] Token expired, attempting refresh before redirect...'
-    );
-
     return from(refreshSvc.refreshToken()).pipe(
       map(() => {
-        console.log(
-          '[AuthGuard] Token refreshed successfully, allowing access'
-        );
         return true; // Autoriser l'accès
       }),
       catchError((err) => {
@@ -60,13 +52,11 @@ export const authCanActivate: CanActivateFn = (_route, state) => {
 
   // Token valide et non expiré, vérifier l'authentification
   if (!auth.snapshot.isAuthenticated) {
-    console.log('[AuthGuard] User not authenticated, redirecting to login');
     return router.createUrlTree(['/login'], {
       queryParams: { redirect: state.url },
     });
   }
 
-  console.log('[AuthGuard] Token valid, allowing access');
   return true;
 };
 
@@ -108,7 +98,6 @@ export const authCanMatch: CanMatchFn = (_route, segments) => {
   // Si pas de token du tout, rediriger immédiatement vers login
   const token = auth.token;
   if (!token) {
-    console.log('[AuthGuard] No token found, redirecting to login');
     return router.createUrlTree(['/login'], {
       queryParams: { redirect: redirectUrl },
     });
@@ -116,19 +105,11 @@ export const authCanMatch: CanMatchFn = (_route, segments) => {
 
   // Si le token est expiré, tenter un refresh AVANT de rediriger
   if (refreshSvc.isTokenExpired(token)) {
-    console.log(
-      '[AuthGuard] Token expired, attempting refresh before redirect...'
-    );
-
     return from(refreshSvc.refreshToken()).pipe(
       map(() => {
-        console.log(
-          '[AuthGuard] Token refreshed successfully, allowing access'
-        );
         return true;
       }),
       catchError((err) => {
-        console.error('[AuthGuard] Refresh failed, redirecting to login:', err);
         return of(
           router.createUrlTree(['/login'], {
             queryParams: { redirect: redirectUrl },
@@ -140,13 +121,11 @@ export const authCanMatch: CanMatchFn = (_route, segments) => {
 
   // Token valide et non expiré, vérifier l'authentification
   if (!auth.snapshot.isAuthenticated) {
-    console.log('[AuthGuard] User not authenticated, redirecting to login');
     return router.createUrlTree(['/login'], {
       queryParams: { redirect: redirectUrl },
     });
   }
 
-  console.log('[AuthGuard] Token valid, allowing access');
   return true;
 };
 
@@ -172,23 +151,14 @@ const decideForRoute = (
       if (isAuth) {
         const redirect = state?.url || redirectTo;
         if (redirect === '/login' || redirect === '/register') {
-          console.log(
-            '[GuestGuard] User authenticated, redirecting to',
-            redirectTo
-          );
           return router.createUrlTree([redirectTo]);
         }
-        console.log(
-          '[GuestGuard] User authenticated, redirecting to',
-          redirect
-        );
         return router.createUrlTree([redirect]);
       }
       return true;
 
     case 'logoutThenAllow':
       if (isAuth) {
-        console.log('[GuestGuard] Logging out user before allowing access');
         auth.logout();
       }
       return true;

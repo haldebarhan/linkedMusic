@@ -54,7 +54,7 @@ export class SearchbarComponent implements OnInit {
 
   onSubmit() {
     const { category, query } = this.form.value;
-    this.router.navigate(['announcemnts', category], {
+    this.router.navigate(['announcements', category], {
       queryParams: { q: query },
     });
   }

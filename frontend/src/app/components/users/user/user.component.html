@@ -1,6 +1,61 @@
 <div class="profile-shell">
+  <!-- MOBILE HEADER avec bouton hamburger -->
+  <header class="mobile-header">
+    <button
+      class="hamburger-btn"
+      (click)="toggleSidebar()"
+      aria-label="Toggle menu"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="mobile-logo">
+      <span style="color: #2563eb; font-weight: 700; font-size: 1.25rem"
+        >Zik</span
+      ><span style="font-weight: 600; font-size: 1.25rem">Muzik</span>
+    </div>
+  </header>
+
+  <!-- BACKDROP pour fermer le menu en mobile -->
+  <div
+    class="sidebar-backdrop"
+    [class.active]="isSidebarOpen"
+    (click)="closeSidebar()"
+  ></div>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" [class.open]="isSidebarOpen">
+    <!-- Bouton de fermeture pour mobile -->
+    <button class="close-btn" (click)="closeSidebar()" aria-label="Close menu">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
     <nav class="nav-menu">
       <div class="menu-section">
         <span class="menu-label">Main Menu</span>
@@ -9,6 +64,7 @@
           routerLink="/users/dashboard"
           routerLinkActive="active"
           class="menu-item"
+          (click)="closeSidebar()"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -33,6 +89,7 @@
           routerLink="/users/transactions"
           routerLinkActive="active"
           class="menu-item"
+          (click)="closeSidebar()"
         >
           <i class="fa-regular fa-credit-card"></i>
           <span>Payments</span>
@@ -42,6 +99,7 @@
           routerLink="/profile/messages"
           routerLinkActive="active"
           class="menu-item"
+          (click)="closeSidebar()"
         >
           <i class="fa-regular fa-message"></i>
           <span>Messages</span>
@@ -52,6 +110,7 @@
           routerLink="/users/profile"
           routerLinkActive="active"
           class="menu-item"
+          (click)="closeSidebar()"
         >
           <i class="fa-solid fa-user-gear"></i>
           <span>Paramètres</span>

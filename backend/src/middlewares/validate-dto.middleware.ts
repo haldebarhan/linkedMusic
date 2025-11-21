@@ -20,12 +20,12 @@ export const ValidateDtoMiddleware = <T extends object>(
 
       const dtoInstance = plainToInstance(dtoClass, req.body, {
         enableImplicitConversion: true,
-        excludeExtraneousValues: false, // 👈 Important
-        exposeUnsetFields: false, // 👈 N'expose pas les champs non définis
+        excludeExtraneousValues: false,
+        exposeUnsetFields: false,
       });
 
       const errors = await validate(dtoInstance, {
-        whitelist: false, // 👈 Désactivez le whitelist !
+        whitelist: false,
         forbidNonWhitelisted: false,
         skipMissingProperties: false,
         forbidUnknownValues: false,
@@ -53,7 +53,6 @@ export const ValidateDtoMiddleware = <T extends object>(
   };
 };
 
-// Fonction récursive pour aplatir les erreurs de validation
 function flattenValidationErrors(errors: any[], parentPath = ""): any[] {
   const result: any[] = [];
 
