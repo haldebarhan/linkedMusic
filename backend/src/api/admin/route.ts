@@ -7,11 +7,9 @@ import { UpdateUserDTO } from "@/microservices/users/user.dto";
 import { CreateConfigDTO } from "@/microservices/configurations/configuration.dto";
 import {
   AttachServicesDTO,
-  CreateCategoryDTO,
   CreateFieldDto,
   CreateFieldOptionDto,
   CreateServiceTypeDTO,
-  UpdateCategoryDTO,
   UpdateFieldDto,
 } from "@/microservices/catalogues/catalogue.dto";
 import {
@@ -19,8 +17,10 @@ import {
   UpdatePlanDTO,
 } from "@/microservices/subscriptions/dto/plan.dto";
 import {
+  CreateCategoryDto,
   CreateCategoryFieldDto,
   LinkFieldsToCategoryDTO,
+  UpdateCategoryDto,
 } from "@/microservices/categories/category.dto";
 import uploads from "@/multer-config";
 
@@ -68,20 +68,26 @@ router.delete("/configurations/:id", async (req: Request, res: Response) =>
 
 router.post(
   "/catalog/categories",
-  ValidateDtoMiddleware(CreateCategoryDTO),
+  ValidateDtoMiddleware(CreateCategoryDto),
   async (req: Request, res: Response) =>
     adminController.createCategory(req, res)
 );
 
 router.put(
   "/catalog/categories/:id",
-  ValidateDtoMiddleware(UpdateCategoryDTO),
+  ValidateDtoMiddleware(UpdateCategoryDto),
   async (req: Request, res: Response) =>
     adminController.updateCategory(req, res)
 );
 
 router.delete("/catalog/categories/:id", async (req: Request, res: Response) =>
   adminController.removeCategory(req, res)
+);
+
+router.put(
+  "/catalog/categories/desable/:id",
+  async (req: Request, res: Response) =>
+    adminController.desableCategory(req, res)
 );
 
 router.post(

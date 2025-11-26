@@ -141,7 +141,6 @@ export class BrevoMailService {
       emailContent.htmlContent = this.getAnnouncementApprovedTemplate(data);
 
       const response = await this.emailApi.sendTransacEmail(emailContent);
-      logger.info(`✅ Email d'approbation envoyé à ${data.to}`);
       return response.response.data;
     } catch (error) {
       logger.error(
@@ -179,7 +178,6 @@ export class BrevoMailService {
       emailContent.htmlContent = this.getAnnouncementRejectedTemplate(data);
 
       const response = await this.emailApi.sendTransacEmail(emailContent);
-      logger.info(`✅ Email de rejet envoyé à ${data.to}`);
       return response.response.data;
     } catch (error) {
       logger.error("❌ Erreur lors de l'envoi de l'email de rejet:", error);
@@ -218,7 +216,6 @@ export class BrevoMailService {
       emailContent.htmlContent = this.getContactRequestReceivedTemplate(data);
 
       const response = await this.emailApi.sendTransacEmail(emailContent);
-      logger.info(`✅ Email de demande de contact envoyé à ${data.to}`);
       return response.response.data;
     } catch (error) {
       logger.error("❌ Erreur lors de l'envoi de l'email de demande:", error);
@@ -252,7 +249,6 @@ export class BrevoMailService {
       emailContent.htmlContent = this.getContactRequestAcceptedTemplate(data);
 
       const response = await this.emailApi.sendTransacEmail(emailContent);
-      logger.info(`✅ Email d'acceptation envoyé à ${data.to}`);
       return response.response.data;
     } catch (error) {
       logger.error(
@@ -288,7 +284,6 @@ export class BrevoMailService {
       emailContent.htmlContent = this.getContactRequestRejectedTemplate(data);
 
       const response = await this.emailApi.sendTransacEmail(emailContent);
-      logger.info(`✅ Email de refus envoyé à ${data.to}`);
       return response.response.data;
     } catch (error) {
       logger.error("❌ Erreur lors de l'envoi de l'email de refus:", error);

@@ -82,7 +82,6 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   }
   ngOnInit(): void {
     this.countries = country_list;
-
     this.route.paramMap.subscribe(async (pm) => {
       this.slug = pm.get('category') || '';
       await this.loadCategorySchema(this.slug);
@@ -365,32 +364,38 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
   resetFilters() {
     this.sub?.unsubscribe();
+
+    // Reset du formulaire
     this.searchForm.reset({ location: '' }, { emitEvent: false });
     this.showAdvancedSearch = false;
     this.page = 1;
     this.query = null;
 
-    const cleared = Object.keys(this.route.snapshot.queryParams).reduce(
-      (acc, k) => {
-        acc[k] = null;
-        return acc;
-      },
-      {} as Record<string, null>
-    );
+    // Reset du tri
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'desc';
+
+    // ⚠️ Garder seulement les query params essentiels
     this.router
       .navigate([], {
         relativeTo: this.route,
-        queryParams: cleared,
+        queryParams: {
+          page: 1,
+          limit: this.limit,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        },
         replaceUrl: true,
       })
       .then(() => {
+        // Réabonner aux changements
         this.sub = this.searchForm.valueChanges
           .pipe(debounceTime(300))
           .subscribe(() => this.applyFilters());
 
+        // Charger les résultats sans filtres
         this.loadResults();
       });
-    this.showAdvancedSearch = false;
   }
 
   toggleAdvancedSearch() {
@@ -399,32 +404,6 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
   scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  getTheme(slug: string) {
-    let theme: string = '';
-    switch (slug) {
-      case 'musiciens':
-        theme = 'Musiciens';
-        break;
-      case 'instruments':
-        theme = 'Instruments de musique';
-        break;
-      case 'cours':
-        theme = 'Cours de musique';
-        break;
-      case 'professionnels':
-        theme = 'Professionnels de la musique';
-        break;
-      case 'studios':
-        theme = 'Studios';
-        break;
-      case 'divers':
-      default:
-        theme = 'Autres rubriques de musique';
-        break;
-    }
-    return theme;
   }
 
   goToDetails(announcementId: number) {

@@ -17,7 +17,24 @@
         <div class="announcement-card">
           <!-- En-tête avec titre et badges -->
           <div class="announcement-header">
-            <h1 class="announcement-title">{{ announcement.title }}</h1>
+            <div class="header-top">
+              <h1 class="announcement-title">{{ announcement.title }}</h1>
+
+              <!-- Bouton Like -->
+              <button
+                class="btn-like"
+                (click)="toggleLike()"
+                [disabled]="likingInProgress"
+                [class.liked]="isLiked"
+                *ngIf="!isOwner()"
+              >
+                <i class="fas fa-heart" [class.filled]="isLiked"></i>
+                <span class="like-count" *ngIf="likeCount > 0">{{
+                  likeCount
+                }}</span>
+              </button>
+            </div>
+
             <div class="announcement-badges">
               <span class="badge badge-category" *ngIf="announcement.category">
                 <i class="fas fa-tag"></i> {{ announcement.category.name }}
@@ -119,6 +136,14 @@
                     <ng-container *ngSwitchCase="'TOGGLE'">
                       <span>{{ fieldValue.valueBoolean ? "OUI" : "NON" }}</span>
                     </ng-container>
+                    <ng-container *ngSwitchCase="'RADIO'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
                     <ng-container *ngSwitchCase="'DATE'">
                       {{ fieldValue.valueDate | date : "d MMMM y" }}
                     </ng-container>
@@ -186,15 +211,39 @@
 
               <!-- Utilisateur connecté - Non propriétaire -->
               <ng-container *ngIf="!isOwner() && (isLoggedIn$ | async)">
-                <!-- Aucune demande -->
-                <ng-container *ngIf="!currentUserRequest">
+                <!-- Bouton demander contact -->
+                <ng-container *ngIf="canRequestContact()">
+                  <!-- Message informatif si demande précédente annulée/rejetée -->
+                  <div
+                    class="alert alert-info mb-3"
+                    *ngIf="hasRequestCanceled()"
+                  >
+                    <i class="fas fa-info-circle"></i>
+                    Votre précédente demande a été annulée. Vous pouvez en faire
+                    une nouvelle.
+                  </div>
+                  <div
+                    class="alert alert-warning mb-3"
+                    *ngIf="hasRequestRejected()"
+                  >
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Votre demande a été refusée. Vous pouvez réessayer avec un
+                    nouveau message.
+                  </div>
+
                   <button
                     class="btn btn-primary btn-block"
                     (click)="onClickContactRequest()"
-                    *ngIf="canRequestContact()"
                   >
                     <i class="fas fa-paper-plane"></i>
-                    Demander une mise en relation
+                    <ng-container
+                      *ngIf="hasRequestCanceled() || hasRequestRejected()"
+                    >
+                      Refaire une demande
+                    </ng-container>
+                    <ng-container *ngIf="!currentUserRequest">
+                      Demander une mise en relation
+                    </ng-container>
                   </button>
                 </ng-container>
 
@@ -213,7 +262,7 @@
                       L'annonceur vous répondra bientôt.
                     </p>
                     <button
-                      class="btn btn-outline-secondary btn-sm"
+                      class="btn btn-outline-primary btn-sm"
                       (click)="cancelContactRequest()"
                       [disabled]="sending"
                     >
@@ -244,22 +293,6 @@
                       <i class="fas fa-comments"></i>
                       Voir la conversation
                     </button>
-                  </div>
-                </div>
-
-                <!-- Demande rejetée -->
-                <div
-                  class="request-status status-rejected"
-                  *ngIf="currentUserRequest?.status === 'REJECTED'"
-                >
-                  <div class="status-icon">
-                    <i class="fas fa-times-circle"></i>
-                  </div>
-                  <div class="status-content">
-                    <h4>Demande refusée</h4>
-                    <p>
-                      L'annonceur a décliné votre demande de mise en relation.
-                    </p>
                   </div>
                 </div>
               </ng-container>

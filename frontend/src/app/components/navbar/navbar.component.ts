@@ -15,8 +15,10 @@ import { SocketService } from '../../shared/services/socket.service';
 export class NavbarComponent implements OnInit, OnDestroy {
   user$: Observable<AuthUser | null>;
   isLoggedIn$: Observable<boolean>;
-  unread = 0;
-  private sub?: Subscription;
+
+  unreadMessages = 0;
+  totalNotifications = 0;
+  private subscriptions = new Subscription();
 
   constructor(
     private router: Router,
@@ -28,13 +30,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.sub = this.socketService.unreadCount$().subscribe((n) => {
-      this.unread = n;
+    const messagesSub = this.socketService.unreadCount$().subscribe((count) => {
+      this.unreadMessages = count;
+      this.updateTotalNotifications();
     });
+
+    const notificationsSub = this.socketService
+      .unreadNotificationsCount$()
+      .subscribe((count) => {
+        this.updateTotalNotifications();
+      });
+
+    this.subscriptions.add(messagesSub);
+    this.subscriptions.add(notificationsSub);
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   goToLogin() {
@@ -63,5 +75,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
       .slice(0, 2)
       .join('')
       .toUpperCase();
+  }
+
+  private updateTotalNotifications(): void {
+    this.totalNotifications = this.unreadMessages;
   }
 }

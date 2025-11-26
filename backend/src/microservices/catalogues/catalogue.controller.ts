@@ -44,7 +44,7 @@ export class CatalogueController {
         order: orderQuery,
         q: searchQuery,
       } = req.query;
-      const where: any = {};
+      const where: any = { active: true };
 
       if (searchQuery) {
         where.name = {

@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from './auth/auth.service';
 import { RefreshTokenService } from './auth/refresh-token.service';
 import { Subscription } from 'rxjs';
-import { SocketService } from './shared/services/socket.service';
+import { NotificationComponent } from './shared/components/notification/notification.component';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +17,7 @@ import { SocketService } from './shared/services/socket.service';
     NavbarComponent,
     SearchbarComponent,
     FooterComponent,
+    NotificationComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -27,8 +28,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private auth: AuthService,
-    private refresh: RefreshTokenService,
-    private socketService: SocketService
+    private refresh: RefreshTokenService
   ) {}
 
   ngOnInit(): void {

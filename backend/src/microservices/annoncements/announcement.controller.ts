@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import {
   AnnouncementQueryDto,
   CreateAnnouncementDto,
+  likeAnnouncementDTO,
   UpdateAnnouncementDto,
 } from "./announcement.dto";
 import { formatResponse } from "@/utils/helpers/response-formatter";
@@ -90,6 +91,18 @@ export class AnnouncementController {
         ...announcement,
         fichiers: pressignedUrl,
       });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async likeStatus(req: AuthenticatedRequest, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id as number;
+      const result = await this.announcementService.likeStatus(userId, id);
+      const response = formatResponse(200, result);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -248,6 +261,131 @@ export class AnnouncementController {
         ...result,
         fichiers: pressignedUrl,
       });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async userRecentViews(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const sortBy = (req.query.sortBy as string) || "createdAt";
+      const sortOrder =
+        (req.query.sortOrder as Order.ASC | Order.DESC) || Order.DESC;
+      const pagination = {
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+      };
+      const recentViews = await this.announcementService.recentViews(
+        userId,
+        pagination
+      );
+      const response = formatResponse(200, recentViews);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async addToRecentViews(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const dto: likeAnnouncementDTO = Object.assign(
+        new likeAnnouncementDTO(),
+        req.body
+      );
+      const result = await this.announcementService.addToRecentViews(
+        userId,
+        dto.announcementId
+      );
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async removeToRecentViews(req: AuthenticatedRequest, res: Response) {
+    try {
+      const id = parseInt(req.params.id as string);
+      const result = await this.announcementService.removeRecentView(id);
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+  async removeALLRecentViews(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const result = await this.announcementService.removeAll(userId);
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async likeAnnouncement(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const dto: likeAnnouncementDTO = Object.assign(
+        new likeAnnouncementDTO(),
+        req.body
+      );
+      const result = await this.announcementService.likeAnnouncement(
+        userId,
+        dto.announcementId
+      );
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async unlikeAnnouncement(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const dto: likeAnnouncementDTO = Object.assign(
+        new likeAnnouncementDTO(),
+        req.body
+      );
+      const result = await this.announcementService.unlikeAnnouncement(
+        userId,
+        dto.announcementId
+      );
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async mylikedAnnouncements(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user.id as number;
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const sortBy = (req.query.sortBy as string) || "createdAt";
+      const sortOrder =
+        (req.query.sortOrder as Order.ASC | Order.DESC) || Order.DESC;
+      const pagination = {
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+      };
+      const result = await this.announcementService.myLikedAnnouncement(
+        userId,
+        pagination
+      );
+      const response = paginatedResponse(200, result);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

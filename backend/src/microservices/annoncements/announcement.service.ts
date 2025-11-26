@@ -31,6 +31,12 @@ import {
 import { BrevoMailService } from "@/utils/services/brevo-mail.service";
 import { NotificationRepository } from "../notifications/notification.repository";
 import DatabaseService from "@/utils/services/database.service";
+import { getIo } from "@/sockets/io-singleton";
+import { userRoom } from "@/sockets/room";
+import { EVENTS } from "@/sockets/event";
+import logger from "@/config/logger";
+import { countUnread } from "@/sockets/handlers/notification.handler";
+import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
 const minioService: MinioService = MinioService.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -39,86 +45,9 @@ export class AnnouncementService {
   constructor(
     private readonly announcementRepository: AnnouncementRepository,
     private readonly mailService: BrevoMailService,
-    private readonly notificationRepository: NotificationRepository
+    private readonly notificationRepository: NotificationRepository,
+    private readonly announcementViewRepository: AnnouncementViewRepository
   ) {}
-
-  /**
-   * Helper pour normaliser une réponse paginée
-   * Adapté à la structure { data, pagination } du projet
-   */
-  private normalizePaginatedResponse<T>(
-    result: any,
-    mapper?: (item: any) => T
-  ): PaginatedResponse<T> {
-    if (result && result.data && result.pagination) {
-      return {
-        data: mapper ? result.data.map(mapper) : result.data,
-        pagination: result.pagination,
-      };
-    }
-
-    if (result && result.data && result.meta) {
-      const page = result.meta.page;
-      const limit = result.meta.limit;
-      const total = result.meta.total;
-      const totalPages = result.meta.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.data.map(mapper) : result.data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      };
-    }
-
-    if (result && result.data && result.total !== undefined) {
-      const page = result.page;
-      const limit = result.limit;
-      const total = result.total;
-      const totalPages = result.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.data.map(mapper) : result.data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      };
-    }
-
-    // Format avec items au lieu de data
-    if (result && result.items) {
-      const page = result.page || result.pagination?.page;
-      const limit = result.limit || result.pagination?.limit;
-      const total = result.total || result.pagination?.total;
-      const totalPages = result.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.items.map(mapper) : result.items,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      };
-    }
-
-    throw new Error(
-      "Format de réponse paginée non reconnu. Vérifiez votre repository."
-    );
-  }
 
   async createAnnouncement(ownerId: number, dto: CreateAnnouncementDto) {
     const announcementData: Prisma.AnnouncementCreateInput = {
@@ -133,7 +62,7 @@ export class AnnouncementService {
       images: dto.images ?? [],
       videos: dto.videos ?? [],
       audios: dto.audios ?? [],
-      status: AnnouncementStatus.DRAFT,
+      status: AnnouncementStatus.PENDING_APPROVAL,
       isPublished: false,
       user: {
         connect: { id: ownerId },
@@ -340,7 +269,7 @@ export class AnnouncementService {
     const filters = {
       categorySlug: query.categorySlug,
       city: query.city,
-      countryCode: query.country,
+      countryCode: query.country === "ALL" ? undefined : query.country,
       minPrice: query.minPrice,
       maxPrice: query.maxPrice,
       search: query.search,
@@ -492,9 +421,79 @@ export class AnnouncementService {
         announcementId: announcement.id,
         announcementTitle: announcement.title,
       });
+      const notification = await this.notifyRequestAccepted(
+        announcement.ownerId,
+        announcement
+      );
+
+      try {
+        const io = getIo();
+        io.to(userRoom(announcement.ownerId)).emit(EVENTS.NOTIFICATION_NEW, {
+          notification,
+          type: NotificationType.ANNOUNCEMENT_APPROVED,
+        });
+
+        io.to(userRoom(announcement.ownerId)).emit(EVENTS.NOTIFICATION_UNREAD, {
+          total: await countUnread(announcement.ownerId),
+        });
+      } catch (error) {
+        logger.log("Erreur lors de l'émission Socket.IO:", error);
+      }
     }
 
     return approved;
+  }
+
+  async likeAnnouncement(userId: number, announcementId: number) {
+    const announcement = await this.announcementRepository.findById(
+      announcementId
+    );
+    if (!announcement) {
+      throw createError(404, `Annonce avec l'ID ${announcementId} introuvable`);
+    }
+
+    await this.announcementRepository.likeAnnouncement(userId, announcementId);
+
+    const ann = await this.announcementRepository.likeStatus(
+      userId,
+      announcementId
+    );
+    if (!ann) {
+      throw createError(404, `Data not found`);
+    }
+    const isLiked = (ann.Favorites.length ?? 0) > 0;
+    const totalLikes = ann?._count?.Favorites ?? 0;
+    return {
+      isLiked,
+      totalLikes,
+    };
+  }
+
+  async unlikeAnnouncement(userId: number, announcementId: number) {
+    const favorite = await this.announcementRepository.getOneFavorite(
+      userId,
+      announcementId
+    );
+    if (!favorite) {
+      throw createError(
+        404,
+        `Aucun like trouvé pour l'annonce avec ID ${announcementId}`
+      );
+    }
+    await this.announcementRepository.unlikeAnnouncement(favorite.id);
+    const ann = await this.announcementRepository.likeStatus(
+      userId,
+      announcementId
+    );
+    if (!ann) {
+      throw createError(404, `Data not found`);
+    }
+    const isLiked = (ann.Favorites.length ?? 0) > 0;
+    const totalLikes = ann?._count?.Favorites ?? 0;
+    return {
+      isLiked,
+      totalLikes,
+    };
   }
 
   async rejectAnnouncement(announcementId: number, reason: string) {
@@ -520,6 +519,25 @@ export class AnnouncementService {
         announcementTitle: announcement.title,
         reason,
       });
+
+      const notification = await this.notifyRequestRejected(
+        announcement.ownerId,
+        announcement,
+        reason
+      );
+
+      try {
+        const io = getIo();
+        io.to(userRoom(announcement.ownerId)).emit(EVENTS.NOTIFICATION_NEW, {
+          notification,
+          type: NotificationType.ANNOUNCEMENT_REJECTED,
+        });
+        io.to(userRoom(announcement.ownerId)).emit(EVENTS.NOTIFICATION_UNREAD, {
+          total: await countUnread(announcement.ownerId),
+        });
+      } catch (error) {
+        logger.log("Erreur lors de l'émission Socket.IO:", error);
+      }
     }
     return rejected;
   }
@@ -556,12 +574,105 @@ export class AnnouncementService {
     return await this.announcementRepository.count({ ownerId: userId });
   }
 
+  async recentViews(userId: number, pagination: PaginationParams) {
+    const recentViews = await this.announcementViewRepository.recentViews(
+      userId,
+      pagination
+    );
+    const announcements = await Promise.all(
+      recentViews.map(async (rv) => {
+        const { announcement } = rv;
+        const [audios, videos, images] = await Promise.all([
+          this.generateUrl(announcement.audios),
+          this.generateUrl(announcement.videos),
+          this.generateUrl(announcement.images),
+        ]);
+
+        return {
+          viewsId: rv.id,
+          viewedAt: rv.viewedAt,
+          announcement: {
+            ...announcement,
+            audios,
+            videos,
+            images,
+          },
+        };
+      })
+    );
+    return announcements;
+  }
+
+  async addToRecentViews(userId: number, announcementId: number) {
+    const announcement = await this.announcementRepository.findById(
+      announcementId
+    );
+    if (!announcement) {
+      throw createError(404, `Annonce avec l'ID ${announcementId} introuvable`);
+    }
+
+    return await this.announcementViewRepository.create(userId, announcementId);
+  }
+
+  async removeRecentView(id: number) {
+    const view = await this.announcementViewRepository.getOne(id);
+    if (!view) {
+      throw createError(404, `Annonce avec l'ID ${id} introuvable`);
+    }
+    return await this.announcementViewRepository.remove(id);
+  }
+
+  async removeAll(userId: number) {
+    return await this.announcementViewRepository.removeAll(userId);
+  }
+
+  async likeStatus(userId: number, announcementId: number) {
+    const announcement = await this.announcementRepository.likeStatus(
+      userId,
+      announcementId
+    );
+    if (!announcement) {
+      throw createError(404, `Data not found`);
+    }
+    const isLiked = (announcement.Favorites.length ?? 0) > 0;
+    const totalLikes = announcement?._count?.Favorites ?? 0;
+    return {
+      isLiked,
+      totalLikes,
+    };
+  }
+
+  async myLikedAnnouncement(userId: number, pagination: PaginationParams) {
+    const where = {
+      Favorites: {
+        some: { userId },
+      },
+      isPublished: true,
+      status: AnnouncementStatus.PUBLISHED,
+    };
+    const [data, total] = await Promise.all([
+      this.announcementRepository.myLikedAnnouncement(userId, pagination),
+      this.announcementRepository.count(where),
+    ]);
+    return {
+      data,
+      metadata: {
+        total,
+        page: pagination.page!,
+        totalPage: Math.ceil(total / pagination.limit!),
+      },
+    };
+  }
+
   /**
    * Mapper une annonce vers un DTO de réponse
    */
   private mapToResponseDto(
     announcement: AnnouncementWithDetails
-  ): AnnouncementResponseDto {
+  ): AnnouncementResponseDto & {
+    likes?: number;
+    contacts?: number;
+  } {
     return {
       id: announcement.id,
       title: announcement.title,
@@ -583,6 +694,8 @@ export class AnnouncementService {
       updatedAt: announcement.updatedAt,
       publishedAt: announcement.publishedAt ?? undefined,
       expiresAt: undefined,
+      likes: announcement._count?.Favorites ?? 0,
+      contacts: announcement._count?.contactRequests ?? 0,
       category: {
         id: announcement.category.id,
         name: announcement.category.name,
@@ -611,5 +724,116 @@ export class AnnouncementService {
           })) ?? [],
       })),
     };
+  }
+
+  private async notifyRequestAccepted(ownerId: number, announcement: any) {
+    return await this.notificationRepository.notify({
+      userId: ownerId,
+      type: NotificationType.ANNOUNCEMENT_APPROVED,
+      title: "Votre annonce a été approuvée",
+      message: `Félicitations ! Votre annonce "${announcement.title}" a été approuvée et est maintenant en ligne.`,
+      actionUrl: `${ENV.FRONTEND_URL}/profile/announcements/${announcement.id}`,
+    });
+  }
+
+  private async notifyRequestRejected(
+    ownerId: number,
+    announcement: any,
+    reason: string
+  ) {
+    return await this.notificationRepository.notify({
+      userId: ownerId,
+      type: NotificationType.ANNOUNCEMENT_REJECTED,
+      title: "Votre annonce a été rejetée",
+      message: `Nous sommes désolés de vous informer que votre annonce "${announcement.title}" a été rejetée. Raison : ${reason}`,
+      actionUrl: `${ENV.FRONTEND_URL}/profile/announcements/${announcement.id}`,
+    });
+  }
+
+  /**
+   * Helper pour normaliser une réponse paginée
+   * Adapté à la structure { data, pagination } du projet
+   */
+  private normalizePaginatedResponse<T>(
+    result: any,
+    mapper?: (item: any) => T
+  ): PaginatedResponse<T> {
+    if (result && result.data && result.pagination) {
+      return {
+        data: mapper ? result.data.map(mapper) : result.data,
+        pagination: result.pagination,
+      };
+    }
+
+    if (result && result.data && result.meta) {
+      const page = result.meta.page;
+      const limit = result.meta.limit;
+      const total = result.meta.total;
+      const totalPages = result.meta.totalPages || Math.ceil(total / limit);
+
+      return {
+        data: mapper ? result.data.map(mapper) : result.data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    }
+
+    if (result && result.data && result.total !== undefined) {
+      const page = result.page;
+      const limit = result.limit;
+      const total = result.total;
+      const totalPages = result.totalPages || Math.ceil(total / limit);
+
+      return {
+        data: mapper ? result.data.map(mapper) : result.data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    }
+
+    // Format avec items au lieu de data
+    if (result && result.items) {
+      const page = result.page || result.pagination?.page;
+      const limit = result.limit || result.pagination?.limit;
+      const total = result.total || result.pagination?.total;
+      const totalPages = result.totalPages || Math.ceil(total / limit);
+
+      return {
+        data: mapper ? result.items.map(mapper) : result.items,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    }
+
+    throw new Error(
+      "Format de réponse paginée non reconnu. Vérifiez votre repository."
+    );
+  }
+
+  private async generateUrl(files: string[]) {
+    if (!files || files.length === 0) return [];
+    return Promise.all(
+      files.map((file) =>
+        minioService.generatePresignedUrl(ENV.MINIO_BUCKET_NAME, file)
+      )
+    );
   }
 }

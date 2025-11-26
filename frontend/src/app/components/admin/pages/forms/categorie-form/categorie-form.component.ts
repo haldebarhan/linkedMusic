@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminApi } from '../../../data/admin-api.service';
+import { setupKeyGeneration } from '../../../../../helpers/setup-key-generation';
 
 @Component({
   selector: 'app-categorie-form',
@@ -31,7 +32,10 @@ export class CategorieFormComponent implements OnInit {
   ) {
     this.CategoryForm = this.fb.group({
       name: new FormControl('', [Validators.required]),
+      slug: [{ value: '', disabled: true }, [Validators.required]],
     });
+
+    setupKeyGeneration(this.CategoryForm, 'name', 'slug');
   }
 
   ngOnInit(): void {
@@ -45,6 +49,7 @@ export class CategorieFormComponent implements OnInit {
             this.subHeaderText = `mofidier la category N°${this.categoryId}`;
             this.CategoryForm.patchValue({
               name: res.data.name,
+              slug: res.data.slug,
             });
           },
         });
@@ -54,8 +59,7 @@ export class CategorieFormComponent implements OnInit {
 
   onSubmit() {
     this.isSubmit = true;
-    const { name } = this.CategoryForm.value;
-    const slug = String(name).toLocaleLowerCase();
+    const { name, slug } = this.CategoryForm.value;
     if (this.categoryId) {
       this.api
         .updateResource('categories', this.categoryId, { name, slug })

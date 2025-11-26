@@ -35,14 +35,22 @@
             </td>
             <td data-label="Nom">{{ c.name }}</td>
             <td>
-              <i
-                class="fas fa-trash fa-1x text-danger"
-                style="cursor: pointer"
-                (click)="removeCategory(c)"
-              ></i>
+              <div class="d-flex justify-content-start px-3 gap-4">
+                <i
+                  class="fas fa-pencil fa-1x text-success"
+                  style="cursor: pointer mr-10"
+                  (click)="goToEdit(c)"
+                ></i>
+
+                <i
+                  class="fas fa-trash fa-1x text-danger"
+                  style="cursor: pointer"
+                  (click)="removeCategory(c)"
+                ></i>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="!rows?.length">
+          <tr *ngIf="!rows">
             <td colspan="3" class="text-center text-muted py-4">
               Aucune catégorie
             </td>

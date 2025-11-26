@@ -334,4 +334,6 @@ const otherCountries = [...countries]
     collator.compare(stripFrenchArticle(a.name), stripFrenchArticle(b.name))
   );
 
-export const country_list = [...africaCountries, ...otherCountries];
+const allCountries = [...africaCountries, ...otherCountries];
+allCountries.unshift({ name: 'Tous les pays', code: 'ALL' });
+export const country_list = [...allCountries];

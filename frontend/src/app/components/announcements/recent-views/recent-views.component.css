@@ -1,0 +1,73 @@
+/* Style pour les boutons de pagination */
+.pagination-pills .page-link {
+  border-radius: 20px;
+  margin: 0 2px;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.pagination-pills .page-item.active .page-link {
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  border-color: #1a73e8;
+}
+
+.pagination-pills .page-link:hover:not(.disabled) {
+  background-color: #f8f9fa;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+/* Style pour les items de la liste */
+.list-group-item {
+  transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+/* Style pour les badges */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  font-weight: 500;
+}
+
+/* État vide */
+.fa-3x {
+  opacity: 0.3;
+}
+
+/* Boutons d'action */
+.btn-outline-danger {
+  transition: all 0.2s ease;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(234, 67, 53, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .list-group-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .list-group-item > div:first-child {
+    min-width: auto !important;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

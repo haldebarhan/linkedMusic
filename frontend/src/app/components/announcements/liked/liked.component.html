@@ -1,0 +1,118 @@
+<div class="container py-3" style="height: 75vh">
+  <div
+    class="d-flex justify-content-between align-items-center mb-3 text-primary"
+  >
+    <h1 class="h4 m-0">
+      <i class="fas fa-heart me-2"></i>
+      Mes Favorites
+    </h1>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="text-center py-5" *ngIf="loading && rows.length === 0">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement…</span>
+    </div>
+  </div>
+
+  <!-- État vide -->
+  <div class="text-center py-5" *ngIf="!loading && total === 0">
+    <div class="text-muted mb-3">
+      <i class="fas fa-history fa-3x mb-3 d-block"></i>
+      <h5>Aucune annonce likées</h5>
+      <p>Les annonces que vous likez apparaîtront ici</p>
+    </div>
+    <a routerLink="/" class="btn btn-primary">
+      <i class="fas fa-search me-2"></i>
+      Parcourir les annonces
+    </a>
+  </div>
+
+  <!-- Liste des vues -->
+  <div class="list-group" *ngIf="rows.length > 0">
+    <a
+      class="list-group-item list-group-item-action d-flex align-items-center"
+      *ngFor="let like of rows"
+      [routerLink]="['/announcemnts/details/', like.id]"
+    >
+      <!-- Date/heure de consultation -->
+      <div class="text-muted me-3" style="min-width: 150px">
+        <i class="fas fa-heart me-1"></i>
+        {{ like.likeAt | date : "dd-MM-yy HH:mm" }}
+      </div>
+
+      <!-- Détails de l'annonce -->
+      <div class="flex-grow-1">
+        <div class="fw-semibold">{{ like.title }}</div>
+        <div class="small text-muted">
+          <i class="fas fa-map-marker-alt me-1"></i>
+          {{ like.location || "—" }}
+        </div>
+      </div>
+
+      <!-- Badge statut -->
+      <div class="me-3">
+        <span
+          class="badge"
+          [ngClass]="{
+            'bg-success': like.status === 'ACTIVE',
+            'bg-secondary': like.status === 'INACTIVE',
+            'bg-danger': like.status === 'DELETED'
+          }"
+        >
+          {{
+            like.status === "ACTIVE"
+              ? "Active"
+              : like.status === "INACTIVE"
+              ? "Inactive"
+              : "Supprimée"
+          }}
+        </span>
+      </div>
+
+      <!-- Bouton Retirer -->
+      <button
+        class="btn btn-sm btn-outline-danger"
+        (click)="removeLike(like.id, $event)"
+        [disabled]="deleting"
+        type="button"
+        title="supprimer le like"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </a>
+  </div>
+
+  <!-- Pagination -->
+  <div
+    class="d-flex justify-content-between align-items-center mt-3"
+    *ngIf="total > 0"
+  >
+    <small class="text-muted">
+      Affichage de {{ start }} à {{ end }} sur {{ total }} entrées
+    </small>
+    <nav>
+      <ul class="pagination pagination-sm pagination-pills mb-0">
+        <li class="page-item" [class.disabled]="page === 1">
+          <button class="page-link" (click)="go(page - 1)">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </li>
+
+        <li
+          class="page-item"
+          *ngFor="let p of pages"
+          [class.active]="p === page"
+        >
+          <button class="page-link" (click)="go(p)">{{ p }}</button>
+        </li>
+
+        <li class="page-item" [class.disabled]="page === totalPage">
+          <button class="page-link" (click)="go(page + 1)">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>

@@ -161,6 +161,11 @@ export class CreateAnnouncementDto {
   fieldValues: FieldValueDto[];
 }
 
+export class likeAnnouncementDTO {
+  @IsNumber({}, { message: "announcementId must be number" })
+  announcementId: number;
+}
+
 // ============================================================================
 // UPDATE ANNOUNCEMENT DTO
 // ============================================================================

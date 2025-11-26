@@ -58,13 +58,6 @@ export class AdminController {
 
   // CATALOGUES
 
-  async createCategory(req: Request, res: Response) {
-    return await this.catalogueController.createCategory(req, res);
-  }
-  async updateCategory(req: Request, res: Response) {
-    return await this.catalogueController.updateCategory(req, res);
-  }
-
   async removeCategory(req: Request, res: Response) {
     return await this.catalogueController.removeCategory(req, res);
   }
@@ -149,6 +142,20 @@ export class AdminController {
 
   async detachField(req: Request, res: Response) {
     return await this.categoryController.removeFieldFromCategory(req, res);
+  }
+
+  // Categories
+
+  async createCategory(req: Request, res: Response) {
+    return await this.categoryController.createCategory(req, res);
+  }
+
+  async updateCategory(req: Request, res: Response) {
+    return await this.categoryController.updateCategory(req, res);
+  }
+
+  async desableCategory(req: Request, res: Response) {
+    return await this.categoryController.desableCategory(req, res);
   }
 
   // Banner Slides

@@ -3,7 +3,7 @@
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb bg-light rounded p-2">
       <li class="breadcrumb-item"><a href="/">Accueil</a></li>
-      <li class="breadcrumb-item"><a href="/">Annonces</a></li>
+      <li class="breadcrumb-item">Annonces</li>
       <li class="breadcrumb-item active" aria-current="page">
         {{ categoryName || (slug | titlecase) }}
       </li>
@@ -11,10 +11,12 @@
   </nav>
 
   <!-- En-tête -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div
+    class="d-flex justify-content-between align-items-center mb-4 text-primary"
+  >
     <h1 class="h3 mb-0">
       <i class="fas fa-music me-2"></i>
-      {{ getTheme(slug) }}
+      {{ categoryName | titlecase }}
     </h1>
   </div>
 
@@ -32,7 +34,7 @@
             Localisation
           </label>
           <select class="form-select" formControlName="location">
-            <option value="">Tous les pays</option>
+            <option value="">-- Selectionnez un pays --</option>
             <option *ngFor="let c of countries" [ngValue]="c.code">
               {{ c.name }}
             </option>
@@ -64,7 +66,7 @@
         *ngIf="showAdvancedSearch && searchFields.length > 0"
         class="advanced-search-panel border-top pt-3"
       >
-        <h6 class="mb-3">
+        <h6 class="mb-3 text-dark">
           <i class="fas fa-filter me-2"></i>
           Filtres avancés
         </h6>
@@ -316,7 +318,7 @@
         <div class="d-flex justify-content-end gap-2 mt-3">
           <button
             type="button"
-            class="btn btn-outline-secondary"
+            class="btn btn-outline-primary"
             (click)="resetFilters()"
           >
             <i class="fas fa-redo me-2"></i>

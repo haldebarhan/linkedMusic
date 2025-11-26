@@ -15,6 +15,6 @@ export const getAllowedOrigins = () => {
     origins.push(ENV.ADMIN_URL);
   }
 
-  origins.push("https://hepatitis-trips-prevention-bufing.trycloudflare.com");
+  origins.push("https://scoop-clause-including-first.trycloudflare.com");
   return origins;
 };

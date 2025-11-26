@@ -17,6 +17,7 @@ import {
   UpdateFieldDto,
   UpdateFieldOptionDto,
 } from "./category.dto";
+import { Order } from "@/utils/enums/order.enum";
 
 @injectable()
 export class CategoryService {
@@ -27,8 +28,31 @@ export class CategoryService {
     private readonly categoryFieldRepository: CategoryFieldRepository
   ) {}
 
-  async getAllCategories() {
-    return this.categoryRepository.findAllActive();
+  async getAllCategories(params: {
+    limit: number;
+    page: number;
+    order: Order;
+    where?: any;
+  }) {
+    const { limit, page, order, where } = params;
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.categoryRepository.findAll({
+        where,
+        orderBy: { createdAt: order },
+        take: limit,
+        skip,
+      }),
+      this.categoryRepository.count(where),
+    ]);
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        totalPage: Math.ceil(total / limit),
+      },
+    };
   }
 
   async getCategoryBySlug(slug: string) {
@@ -76,6 +100,14 @@ export class CategoryService {
     }
 
     return this.categoryRepository.delete(id);
+  }
+
+  async desableCategory(id: number) {
+    const category = await this.categoryRepository.findById(id);
+    if (!category) {
+      throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
+    }
+    return this.categoryRepository.update(id, { active: false });
   }
 
   async createField(dto: CreateFieldDto) {

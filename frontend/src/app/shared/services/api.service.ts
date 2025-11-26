@@ -82,9 +82,12 @@ export class ApiService<T> {
       .pipe(catchError(this.handleError));
   }
 
-  delete(endpoint: string, id: number | string): Observable<ApiResponse<T>> {
+  delete(endpoint: string, id?: number | string): Observable<ApiResponse<T>> {
+    const fullEndpoint = id
+      ? `${this.API_URL}/${endpoint}/${id}`
+      : `${this.API_URL}/${endpoint}`;
     return this.http
-      .delete<ApiResponse<T>>(`${this.API_URL}/${endpoint}/${id}`)
+      .delete<ApiResponse<T>>(fullEndpoint)
       .pipe(catchError(this.handleError));
   }
 

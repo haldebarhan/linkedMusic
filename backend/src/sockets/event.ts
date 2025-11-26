@@ -9,5 +9,14 @@ export const EVENTS = {
   MESSAGE_MARK_READ: "message:markRead", // (client -> server) { threadId }
   NOTIF_UNREAD: "notif:unread", // (server -> client) { total }
   ERROR: "error", // (server -> client) { message }
+
+  NOTIFICATION_NEW: "notification:new",
+  NOTIFICATION_LIST: "notification:list",
+  NOTIFICATION_DATA: "notification:data",
+  NOTIFICATION_MARK_READ: "notification:markRead",
+  NOTIFICATION_LOAD: "notification:load",
+  NOTIFICATION_SELECT: "notification:select",
+  NOTIFICATION_SELECT_DATA: "notification:select-data",
+  NOTIFICATION_UNREAD: "notification:unread",
 } as const;
 export type EventKey = (typeof EVENTS)[keyof typeof EVENTS];
