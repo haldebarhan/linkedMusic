@@ -5,6 +5,8 @@ import { CreateContactRequestDTO } from "./contact-request.dto";
 import createError from "http-errors";
 import {
   ContactRequestStatus,
+  NotificationType,
+  Prisma,
   PrismaClient,
   SubscriptionStatus,
 } from "@prisma/client";
@@ -14,6 +16,12 @@ import { ENV } from "@/config/env";
 import { BrevoMailService } from "@/utils/services/brevo-mail.service";
 import { MatchingService } from "../matching/matching.service";
 import { UserRepository } from "../users/user.repository";
+import { NotificationRepository } from "../notifications/notification.repository";
+import { getIo } from "@/sockets/io-singleton";
+import { userRoom } from "@/sockets/room";
+import { EVENTS } from "@/sockets/event";
+import logger from "@/config/logger";
+import { countUnread } from "@/sockets/handlers/notification.handler";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: MinioService = MinioService.getInstance();
@@ -24,7 +32,9 @@ export class ContactRequestService {
     private readonly contactRepository: ContactRequestRepository,
     private readonly announcementRepository: AnnouncementRepository,
     private readonly mailService: BrevoMailService,
-    private readonly matchingService: MatchingService
+    private readonly matchingService: MatchingService,
+    private readonly notificationRepository: NotificationRepository,
+    private readonly userRepository: UserRepository
   ) {}
 
   async create(userId: number, dto: CreateContactRequestDTO) {
@@ -64,19 +74,26 @@ export class ContactRequestService {
       this.matchingService.hasActiveSubscription(annoncement.ownerId),
       prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     ]);
-
-    await this.mailService.sendContactRequestReceivedMail({
-      to: annoncement.user.email!,
-      ownerName: annoncement.user.displayName!,
-      requesterName: userHasSubscription
-        ? requester.displayName!
-        : "Un utilisateur de Zikmusic",
-      announcementTitle: annoncement.title,
-      announcementId: annoncement.id,
-      message: userHasSubscription
-        ? dto.message || ""
-        : "Contenu réservé aux abonnés. Abonnez-vous pour voir le message complet.",
-    });
+    const requesterName = userHasSubscription
+      ? requester.displayName!
+      : "Un utilisateur de Zikmusic";
+    await Promise.all([
+      this.mailService.sendContactRequestReceivedMail({
+        to: annoncement.user.email!,
+        ownerName: annoncement.user.displayName!,
+        requesterName: requesterName,
+        announcementTitle: annoncement.title,
+        announcementId: annoncement.id,
+        message: userHasSubscription
+          ? dto.message || ""
+          : "Contenu réservé aux abonnés. Abonnez-vous pour voir le message complet.",
+      }),
+      this.notifyCreatedRequest(
+        annoncement.ownerId,
+        requesterName,
+        annoncement
+      ),
+    ]);
     return create;
   }
 
@@ -145,18 +162,35 @@ export class ContactRequestService {
         },
       });
 
+      const notification = await this.notifyRequestAccepted(
+        request.requesterId,
+        request.announcement.title,
+        request.announcementId
+      );
+
+      try {
+        const io = getIo();
+        io.to(userRoom(request.requesterId)).emit(EVENTS.NOTIFICATION_NEW, {
+          notification,
+          type: NotificationType.CONTACT_REQUEST_ACCEPTED,
+        });
+        io.to(userRoom(request.requesterId)).emit(EVENTS.NOTIFICATION_UNREAD, {
+          total: await countUnread(request.requesterId),
+        });
+      } catch (error) {
+        logger.log("Erreur lors de l'émission Socket.IO:", error);
+      }
+
       const existingConversation = await tx.conversation.findFirst({
         where: {
           OR: [
             {
               senderId: userId,
               receiverId: request.requesterId,
-              announcementId: request.announcementId,
             },
             {
               senderId: request.requesterId,
               receiverId: userId,
-              announcementId: request.announcementId,
             },
           ],
         },
@@ -228,7 +262,6 @@ export class ContactRequestService {
    * Rejeter une demande de mise en relation
    */
   async rejectRequest(userId: number, requestId: number) {
-    // Récupérer la demande
     const request = await prisma.contactRequest.findUnique({
       where: { id: requestId },
       include: {
@@ -240,7 +273,6 @@ export class ContactRequestService {
       throw createError(404, "Demande non trouvée");
     }
 
-    // Vérifier que l'utilisateur est le propriétaire de l'annonce
     if (request.announcement.ownerId !== userId) {
       throw createError(
         403,
@@ -248,12 +280,10 @@ export class ContactRequestService {
       );
     }
 
-    // Vérifier que la demande est en attente
     if (request.status !== ContactRequestStatus.PENDING) {
       throw createError(400, "Cette demande a déjà été traitée");
     }
 
-    // Vérifier que l'utilisateur a un abonnement actif
     const hasActiveSubscription = await this.checkActiveSubscription(userId);
     if (!hasActiveSubscription) {
       throw createError(
@@ -262,7 +292,6 @@ export class ContactRequestService {
       );
     }
 
-    // Mettre à jour la demande
     const updatedRequest = await prisma.contactRequest.update({
       where: { id: requestId },
       data: {
@@ -281,8 +310,25 @@ export class ContactRequestService {
       },
     });
 
-    // TODO: Envoyer une notification au demandeur
-    // await this.notificationService.sendRequestRejectedNotification(updatedRequest);
+    const notification = await this.notifyRequestRejected(
+      request.requesterId,
+      request.announcement.title,
+      request.announcementId
+    );
+
+    try {
+      const io = getIo();
+      io.to(userRoom(request.requesterId)).emit(EVENTS.NOTIFICATION_NEW, {
+        notification,
+        type: NotificationType.CONTACT_REQUEST_REJECTED,
+      });
+
+      io.to(userRoom(request.requesterId)).emit(EVENTS.NOTIFICATION_UNREAD, {
+        total: await countUnread(request.requesterId),
+      });
+    } catch (error) {
+      logger.log("Erreur lors de l'émission Socket.IO:", error);
+    }
 
     return updatedRequest;
   }
@@ -291,7 +337,6 @@ export class ContactRequestService {
    * Annuler sa propre demande
    */
   async cancelRequest(userId: number, requestId: number) {
-    // Récupérer la demande
     const request = await prisma.contactRequest.findUnique({
       where: { id: requestId },
     });
@@ -300,7 +345,6 @@ export class ContactRequestService {
       throw createError(404, "Demande non trouvée");
     }
 
-    // Vérifier que l'utilisateur est le demandeur
     if (request.requesterId !== userId) {
       throw createError(
         403,
@@ -308,7 +352,6 @@ export class ContactRequestService {
       );
     }
 
-    // Vérifier que la demande est en attente
     if (request.status !== ContactRequestStatus.PENDING) {
       throw createError(
         400,
@@ -316,14 +359,67 @@ export class ContactRequestService {
       );
     }
 
-    // Mettre à jour la demande
-    const updatedRequest = await prisma.contactRequest.update({
+    const updatedRequest = await prisma.contactRequest.delete({
       where: { id: requestId },
-      data: {
-        status: ContactRequestStatus.CANCELED,
-      },
     });
 
     return updatedRequest;
+  }
+
+  private async notifyCreatedRequest(
+    ownerId: number,
+    requesterName: string,
+    annoncement: any
+  ) {
+    const notification = await this.notificationRepository.notify({
+      userId: ownerId,
+      type: NotificationType.CONTACT_REQUEST_RECEIVED,
+      title: "Nouvelle demande de mise en relation",
+      message: `${requesterName} a demandé une mise en relation pour votre annonce "${annoncement.title}".`,
+      actionUrl: `${ENV.FRONTEND_URL}/profile/announcements/${annoncement.id}`,
+    });
+
+    try {
+      const io = getIo();
+      io.to(userRoom(ownerId)).emit(EVENTS.NOTIFICATION_NEW, {
+        notification,
+        type: NotificationType.CONTACT_REQUEST_RECEIVED,
+      });
+      io.to(userRoom(ownerId)).emit(EVENTS.NOTIFICATION_UNREAD, {
+        total: await countUnread(ownerId),
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'émission Socket.IO:", error);
+    }
+
+    return notification;
+  }
+
+  private async notifyRequestAccepted(
+    requesterId: number,
+    announcementTitle: string,
+    announcementId: number
+  ) {
+    return await this.notificationRepository.notify({
+      userId: requesterId,
+      type: NotificationType.CONTACT_REQUEST_ACCEPTED,
+      title: "Mise en relation acceptée",
+      message: `Votre demande de mise en relation pour l'annonce: "${announcementTitle} a été acceptée".`,
+      actionUrl: `${ENV.FRONTEND_URL}/announcemnts/details/${announcementId}`,
+    });
+  }
+
+  private async notifyRequestRejected(
+    requesterId: number,
+    announcementTitle: string,
+    announcementId: number
+  ) {
+    return await this.notificationRepository.notify({
+      userId: requesterId,
+      title: "Mise en relation rejetée",
+      type: NotificationType.CONTACT_REQUEST_REJECTED,
+      message: `Votre demande de mise en relation pour l'annonce: "${announcementTitle} a été rejetée".`,
+      actionUrl: `${ENV.FRONTEND_URL}/announcemnts/details/${announcementId}`,
+    });
   }
 }

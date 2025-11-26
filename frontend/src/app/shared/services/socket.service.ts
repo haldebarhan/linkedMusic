@@ -14,8 +14,12 @@ export type SocketUnread = { total: number };
 export class SocketService {
   private socket?: Socket;
   private unread$ = new BehaviorSubject<number>(0);
+  private unreadNotifications$ = new BehaviorSubject<number>(0);
   private currentToken: string | null = null;
   private authSub?: Subscription;
+
+  private notifications$ = new BehaviorSubject<any[]>([]);
+  private newNotification$ = new BehaviorSubject<any | null>(null);
 
   constructor(private auth: AuthService) {
     this.initializeAuthListener();
@@ -27,7 +31,6 @@ export class SocketService {
   private initializeAuthListener(): void {
     this.authSub = this.auth.auth$
       .pipe(
-        // Optimisation: ne réagir que si le token ou l'état d'auth change réellement
         distinctUntilChanged(
           (prev, curr) =>
             prev.accessToken === curr.accessToken &&
@@ -39,30 +42,21 @@ export class SocketService {
           ? state.accessToken ?? null
           : null;
 
-        // console.log('[Socket] Auth state changed:', {
-        //   isAuthenticated: state.isAuthenticated,
-        //   hasToken: !!nextToken,
-        //   tokenChanged: this.currentToken !== nextToken,
-        // });
-
-        // Si pas de token, déconnecter le socket
         if (!nextToken) {
           this.currentToken = null;
           this.teardown();
           this.unread$.next(0);
+          this.unreadNotifications$.next(0);
           return;
         }
 
-        // Si pas de socket existant, créer et connecter
         if (!this.socket) {
           this.currentToken = nextToken;
           this.createAndConnect(nextToken);
           return;
         }
 
-        // Si le token a changé, mettre à jour l'authentification du socket
         if (this.currentToken !== nextToken) {
-          //   console.log('[Socket] Token changed, updating socket auth...');
           this.currentToken = nextToken;
           this.updateSocketAuth(nextToken);
         }
@@ -73,8 +67,6 @@ export class SocketService {
    * Crée et connecte le socket avec le token
    */
   private createAndConnect(token: string): void {
-    console.log('[Socket] Creating new socket connection');
-
     this.socket = io(environment.socketUrl, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
@@ -87,9 +79,7 @@ export class SocketService {
       autoConnect: true,
     });
 
-    // À chaque tentative de reconnexion, utiliser le token le plus récent
     this.socket.io.on('reconnect_attempt', (attemptNumber) => {
-      //   console.log(`[Socket] Reconnect attempt #${attemptNumber}`);
       if (this.currentToken) {
         this.socket!.auth = { token: this.currentToken };
       }
@@ -104,24 +94,16 @@ export class SocketService {
   private updateSocketAuth(newToken: string): void {
     if (!this.socket) return;
 
-    // Mettre à jour l'auth
     this.socket.auth = { token: newToken };
 
-    // Si le socket est connecté, le forcer à se reconnecter avec le nouveau token
     if (this.socket.connected) {
-      //   console.log('[Socket] Disconnecting to reconnect with new token');
       this.socket.disconnect();
-
-      // Petit délai avant de reconnecter pour éviter les race conditions
       setTimeout(() => {
         if (this.socket) {
-          //   console.log('[Socket] Reconnecting with new token');
           this.socket.connect();
         }
       }, 100);
     } else {
-      // Si déjà déconnecté, juste connecter
-      //   console.log('[Socket] Connecting with new token');
       this.socket.connect();
     }
   }
@@ -133,25 +115,46 @@ export class SocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      //   console.log('[Socket] Connected successfully, ID:', this.socket?.id);
+      this.loadNotifications();
     });
 
-    this.socket.on('connect_error', (error: any) => {
-      //   console.error('[Socket] Connection error:', error.message);
-    });
+    this.socket.on('connect_error', (error: any) => {});
 
     this.socket.on('notif:unread', (payload: SocketUnread) => {
       const count = payload?.total ?? 0;
-      //   console.log('[Socket] Unread notifications:', count);
       this.unread$.next(count);
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('[Socket] Disconnected, reason:', reason);
+    this.socket.on('notification:unread', (payload) => {
+      const count = payload?.total ?? 0;
+      this.unreadNotifications$.next(count);
+    });
 
-      // Si la déconnexion est volontaire, ne pas essayer de reconnecter
+    this.socket.on('notification:data', (payload) => {
+      let notifications: any[] = [];
+      if (Array.isArray(payload)) {
+        notifications = payload;
+      } else if (payload.data && Array.isArray(payload.data)) {
+        notifications = payload.data;
+      } else if (payload.notifications) {
+        notifications = payload.notifications;
+      }
+
+      this.notifications$.next(notifications);
+    });
+
+    this.socket.on('notification:new', (payload) => {
+      let notification = payload.notification.notification;
+      this.newNotification$.next(notification);
+
+      const current = this.notifications$.value;
+      this.notifications$.next([notification, ...current]);
+
+      this.playNotificationSound();
+    });
+
+    this.socket.on('disconnect', (reason) => {
       if (reason === 'io client disconnect') {
-        // console.log('[Socket] Client-side disconnect, not reconnecting');
       }
     });
 
@@ -203,6 +206,10 @@ export class SocketService {
     return this.unread$.asObservable();
   }
 
+  unreadNotificationsCount$(): Observable<number> {
+    return this.unreadNotifications$.asObservable();
+  }
+
   /**
    * Vérifie si le socket est connecté
    */
@@ -219,5 +226,59 @@ export class SocketService {
       this.authSub = undefined;
     }
     this.teardown();
+  }
+
+  /**
+   * 🔥 AJOUT : Observable de la liste des notifications
+   */
+  notificationsList$(): Observable<any[]> {
+    return this.notifications$.asObservable();
+  }
+
+  /**
+   * 🔥 AJOUT : Observable des nouvelles notifications
+   */
+  incomingNotification$(): Observable<any | null> {
+    return this.newNotification$.asObservable();
+  }
+
+  /**
+   * 🔥 AJOUT : Demander le chargement des notifications
+   */
+  loadNotifications(): void {
+    if (this.socket?.connected) {
+      this.emit('notification:list');
+    } else {
+      console.warn('[Socket] Cannot load notifications, socket not connected');
+    }
+  }
+
+  /**
+   * 🔥 AJOUT : Marquer une notification comme lue
+   */
+  markNotificationAsRead(notificationId: number): void {
+    this.emit('notification:markRead', { notificationId });
+  }
+
+  /**
+   * 🔥 AJOUT : Marquer toutes les notifications comme lues
+   */
+  markAllNotificationsAsRead(): void {
+    this.emit('notification:markAllRead');
+  }
+
+  /**
+   * Joue un son de notification (optionnel)
+   */
+  private playNotificationSound(): void {
+    try {
+      const audio = new Audio('assets/audios/toast.ogg');
+      audio.volume = 0.3;
+      audio.play().catch((err) => {
+        // Son désactivé ou pas disponible
+      });
+    } catch (error) {
+      // Son désactivé ou pas disponible
+    }
   }
 }

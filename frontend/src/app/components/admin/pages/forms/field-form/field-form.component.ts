@@ -11,8 +11,8 @@ import { AdminApi } from '../../../data/admin-api.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FieldInputType } from '../../../../../shared/types/field-input-type';
-import Swal from 'sweetalert2';
 import { Toast } from '../../../../../helpers/sweet-alert';
+import { setupKeyGeneration } from '../../../../../helpers/setup-key-generation';
 
 @Component({
   selector: 'app-field-form',
@@ -49,7 +49,7 @@ export class FieldFormComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
-      key: ['', [Validators.required, Validators.pattern(/^[a-z0-9_-]+$/)]],
+      key: [{ value: '', disabled: true }, [Validators.required]],
       label: ['', [Validators.required, Validators.minLength(2)]],
       inputType: <FormControl<FieldInputType>>(
         new FormControl('TEXT', { nonNullable: true })
@@ -61,6 +61,7 @@ export class FieldFormComponent implements OnInit {
       sortable: [true],
       options: this.fb.array([] as FormGroup[]),
     });
+    setupKeyGeneration(this.form, 'label', 'key');
   }
 
   ngOnInit(): void {

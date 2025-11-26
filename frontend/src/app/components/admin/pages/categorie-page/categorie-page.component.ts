@@ -3,6 +3,7 @@ import { AdminApi } from '../../data/admin-api.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SweetAlert } from '../../../../helpers/sweet-alert';
+import { ApiService } from '../../../../shared/services/api.service';
 
 @Component({
   selector: 'app-categorie-page',
@@ -17,7 +18,11 @@ export class CategoriePageComponent implements OnInit {
   total = 0;
   totalPage = 1;
   pages: number[] = [];
-  constructor(private api: AdminApi, private router: Router) {}
+  constructor(
+    private api: AdminApi,
+    private router: Router,
+    publicApi: ApiService<any>
+  ) {}
 
   ngOnInit(): void {
     this.listCategories(this.page);
@@ -36,6 +41,9 @@ export class CategoriePageComponent implements OnInit {
     });
   }
 
+  goToEdit(catgory: any) {
+    this.router.navigate(['/admin/categories/edit', catgory.id]);
+  }
   removeCategory(categorie: any) {
     SweetAlert.fire({
       title: 'Etes-vous sure ?',
@@ -49,18 +57,20 @@ export class CategoriePageComponent implements OnInit {
       reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.api.removeResource('categories', categorie.id).subscribe({
-          next: () => {
-            SweetAlert.fire({
-              title: 'Supprimé!',
-              text: `${categorie.name} a bien ete supprimé`,
-              icon: 'success',
-              didClose: () => {
-                this.listCategories(this.page);
-              },
-            });
-          },
-        });
+        this.api
+          .updateResource('categories/desable', categorie.id, {})
+          .subscribe({
+            next: () => {
+              SweetAlert.fire({
+                title: 'Supprimé!',
+                text: `${categorie.name} a bien ete supprimé`,
+                icon: 'success',
+                didClose: () => {
+                  this.listCategories(this.page);
+                },
+              });
+            },
+          });
       }
     });
   }

@@ -1,3 +1,4 @@
+import { Order } from "@/utils/enums/order.enum";
 import DatabaseService from "@/utils/services/database.service";
 import {
   NotificationPreference,
@@ -100,8 +101,8 @@ export class NotificationRepository {
    */
   async getUserNotifications(userId: number, limit = 20) {
     return prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+      where: { userId, isRead: false },
+      orderBy: { createdAt: Order.DESC },
       take: limit,
     });
   }
@@ -112,6 +113,19 @@ export class NotificationRepository {
   async getUnreadCount(userId: number): Promise<number> {
     return prisma.notification.count({
       where: { userId, isRead: false },
+    });
+  }
+
+  /**
+   *
+   * Récupérer une notification spécifique
+   * @param notificationId
+   * @param userId
+   * @returns Promise<Notification | null>
+   */
+  async getOne(notificationId: number, userId: number) {
+    return prisma.notification.findUnique({
+      where: { id: notificationId, userId },
     });
   }
 }

@@ -36,15 +36,21 @@
         <div class="d-flex justify-content-end gap-3">
           <a
             routerLink="profile/announcements"
-            class="text-decoration-none text-dark"
+            class="bg-primary-subtle text-primary text-decoration-none px-2 py-2 rounded d-flex align-items-center"
           >
             <i class="fas fa-list me-1"></i> Mes annonces
           </a>
-          <a href="#" class="text-decoration-none text-dark">
-            <i class="fas fa-heart me-1"></i> Mémorisées
+          <a
+            routerLink="profile/likees"
+            class="btn btn-outline-primary text-decoration-none px-2 py-2 rounded d-flex align-items-center"
+          >
+            <i class="fas fa-heart me-1"></i> Favorites
           </a>
-          <a href="#" class="text-decoration-none text-dark">
-            <i class="fas fa-search me-1"></i> Mes recherches
+          <a
+            routerLink="profile/memorises"
+            class="btn btn-outline-primary text-decoration-none px-2 py-2 rounded d-flex align-items-center"
+          >
+            <i class="fa-solid fa-clock-rotate-left me-1"></i>Mon historique
           </a>
           <button class="btn btn-success btn-sm" (click)="createAnnouncement()">
             <i class="fas fa-plus me-1"></i> Passer une annonce
@@ -62,15 +68,24 @@
       <!-- Navigation mobile (mes annonces, mémorisées, mes recherches) -->
       <div class="col-12 mt-3 d-lg-none">
         <div class="d-flex justify-content-around">
-          <a href="#" class="text-decoration-none text-dark text-center">
+          <a
+            routerLink="profile/announcements"
+            class="text-decoration-none text-dark text-center"
+          >
             <i class="fas fa-list d-block mb-1"></i>
             <small>Mes annonces</small>
           </a>
-          <a href="#" class="text-decoration-none text-dark text-center">
+          <a
+            routerLink="profile/likees"
+            class="text-decoration-none text-dark text-center"
+          >
             <i class="fas fa-heart d-block mb-1"></i>
-            <small>Mémorisées</small>
+            <small>Favorites</small>
           </a>
-          <a href="#" class="text-decoration-none text-dark text-center">
+          <a
+            routerLink="profile/memorises"
+            class="text-decoration-none text-dark text-center"
+          >
             <i class="fas fa-search d-block mb-1"></i>
             <small>Mes recherches</small>
           </a>

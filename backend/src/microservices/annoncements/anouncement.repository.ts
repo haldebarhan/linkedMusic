@@ -103,69 +103,106 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
 
     // Filtres dynamiques par champs
     if (filters.fieldFilters) {
-      where.fieldValues = {
-        some: this.buildFieldFilters(filters.fieldFilters),
-      };
+      const fieldConditions = this.buildFieldFilters(filters.fieldFilters);
+      if (fieldConditions.length > 0) {
+        // Combine avec les autres conditions
+        if (Array.isArray(where.AND)) {
+          // Si AND est déjà un tableau, concatène
+          where.AND = [...where.AND, ...fieldConditions];
+        } else if (where.AND) {
+          // Si AND est un objet unique, transforme-le en tableau puis concatène
+          where.AND = [
+            where.AND as Prisma.AnnouncementWhereInput,
+            ...fieldConditions,
+          ];
+        } else {
+          // Sinon, crée AND avec les conditions de champs
+          where.AND = fieldConditions;
+        }
+      }
     }
+    const orderBy: Prisma.AnnouncementOrderByWithRelationInput[] = [
+      { isHighlighted: Order.DESC },
+      {
+        [pagination.sortBy || "createdAt"]: pagination.sortOrder || Order.DESC,
+      },
+    ];
 
     return this.findWithPagination(
       pagination,
       where,
-      this.defaultInclude
+      this.defaultInclude,
+      orderBy
     ) as Promise<PaginatedResponse<AnnouncementWithDetails>>;
   }
 
   private buildFieldFilters(
     fieldFilters: Record<string, any>
-  ): Prisma.AnnFieldValueWhereInput {
-    const filters: Prisma.AnnFieldValueWhereInput[] = [];
+  ): Prisma.AnnouncementWhereInput[] {
+    const conditions: Prisma.AnnouncementWhereInput[] = [];
 
     for (const [fieldKey, value] of Object.entries(fieldFilters)) {
       if (value === undefined || value === null) continue;
 
-      const filter: Prisma.AnnFieldValueWhereInput = {
+      const fieldCondition: Prisma.AnnFieldValueWhereInput = {
         field: { key: fieldKey },
       };
 
       // Type boolean
       if (typeof value === "boolean") {
-        filter.valueBoolean = value;
+        fieldCondition.valueBoolean = value;
       }
       // Type number ou range
       else if (typeof value === "number") {
-        filter.valueNumber = value;
+        fieldCondition.valueNumber = value;
       } else if (
         typeof value === "object" &&
+        !Array.isArray(value) &&
         (value.min !== undefined || value.max !== undefined)
       ) {
-        filter.valueNumber = {};
-        if (value.min !== undefined) filter.valueNumber.gte = value.min;
-        if (value.max !== undefined) filter.valueNumber.lte = value.max;
+        fieldCondition.valueNumber = {};
+        if (value.min !== undefined) fieldCondition.valueNumber.gte = value.min;
+        if (value.max !== undefined) fieldCondition.valueNumber.lte = value.max;
       }
-      // Type string
-      else if (typeof value === "string") {
-        filter.valueText = {
-          contains: value,
-          mode: "insensitive",
-        };
-      }
-      // Type array (pour MULTISELECT)
-      else if (Array.isArray(value)) {
-        filter.options = {
+      // Type array (MULTISELECT)
+      else if (Array.isArray(value) && value.length > 0) {
+        fieldCondition.options = {
           some: {
             option: {
-              value: {
-                in: value,
-              },
+              value: { in: value },
             },
           },
         };
       }
+      // Type string (RADIO ou TEXT)
+      else if (typeof value === "string" && value.trim() !== "") {
+        fieldCondition.OR = [
+          {
+            options: {
+              some: {
+                option: {
+                  value: value,
+                },
+              },
+            },
+          },
+          {
+            valueText: {
+              contains: value,
+              mode: "insensitive",
+            },
+          },
+        ];
+      }
 
-      filters.push(filter);
+      conditions.push({
+        fieldValues: {
+          some: fieldCondition,
+        },
+      });
     }
 
-    return filters.length > 0 ? { AND: filters } : {};
+    return conditions;
   }
 
   private readonly defaultInclude = {
@@ -192,6 +229,7 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
         },
       },
     },
+    _count: { select: { contactRequests: true, Favorites: true } },
   };
 
   async createWithFieldValues(
@@ -425,6 +463,77 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
         ownerId: userId,
         status: AnnouncementStatus.PUBLISHED,
         isPublished: true,
+      },
+    });
+  }
+
+  async myLikedAnnouncement(userId: number, pagination: PaginationParams) {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const skip = (page - 1) * limit;
+    const favorites = await prisma.favorite.findMany({
+      where: {
+        userId,
+        announcement: {
+          isPublished: true,
+          status: AnnouncementStatus.PUBLISHED,
+        },
+      },
+      skip,
+      take: limit,
+      select: {
+        announcement: {
+          select: { id: true, title: true, location: true, status: true },
+        },
+        createdAt: true,
+      },
+      orderBy: [
+        { announcement: { isHighlighted: Order.DESC } },
+        { createdAt: Order.DESC },
+      ],
+    });
+
+    const announcements = favorites.map((f) => {
+      return {
+        likeAt: f.createdAt,
+        ...f.announcement,
+      };
+    });
+    return announcements;
+  }
+
+  async likeAnnouncement(userId: number, announcementId: number) {
+    return await prisma.favorite.create({
+      data: {
+        userId,
+        announcementId,
+      },
+    });
+  }
+
+  async unlikeAnnouncement(id: number) {
+    return await prisma.favorite.delete({
+      where: { id },
+    });
+  }
+
+  async getOneFavorite(userId: number, announcementId: number) {
+    return await prisma.favorite.findFirst({
+      where: { userId, announcementId },
+    });
+  }
+
+  async likeStatus(userId: number, announcementId: number) {
+    return prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: {
+        _count: {
+          select: { Favorites: true },
+        },
+        Favorites: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
   }

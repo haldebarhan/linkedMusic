@@ -290,7 +290,7 @@
 
 /* ===== Contenu Principal ===== */
 .main-title {
-  font-size: 2.5rem;
+  font-size: 2.1rem;
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 0.5rem;
@@ -321,7 +321,7 @@
 .card-custom {
   background: white;
   border-radius: 16px;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1rem;
   min-width: 160px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;

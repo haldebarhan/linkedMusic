@@ -33,7 +33,7 @@ export class SearchbarComponent implements OnInit {
   ngOnInit(): void {
     this.api.getAll({ endpoint: 'categories' }).subscribe({
       next: (response: any) => {
-        this.categories = response.data;
+        this.categories = response.items.data;
         this.form.patchValue({
           category:
             this.categories.find((c) => c.slug === 'musiciens').slug ??

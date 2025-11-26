@@ -1,0 +1,303 @@
+.active {
+  background-color: #cfe2ff;
+  border-radius: 10%;
+  padding: auto;
+}
+
+/* Navbar compacte */
+.navbar {
+  position: relative;
+}
+
+/* Logo agrandi */
+.brand-logo {
+  width: 85px;
+  height: 85px;
+  object-fit: contain;
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  padding: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.brand-logo:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* Ajuste l'alignement du brand */
+.navbar-brand {
+  padding: 0;
+  margin-right: 1rem;
+}
+
+/* Photo de profil avec badge de notification */
+.profile-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.profile-img:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+/* Badge de notification sur la photo de profil */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4);
+  border: 2px solid white;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.notification-badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 65, 108, 0.6);
+}
+
+/* Animation pulse pour attirer l'attention */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4);
+  }
+  50% {
+    box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4),
+      0 0 0 6px rgba(255, 65, 108, 0.2);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4);
+  }
+}
+
+.notification-badge.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Badges dans le dropdown menu */
+.dropdown-menu .badge {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+}
+
+/* Style amélioré pour le dropdown */
+.dropdown-menu {
+  min-width: 280px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 0.5rem;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateX(4px);
+  padding-left: 1.5rem;
+}
+
+.dropdown-item:hover i {
+  transform: scale(1.1);
+}
+
+.dropdown-item i {
+  width: 20px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-header {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.85rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Badge specifique pour les items du menu */
+.dropdown-item .badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+
+/* Style pour le bouton dropdown */
+.dropdown button:focus {
+  box-shadow: none;
+}
+
+/* Amélioration du lien dans le dropdown */
+.dropdown-item:active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Effet hover sur le bouton de profil */
+.btn-link:hover {
+  opacity: 0.9;
+}
+
+/* Badge avec effet glow pour les comptes élevés */
+.notification-badge {
+  position: relative;
+}
+
+/* Pour les grands nombres (99+) */
+.notification-badge:has(text) {
+  min-width: 24px;
+  padding: 0 6px;
+  font-size: 0.6rem;
+}
+
+/* Style alternatif pour le badge dans le menu mobile */
+@media (max-width: 991px) {
+  .notification-badge {
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+  }
+
+  .profile-img {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+/* Responsive : logo plus petit sur mobile */
+@media (max-width: 768px) {
+  .brand-logo {
+    width: 60px;
+    height: 60px;
+    top: 0;
+  }
+
+  .navbar-nav {
+    padding-top: 1rem;
+  }
+
+  .dropdown-menu {
+    min-width: 260px;
+  }
+}
+
+/* Animation pour le chargement initial */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-badge {
+  animation: slideInRight 0.4s ease;
+}
+
+/* Effet de brillance sur le badge */
+@keyframes shine {
+  0% {
+    background-position: -100%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+.notification-badge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.notification-badge:hover::before {
+  left: 100%;
+}
+
+/* Style amélioré pour les badges dans le dropdown */
+.dropdown-item .bg-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.dropdown-item .bg-danger {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%) !important;
+}
+
+/* Effet pulse plus subtil pour desktop */
+@media (min-width: 992px) {
+  .notification-badge.pulse {
+    animation: pulse 3s ease-in-out infinite;
+  }
+}
+
+/* Amélioration de l'accessibilité */
+.notification-badge:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Style pour les nombres élevés */
+.notification-badge:not(:empty) {
+  letter-spacing: -0.5px;
+}

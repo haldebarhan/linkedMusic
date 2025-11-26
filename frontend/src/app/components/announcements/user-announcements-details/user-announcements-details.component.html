@@ -172,9 +172,8 @@
               *ngIf="contactRequests.length > 0"
             >
               <i class="fas fa-inbox"></i>
-              {{ pendingRequestsCount }} demande{{
-                pendingRequestsCount === 1 ? "" : "s"
-              }}
+              {{ pendingRequestsCount > 0 ? pendingRequestsCount : "Aucune" }}
+              demande{{ pendingRequestsCount > 1 ? "s" : "" }}
               en attente
               <i
                 class="fas"

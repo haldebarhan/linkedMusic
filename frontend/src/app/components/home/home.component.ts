@@ -32,7 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadCategories(): void {
     this.api.getAll({ endpoint: 'categories' }).subscribe({
       next: (res: any) => {
-        this.categories = res.data;
+        this.categories = res.items.data;
       },
       error: (err) => console.error(err),
     });

@@ -157,6 +157,26 @@ export const routes: Routes = [
       ).then((m) => m.UserAnnouncementsDetailsComponent),
   },
   {
+    path: 'profile/memorises',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import(
+        './components/announcements/recent-views/recent-views.component'
+      ).then((m) => m.RecentViewsComponent),
+  },
+  {
+    path: 'profile/likees',
+    canMatch: [authCanMatch],
+    canActivate: [authCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/announcements/liked/liked.component').then(
+        (m) => m.LikedComponent
+      ),
+  },
+  {
     path: 'profile/messages',
     canMatch: [authCanMatch],
     canActivate: [authCanActivate],

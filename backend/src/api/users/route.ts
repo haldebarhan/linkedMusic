@@ -15,6 +15,7 @@ import { SubscribeDTO } from "@/microservices/subscriptions/dto/plan.dto";
 import { PaymentDTO } from "@/microservices/payments/payment.dto";
 import {
   CreateAnnouncementDto,
+  likeAnnouncementDTO,
   UpdateAnnouncementDto,
 } from "@/microservices/annoncements/announcement.dto";
 import { CreateContactRequestDTO } from "@/microservices/contact-requests/contact-request.dto";
@@ -30,6 +31,57 @@ router.post(
   ValidateDtoMiddleware(CreateAnnouncementDto),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.createAnnouncement(req, res)
+);
+
+router.post(
+  "/announcements/like",
+  ValidateDtoMiddleware(likeAnnouncementDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.likeAnnouncement(req, res)
+);
+
+router.post(
+  "/announcements/unlike",
+  ValidateDtoMiddleware(likeAnnouncementDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.unlikeAnnouncement(req, res)
+);
+
+router.post(
+  "/announcements/track-view",
+  ValidateDtoMiddleware(likeAnnouncementDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.addToRecentViews(req, res)
+);
+
+router.get(
+  "/announcements/like-status/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.announcementlikeStatus(req, res)
+);
+
+router.get(
+  "/announcements/recent-views",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.myRecentViews(req, res)
+);
+
+router.get(
+  "/announcements/liked",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.myLikedAnnouncements(req, res)
+);
+
+router.delete(
+  "/announcements/recent-views/:id",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.removeToRecentViews(req, res)
+);
+
+router.delete(
+  "/announcements/clear/recent-views",
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.removeAllRecentViews(req, res)
 );
 
 router.put(

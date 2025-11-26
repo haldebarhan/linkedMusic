@@ -19,11 +19,23 @@
               novalidate
             >
               <div class="col-5 mb-3">
-                <label for="nom" class="form-label">Nom</label>
+                <label for="slug" class="form-label">Slug</label>
                 <input
-                  type="email"
+                  type="text"
+                  class="form-control"
+                  id="slug"
+                  name="slug"
+                  aria-describedby="slugHelp"
+                  formControlName="slug"
+                />
+              </div>
+              <div class="col-5 mb-3">
+                <label for="name" class="form-label">Nom</label>
+                <input
+                  type="text"
                   class="form-control"
                   id="name"
+                  name="name"
                   aria-describedby="namePelp"
                   formControlName="name"
                 />

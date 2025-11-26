@@ -14,6 +14,8 @@ import {
   UpdateFieldDto,
   UpdateFieldOptionDto,
 } from "./category.dto";
+import { Order } from "@/utils/enums/order.enum";
+import { paginatedResponse } from "@/utils/helpers/paginated-response";
 
 @injectable()
 export class CategoryController {
@@ -21,8 +23,28 @@ export class CategoryController {
 
   async getAllCategories(req: Request, res: Response) {
     try {
-      const categories = await this.categoryService.getAllCategories();
-      const response = formatResponse(200, categories);
+      const {
+        page: pageQuery,
+        limit: limitQuery,
+        order: orderQuery,
+      } = req.query;
+      const where: any = { active: true };
+      const page = parseInt(pageQuery as string) || 1;
+      const limit = parseInt(limitQuery as string) || 10;
+
+      const page_number = Math.max(page, 1);
+      const limit_query = Math.max(limit, 10);
+      const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
+        ? (orderQuery as Order)
+        : Order.DESC;
+
+      const categories = await this.categoryService.getAllCategories({
+        limit: limit_query,
+        page: page_number,
+        order,
+        where,
+      });
+      const response = paginatedResponse(200, categories);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -85,6 +107,17 @@ export class CategoryController {
       await this.categoryService.deleteCategory(id);
       const result = { message: "Catégorie supprimée avec succès" };
       const response = formatResponse(200, result);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async desableCategory(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await this.categoryService.desableCategory(id);
+      const response = formatResponse(200, category);
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);

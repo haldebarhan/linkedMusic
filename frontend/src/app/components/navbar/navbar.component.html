@@ -12,15 +12,8 @@
     </button>
 
     <!-- Logo -->
-    <a class="navbar-brand" href="#">
-      <img
-        src="assets/images/logo.png"
-        alt="MonSite"
-        class="brand-logo me-2"
-        width="70"
-        height="50"
-      />
-      <!-- <i class="fas fa-rocket text-primary"></i> MonSite -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="assets/images/logo.png" alt="MonSite" class="brand-logo" />
     </a>
 
     <!-- Mobile (actions à droite) : caché sur desktop -->
@@ -29,7 +22,7 @@
         <!-- Connecté (mobile) -->
         <div class="dropdown">
           <button
-            class="btn btn-link p-0"
+            class="btn btn-link p-0 position-relative"
             type="button"
             data-bs-toggle="dropdown"
           >
@@ -38,6 +31,14 @@
               alt="Profile"
               class="profile-img"
             />
+            <!-- Badge de notification mobile -->
+            <span
+              *ngIf="totalNotifications > 0"
+              class="notification-badge"
+              [class.pulse]="totalNotifications > 0"
+            >
+              {{ totalNotifications > 99 ? "99+" : totalNotifications }}
+            </span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
@@ -51,9 +52,12 @@
               >
             </li>
             <li>
-              <a class="dropdown-item" routerLink="/profile/messages"
-                ><i class="fas fa-bell me-2"></i>Notifications</a
-              >
+              <a class="dropdown-item" routerLink="/profile/messages">
+                <i class="fas fa-envelope me-2"></i>Messages
+                <span *ngIf="unreadMessages > 0" class="badge bg-primary ms-2">
+                  {{ unreadMessages }}
+                </span>
+              </a>
             </li>
             <li *ngIf="user.role === 'ADMIN'">
               <a class="dropdown-item" routerLink="/admin"
@@ -83,11 +87,17 @@
       <!-- Navigation centrale -->
       <ul class="navbar-nav mx-auto">
         <li class="nav-item">
-          <a class="nav-link active" href="#">Accueil</a>
+          <a class="nav-link active" routerLink="/home">Accueil</a>
         </li>
-        <li class="nav-item"><a class="nav-link" href="#">Services</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">À propos</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/p">Boutique</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/p">À propos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/p">Contact</a>
+        </li>
       </ul>
 
       <!-- Desktop -->
@@ -96,15 +106,25 @@
           <!-- Connecté -->
           <div class="dropdown">
             <button
-              class="btn btn-link p-0 d-flex align-items-center text-decoration-none"
+              class="btn btn-link p-0 d-flex align-items-center text-decoration-none position-relative"
               type="button"
               data-bs-toggle="dropdown"
             >
-              <img
-                [src]="user.profileImage"
-                alt="Profile"
-                class="profile-img me-2"
-              />
+              <div class="profile-wrapper position-relative">
+                <img
+                  [src]="user.profileImage"
+                  alt="Profile"
+                  class="profile-img me-2"
+                />
+                <!-- Badge de notification desktop -->
+                <span
+                  *ngIf="totalNotifications > 0"
+                  class="notification-badge"
+                  [class.pulse]="totalNotifications > 0"
+                >
+                  {{ totalNotifications > 99 ? "99+" : totalNotifications }}
+                </span>
+              </div>
               <span class="text-dark">{{ displayName(user) }}</span>
               <i class="fas fa-chevron-down ms-2 text-muted"></i>
             </button>
@@ -115,7 +135,7 @@
               <li><hr class="dropdown-divider" /></li>
               <li>
                 <a class="dropdown-item" routerLink="/users"
-                  ><i class="fas fa-user me-2"></i>Mon profile</a
+                  ><i class="fas fa-user me-2"></i>Mon profil</a
                 >
               </li>
               <li>
@@ -124,12 +144,18 @@
                 >
               </li>
               <li>
-                <a class="dropdown-item" routerLink="/profile/messages"
-                  ><i class="fas fa-bell me-2"></i>Notifications
-                  <span *ngIf="unread > 0" class="badge text-bg-secondary">{{
-                    unread
-                  }}</span></a
+                <a
+                  class="dropdown-item d-flex justify-content-between align-items-center"
+                  routerLink="/profile/messages"
                 >
+                  <span><i class="fas fa-envelope me-2"></i>Messages</span>
+                  <span
+                    *ngIf="unreadMessages > 0"
+                    class="badge bg-primary rounded-pill"
+                  >
+                    {{ unreadMessages }}
+                  </span>
+                </a>
               </li>
               <li *ngIf="user.role === 'ADMIN'">
                 <a class="dropdown-item" routerLink="/admin"

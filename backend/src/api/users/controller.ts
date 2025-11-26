@@ -48,6 +48,36 @@ export class UserController {
     return await this.announcementController.getMyAnnouncement(req, res);
   }
 
+  async myRecentViews(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.userRecentViews(req, res);
+  }
+
+  async addToRecentViews(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.addToRecentViews(req, res);
+  }
+
+  async likeAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.likeAnnouncement(req, res);
+  }
+  async unlikeAnnouncement(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.unlikeAnnouncement(req, res);
+  }
+  async announcementlikeStatus(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.likeStatus(req, res);
+  }
+
+  async removeToRecentViews(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.removeToRecentViews(req, res);
+  }
+
+  async removeAllRecentViews(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.removeALLRecentViews(req, res);
+  }
+
+  async myLikedAnnouncements(req: AuthenticatedRequest, res: Response) {
+    return await this.announcementController.mylikedAnnouncements(req, res);
+  }
+
   // Matching
 
   async eligibility(req: AuthenticatedRequest, res: Response) {

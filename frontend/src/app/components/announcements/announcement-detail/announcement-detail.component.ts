@@ -51,6 +51,11 @@ export class AnnouncementDetailComponent implements OnInit {
   // Demande de l'utilisateur actuel
   currentUserRequest: ContactRequest | null = null;
 
+  // Like system
+  isLiked: boolean = false;
+  likeCount: number = 0;
+  likingInProgress: boolean = false;
+
   // UI States
   showContactRequestForm: boolean = false;
   contactRequestForm: FormGroup;
@@ -83,6 +88,7 @@ export class AnnouncementDetailComponent implements OnInit {
 
     if (this.announcementId) {
       this.loadAnnouncementData();
+      this.trackView();
     }
   }
 
@@ -113,26 +119,125 @@ export class AnnouncementDetailComponent implements OnInit {
               )
             : of(null);
 
+          const likeStatus$ = isLoggedIn
+            ? this.api.getOne(
+                'users/announcements/like-status',
+                this.announcementId!
+              )
+            : of(null);
+
           return forkJoin({
             announcement: of(announcement),
             eligibility: eligibility$,
             userRequest: userRequest$,
+            likeStatus: likeStatus$,
           });
         }),
         finalize(() => (this.loading = false))
       )
       .subscribe({
-        next: ({ announcement: annRes, eligibility: elRes, userRequest }) => {
+        next: ({
+          announcement: annRes,
+          eligibility: elRes,
+          userRequest,
+          likeStatus,
+        }) => {
           this.announcement = annRes.data;
           this.advertiser = this.announcement.owner;
           this.eligibility = elRes?.data || null;
           this.currentUserRequest = userRequest?.data || null;
+
+          // Initialiser les données de like
+          if (likeStatus?.data) {
+            this.isLiked = likeStatus.data.isLiked;
+            this.likeCount = likeStatus.data.likeCount;
+          } else if (this.announcement.likesCount !== undefined) {
+            this.likeCount = this.announcement.likesCount;
+          }
         },
         error: (err) => {
           this.error = 'Impossible de charger cette annonce';
           console.error(err);
         },
       });
+  }
+
+  // Tracker la vue de l'annonce
+  trackView(): void {
+    if (this.announcementId) {
+      this.api
+        .create('users/announcements/track-view', {
+          announcementId: this.announcementId,
+        })
+        .subscribe({
+          next: () => {
+            // Vue enregistrée silencieusement
+          },
+          error: (err) => {},
+        });
+    }
+  }
+
+  // Système de likes
+  toggleLike(): void {
+    // Vérifier si l'utilisateur est connecté
+    this.auth.isLoggedIn$.pipe(take(1)).subscribe((isLoggedIn) => {
+      if (!isLoggedIn) {
+        this.goToLogin();
+        return;
+      }
+
+      // Vérifier si l'utilisateur est propriétaire
+      if (this.isOwner()) {
+        Toast.fire({
+          icon: 'info',
+          title: 'Action non autorisée',
+          text: 'Vous ne pouvez pas liker votre propre annonce',
+        });
+        return;
+      }
+
+      // Toggle like
+      if (this.likingInProgress) return;
+
+      this.likingInProgress = true;
+      const previousLiked = this.isLiked;
+      const previousCount = this.likeCount;
+
+      // Mise à jour optimiste de l'UI
+      this.isLiked = !this.isLiked;
+      this.likeCount = this.isLiked ? this.likeCount + 1 : this.likeCount - 1;
+
+      const endpoint = previousLiked
+        ? 'users/announcements/unlike'
+        : 'users/announcements/like';
+
+      this.api
+        .create(endpoint, { announcementId: this.announcementId })
+        .pipe(finalize(() => (this.likingInProgress = false)))
+        .subscribe({
+          next: (res) => {
+            // Succès - l'UI est déjà à jour
+            if (res?.data) {
+              this.isLiked = res.data.isLiked;
+              this.likeCount = res.data.likeCount;
+            }
+          },
+          error: (err) => {
+            // Rollback en cas d'erreur
+            this.isLiked = previousLiked;
+            this.likeCount = previousCount;
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text:
+                err?.error?.message || 'Impossible de mettre à jour le like',
+            });
+            console.error(err);
+          },
+        });
+    });
   }
 
   // Règles d'UI
@@ -142,8 +247,16 @@ export class AnnouncementDetailComponent implements OnInit {
 
   canRequestContact(): boolean {
     if (!this.eligibility) return false;
-    // Peut demander un contact si : pas le propriétaire, pas de demande en cours
-    return !this.isOwner() && !this.currentUserRequest;
+    if (this.isOwner()) return false;
+
+    // Permettre une nouvelle demande si la précédente est CANCELED ou REJECTED
+    if (!this.currentUserRequest) return true;
+
+    const inactiveStatuses: ContactRequest['status'][] = [
+      'CANCELED',
+      'REJECTED',
+    ];
+    return inactiveStatuses.includes(this.currentUserRequest.status);
   }
 
   hasRequestPending(): boolean {
@@ -152,6 +265,14 @@ export class AnnouncementDetailComponent implements OnInit {
 
   hasRequestAccepted(): boolean {
     return this.currentUserRequest?.status === 'ACCEPTED';
+  }
+
+  hasRequestRejected(): boolean {
+    return this.currentUserRequest?.status === 'REJECTED';
+  }
+
+  hasRequestCanceled(): boolean {
+    return this.currentUserRequest?.status === 'CANCELED';
   }
 
   onClickContactRequest(): void {
@@ -200,11 +321,20 @@ export class AnnouncementDetailComponent implements OnInit {
       .update('users/contact-requests/cancel', this.currentUserRequest.id, {})
       .pipe(finalize(() => (this.sending = false)))
       .subscribe({
-        next: () => {
-          this.currentUserRequest = null;
+        next: (res) => {
+          if (res?.data) {
+            this.currentUserRequest = res.data;
+          } else {
+            this.currentUserRequest = {
+              ...this.currentUserRequest!,
+              status: 'CANCELED',
+            };
+          }
+
           Toast.fire({
             icon: 'info',
             title: 'Demande annulée',
+            text: 'Vous pouvez faire une nouvelle demande',
           });
         },
         error: (err) => {
@@ -226,7 +356,7 @@ export class AnnouncementDetailComponent implements OnInit {
 
   goToMessages(): void {
     if (this.currentUserRequest?.status === 'ACCEPTED') {
-      this.router.navigate(['/messages']);
+      this.router.navigate(['/profile/messages']);
     }
   }
 }

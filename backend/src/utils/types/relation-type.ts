@@ -32,6 +32,7 @@ export type FieldWithOptions = Field & {
 export type AnnouncementWithDetails = Announcement & {
   category: Category;
   user: Partial<User>;
+  _count: any;
   fieldValues: Array<
     AnnFieldValue & {
       field: Field;
