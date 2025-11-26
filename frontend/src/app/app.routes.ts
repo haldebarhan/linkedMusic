@@ -177,6 +177,34 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'shop',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/shop/shop.component').then((m) => m.ShopComponent),
+  },
+  {
+    path: 'about-us',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/about-us/about-us.component').then(
+        (m) => m.AboutUsComponent
+      ),
+  },
+  {
+    path: 'contact',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'allow' },
+    loadComponent: () =>
+      import('./components/contact/contact.component').then(
+        (m) => m.ContactComponent
+      ),
+  },
+  {
     path: 'profile/messages',
     canMatch: [authCanMatch],
     canActivate: [authCanActivate],

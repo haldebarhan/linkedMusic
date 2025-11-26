@@ -87,16 +87,28 @@
       <!-- Navigation centrale -->
       <ul class="navbar-nav mx-auto">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/home">Accueil</a>
+          <a
+            class="nav-link"
+            routerLink="/home"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            >Accueil</a
+          >
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/p">Boutique</a>
+          <a class="nav-link" routerLink="/shop" routerLinkActive="active"
+            >Boutique</a
+          >
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/p">À propos</a>
+          <a class="nav-link" routerLink="/about-us" routerLinkActive="active"
+            >À propos</a
+          >
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/p">Contact</a>
+          <a class="nav-link" routerLink="/contact" routerLinkActive="active"
+            >Contact</a
+          >
         </li>
       </ul>
 
