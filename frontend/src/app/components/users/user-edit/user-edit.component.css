@@ -21,3 +21,122 @@
   border-color: #7a5af8;
   box-shadow: 0 0 0 0.2rem rgba(122, 90, 248, 0.12);
 }
+
+/* Avatar Upload Section */
+.avatar-upload-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #fafbff;
+  border-radius: 0.75rem;
+  border: 1px solid #ececf0;
+}
+
+.avatar-container-edit {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-image-edit {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-placeholder-edit {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7a5af8 0%, #9b7dff 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #7a5af8;
+  color: #fff;
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(122, 90, 248, 0.3);
+}
+
+.avatar-edit-btn:hover:not(:disabled) {
+  background: #6848e0;
+  transform: scale(1.05);
+}
+
+.avatar-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avatar-edit-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avatar-actions .btn {
+  min-width: 150px;
+}
+
+.avatar-actions .btn-outline-primary {
+  color: #7a5af8;
+  border-color: #7a5af8;
+}
+
+.avatar-actions .btn-outline-primary:hover {
+  background: #7a5af8;
+  color: #fff;
+}
+
+.avatar-actions .btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.avatar-actions .btn-outline-danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .avatar-upload-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .avatar-actions {
+    width: 100%;
+  }
+
+  .avatar-actions .btn {
+    width: 100%;
+  }
+}

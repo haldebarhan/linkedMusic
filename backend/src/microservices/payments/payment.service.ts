@@ -19,10 +19,10 @@ import { addDays } from "date-fns";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
 import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
 import { Order } from "@/utils/enums/order.enum";
-import { MinioService } from "@/utils/services/minio.service";
+import { S3Service } from "@/utils/services/s3.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class PaymentService {
@@ -95,7 +95,7 @@ export class PaymentService {
       return user;
     });
     user.profileImage = await minioService.generatePresignedUrl(
-      ENV.MINIO_BUCKET_NAME,
+      ENV.AWS_S3_DEFAULT_BUCKET,
       user.profileImage
     );
 

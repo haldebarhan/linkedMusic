@@ -7,4 +7,6 @@ export interface PersonalInfoData {
   lastName?: string;
   country?: string;
   zipCode?: string;
+  city?: string;
+  profileImage?: string;
 }

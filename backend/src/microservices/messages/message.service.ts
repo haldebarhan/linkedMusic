@@ -5,11 +5,11 @@ import { PrismaClient } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
 import { Order } from "@/utils/enums/order.enum";
 import { MessageRepository } from "./message.repository";
-import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
+import { S3Service } from "@/utils/services/s3.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class MessageService {
@@ -193,7 +193,7 @@ export class MessageService {
         const peerAvatar = hasActiveSubscription
           ? peer.profileImage
             ? await minioService.generatePresignedUrl(
-                ENV.MINIO_BUCKET_NAME,
+                ENV.AWS_S3_DEFAULT_BUCKET,
                 peer.profileImage
               )
             : ""
@@ -238,7 +238,7 @@ export class MessageService {
           if (firstMessage.sender?.profileImage) {
             try {
               peerAvatar = await minioService.generatePresignedUrl(
-                ENV.MINIO_BUCKET_NAME,
+                ENV.AWS_S3_DEFAULT_BUCKET,
                 firstMessage.sender.profileImage
               );
             } catch (error) {

@@ -44,7 +44,13 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
   private itiReady = false;
   private userReady = false;
 
+  avatarUrl: string | null = null;
+  avatarFile: File | null = null;
+  avatarPreview: string | null = null;
+  uploadingAvatar = false;
+
   @ViewChild('phoneInput') phoneInput!: ElementRef;
+  @ViewChild('avatarInput') avatarInput!: ElementRef;
 
   constructor(
     private fb: FormBuilder,
@@ -86,7 +92,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (res) => {
           this.userData = res.data;
           this.initialPhone = this.userData.phone || '';
-          const [address, city] = this.splitLocation(res.data.location);
+          this.avatarPreview = res.data.profileImage;
           this.form.patchValue({
             email: this.userData.email,
             displayName: this.userData.displayName || '',
@@ -95,8 +101,8 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
             firstName: this.userData.firstName || '',
             zipCode: this.userData.zipCode || '',
             country: this.userData.country || '',
-            address: address ? address.trim() : '',
-            city: city ? city.trim() : '',
+            address: this.userData.location || '',
+            city: this.userData.city || '',
           });
           this.markUserReady();
         },
@@ -178,7 +184,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/users/profile']);
   }
 
-  save() {
+  async save() {
     if (!this.form.valid) return;
     this.saving = true;
     const {
@@ -192,7 +198,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
       displayName,
     } = this.form.value;
     const fullNumber = this.iti ? this.iti.getNumber() : phone;
-    const payload = {
+    const payload: Record<string, any> = {
       phone: fullNumber,
       lastName,
       firstName,
@@ -203,7 +209,13 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
       city,
     };
 
-    this.api.updateProfile('auth/me/update-profile', payload).subscribe({
+    const fd = new FormData();
+    Object.keys(payload).forEach((key) => {
+      fd.append(key, payload[key]);
+    });
+    if (this.avatarFile) fd.append('profileImage', this.avatarFile);
+
+    this.api.updateProfile('auth/me/update-profile', fd).subscribe({
       next: (res) => {
         this.userUpdateService.notifyUserUpdate(res.data);
         Toast.fire({
@@ -231,9 +243,86 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private splitLocation(location: string) {
-    return location ? location.split(' :') : [];
+  // Avatar methods
+  triggerAvatarUpload() {
+    this.avatarInput.nativeElement.click();
   }
+
+  onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+
+    // Validation du fichier
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      SweetAlert.fire({
+        icon: 'error',
+        title: 'Format invalide',
+        text: 'Veuillez choisir une image au format JPG, PNG ou WEBP.',
+      });
+      return;
+    }
+
+    if (file.size > maxSize) {
+      SweetAlert.fire({
+        icon: 'error',
+        title: 'Fichier trop volumineux',
+        text: 'La taille maximale autorisée est de 5 MB.',
+      });
+      return;
+    }
+
+    this.avatarFile = file;
+
+    // Créer un aperçu
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.avatarPreview = e.target?.result as string;
+      this.form.markAsDirty();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeAvatar() {
+    this.avatarFile = null;
+    this.avatarPreview = null;
+    this.avatarUrl = null;
+    if (this.avatarInput) {
+      this.avatarInput.nativeElement.value = '';
+    }
+    this.form.markAsDirty();
+  }
+
+  getAvatarDisplay(): string {
+    if (this.avatarPreview) return this.avatarPreview;
+    if (this.avatarUrl) return this.avatarUrl;
+    return 'assets/images/default-avatar.png';
+  }
+
+  getInitials(): string {
+    const firstName = this.form.get('firstName')?.value || '';
+    const lastName = this.form.get('lastName')?.value || '';
+    const displayName = this.form.get('displayName')?.value || '';
+
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    }
+
+    if (displayName) {
+      const parts = displayName.split(' ');
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      }
+      return displayName.charAt(0).toUpperCase();
+    }
+
+    return this.form.get('email')?.value?.charAt(0).toUpperCase() || '?';
+  }
+
   private maybeApplyInitialPhone() {
     if (!this.iti || !this.itiReady || !this.userReady) return;
 
@@ -263,4 +352,36 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     this.userReady = true;
     this.maybeApplyInitialPhone();
   }
+
+  //   private uploadAvatar(): Promise<void> {
+  //     return new Promise((resolve, reject) => {
+  //       if (!this.avatarFile) {
+  //         resolve();
+  //         return;
+  //       }
+
+  //       this.uploadingAvatar = true;
+  //       const formData = new FormData();
+  //       formData.append('avatar', this.avatarFile);
+
+  //       // Adapter l'endpoint selon votre API
+  //       this.api.upload('auth/me/upload-avatar', formData).subscribe({
+  //         next: (res) => {
+  //           this.avatarUrl = res.data.avatarUrl;
+  //           this.uploadingAvatar = false;
+  //           resolve();
+  //         },
+  //         error: (err) => {
+  //           this.uploadingAvatar = false;
+  //           console.error('Avatar upload error:', err);
+  //           SweetAlert.fire({
+  //             icon: 'error',
+  //             title: 'Erreur',
+  //             text: "Erreur lors de l'upload de l'avatar",
+  //           });
+  //           reject(err);
+  //         },
+  //       });
+  //     });
+  //   }
 }

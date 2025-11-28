@@ -23,12 +23,12 @@ export class ContactComponent {
 
   // Informations de la compagnie
   companyInfo = {
-    name: 'ZikMusic',
+    name: 'ZikMuzik',
     address: "Abidjan, Côte d'Ivoire",
     fullAddress: 'Cocody, Riviera Palmeraie, Abidjan',
     phone: '+225 07 07 07 07 07',
-    email: 'contact@zikmusic.ci',
-    website: 'www.zikmusic.ci',
+    email: 'contact@ZikMuzik.ci',
+    website: 'www.ZikMuzik.ci',
     socialMedia: {
       facebook: 'https://facebook.com/linkedmusic',
       instagram: 'https://instagram.com/linkedmusic',

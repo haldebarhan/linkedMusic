@@ -3,6 +3,68 @@
     <h5 class="mb-0">Informations personnelles</h5>
   </div>
 
+  <!-- Section Avatar -->
+  <div class="avatar-upload-section mb-4">
+    <div class="avatar-container-edit">
+      <img
+        *ngIf="avatarPreview || avatarUrl"
+        [src]="getAvatarDisplay()"
+        alt="Avatar"
+        class="avatar-image-edit"
+      />
+      <div *ngIf="!avatarPreview && !avatarUrl" class="avatar-placeholder-edit">
+        {{ getInitials() }}
+      </div>
+      <button
+        type="button"
+        class="avatar-edit-btn"
+        (click)="triggerAvatarUpload()"
+        [disabled]="uploadingAvatar"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+    </div>
+    <div class="avatar-actions">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary"
+        (click)="triggerAvatarUpload()"
+        [disabled]="uploadingAvatar"
+      >
+        <span *ngIf="!uploadingAvatar">Choisir une photo</span>
+        <span *ngIf="uploadingAvatar">Upload en cours...</span>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        (click)="removeAvatar()"
+        *ngIf="avatarPreview || avatarUrl"
+        [disabled]="uploadingAvatar"
+      >
+        Supprimer
+      </button>
+      <input
+        #avatarInput
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        (change)="onAvatarSelected($event)"
+        style="display: none"
+      />
+      <small class="text-muted d-block mt-2">
+        JPG, PNG ou WEBP. Max 5 MB.
+      </small>
+    </div>
+  </div>
+
   <form [formGroup]="form" class="row g-3" (ngSubmit)="save()">
     <!-- Email (lecture seule) -->
     <div class="col-3">
@@ -16,7 +78,7 @@
         />
         <span class="badge-verified">Vérifié</span>
       </div>
-      <small class="text-muted">L’adresse email est non modifiable ici.</small>
+      <small class="text-muted">L'adresse email est non modifiable ici.</small>
     </div>
 
     <!-- Pseudo -->
@@ -123,7 +185,7 @@
     <div class="text-left mt-3">
       <button
         class="btn btn-primary btn-sm"
-        [disabled]="!form.valid || form.pristine || saving"
+        [disabled]="!form.valid || form.pristine || saving || uploadingAvatar"
       >
         <span *ngIf="!saving">Enregistrer</span>
         <span *ngIf="saving">

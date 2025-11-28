@@ -114,7 +114,10 @@ export class UserRepository extends BaseRepository<
     });
   }
 
-  async update(id: number, data: Partial<UpdateUserDTO>): Promise<User> {
+  async update(
+    id: number,
+    data: Partial<UpdateUserDTO> & { profileImage?: string }
+  ): Promise<User> {
     return prisma.user.update({
       where: { id },
       data,

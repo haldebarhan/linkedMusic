@@ -21,11 +21,11 @@ import {
 } from "@/utils/functions/create-firebase-user";
 import { Role } from "@/utils/enums/role.enum";
 import { Order } from "@/utils/enums/order.enum";
-import { MinioService } from "@/utils/services/minio.service";
 import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { S3Service } from "@/utils/services/s3.service";
 
 const firebaseService = FirebaseService.getInstance();
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class UserService {
@@ -78,7 +78,7 @@ export class UserService {
       };
       const user = await this.userRepository.create({ ...createData });
       user.profileImage = await minioService.generatePresignedUrl(
-        ENV.MINIO_BUCKET_NAME,
+        ENV.AWS_S3_DEFAULT_BUCKET,
         user.profileImage
       );
       const accessToken = await firebaseService.loginWithUid(user.uid);
@@ -92,11 +92,11 @@ export class UserService {
       ) {
         const target = (error.meta?.target as string[])?.join(", ");
         await rollbackFirebaseUser(uid);
-        await minioService.deleteFile(ENV.MINIO_BUCKET_NAME, profileImage);
+        await minioService.deleteFile(ENV.AWS_S3_DEFAULT_BUCKET, profileImage);
         throw createError(409, `${target} already exists`);
       }
       await rollbackFirebaseUser(uid);
-      await minioService.deleteFile(ENV.MINIO_BUCKET_NAME, profileImage);
+      await minioService.deleteFile(ENV.AWS_S3_DEFAULT_BUCKET, profileImage);
       throw createError(500, `Failed to create user: ${error.message}`);
     }
   }
@@ -138,17 +138,16 @@ export class UserService {
     return user;
   }
 
-  async updateUser(
-    id: number,
-    data: UpdateUserDTO & { profileImage?: string },
-    profileImage?: string
-  ) {
+  async updateUser(id: number, data: UpdateUserDTO, profileImage?: string) {
     const user = await this.findOne(id);
     const deleteOldImagePromise = profileImage
-      ? minioService.deleteFile(ENV.MINIO_BUCKET_NAME, user.profileImage)
+      ? minioService.deleteFile(ENV.AWS_S3_DEFAULT_BUCKET, user.profileImage)
       : Promise.resolve();
     await this.checkPhoneOrUsernameConflicts(data.phone, data.displayName, id);
-    const updateUserPromise = this.userRepository.update(user.id, data);
+    const updateUserPromise = this.userRepository.update(user.id, {
+      ...data,
+      profileImage,
+    });
 
     const [updatedUser] = await Promise.all([
       updateUserPromise,
@@ -190,7 +189,7 @@ export class UserService {
         userCredential.user.reloadUserInfo.providerUserInfo[0].providerId;
       user.profileImage = user.profileImage
         ? await minioService.generatePresignedUrl(
-            ENV.MINIO_BUCKET_NAME,
+            ENV.AWS_S3_DEFAULT_BUCKET,
             user.profileImage
           )
         : "";
@@ -230,7 +229,7 @@ export class UserService {
     authUser.profileImage = user.picture
       ? user.picture
       : await minioService.generatePresignedUrl(
-          ENV.MINIO_BUCKET_NAME,
+          ENV.AWS_S3_DEFAULT_BUCKET,
           authUser.profileImage
         );
     return authUser;
@@ -322,7 +321,7 @@ export class UserService {
     if (!user.profileImage) return user;
 
     const profileImageUrl = await minioService.generatePresignedUrl(
-      ENV.MINIO_BUCKET_NAME,
+      ENV.AWS_S3_DEFAULT_BUCKET,
       user.profileImage
     );
 

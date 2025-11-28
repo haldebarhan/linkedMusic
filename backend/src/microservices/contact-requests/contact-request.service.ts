@@ -11,7 +11,6 @@ import {
   SubscriptionStatus,
 } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
-import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
 import { BrevoMailService } from "@/utils/services/brevo-mail.service";
 import { MatchingService } from "../matching/matching.service";
@@ -22,9 +21,10 @@ import { userRoom } from "@/sockets/room";
 import { EVENTS } from "@/sockets/event";
 import logger from "@/config/logger";
 import { countUnread } from "@/sockets/handlers/notification.handler";
+import { S3Service } from "@/utils/services/s3.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class ContactRequestService {
@@ -76,7 +76,7 @@ export class ContactRequestService {
     ]);
     const requesterName = userHasSubscription
       ? requester.displayName!
-      : "Un utilisateur de Zikmusic";
+      : "Un utilisateur de ZikMuzik";
     await Promise.all([
       this.mailService.sendContactRequestReceivedMail({
         to: annoncement.user.email!,
@@ -118,7 +118,7 @@ export class ContactRequestService {
     await Promise.all(
       requests.map(async (r) => {
         r.requester.profileImage = await minioService.generatePresignedUrl(
-          ENV.MINIO_BUCKET_NAME,
+          ENV.AWS_S3_DEFAULT_BUCKET,
           r.requester.profileImage
         );
       })

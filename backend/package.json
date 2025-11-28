@@ -49,6 +49,8 @@
   },
   "engineStrict": true,
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
+    "@aws-sdk/s3-request-presigner": "^3.940.0",
     "@sharekey/sendinblue-client": "^3.3.2",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",

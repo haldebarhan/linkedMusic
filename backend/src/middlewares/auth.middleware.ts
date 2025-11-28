@@ -5,9 +5,12 @@ import { NextFunction } from "express";
 import { FirebaseService } from "@/utils/services/firebase.service";
 import logger from "@/config/logger";
 import { formatResponse } from "@/utils/helpers/response-formatter";
+import { S3Service } from "@/utils/services/s3.service";
+import { ENV } from "@/config/env";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const firebaseService = FirebaseService.getInstance();
+const s3service: S3Service = S3Service.getInstance();
 
 const authMiddleware = async (
   req: AuthenticatedRequest,
@@ -91,6 +94,10 @@ const authMiddleware = async (
       });
       return res.status(401).json(response);
     }
+    user.profileImage = await s3service.generatePresignedUrl(
+      ENV.AWS_S3_DEFAULT_BUCKET,
+      user.profileImage
+    );
     req.user = { ...user, provider: decodedToken.firebase.sign_in_provider };
     req.token = token;
     next();

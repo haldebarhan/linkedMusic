@@ -9,6 +9,7 @@ import {
 import {
   AnnouncementStatus,
   NotificationType,
+  PlanPeriod,
   Prisma,
   PrismaClient,
 } from "@prisma/client";
@@ -22,7 +23,6 @@ import {
 } from "@/utils/interfaces/pagination";
 import { Order } from "@/utils/enums/order.enum";
 import createError from "http-errors";
-import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
 import {
   definedEntries,
@@ -37,7 +37,9 @@ import { EVENTS } from "@/sockets/event";
 import logger from "@/config/logger";
 import { countUnread } from "@/sockets/handlers/notification.handler";
 import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
-const minioService: MinioService = MinioService.getInstance();
+import { S3Service } from "@/utils/services/s3.service";
+import { SubscriptionRepository } from "../subscriptions/subscription.repository";
+const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
@@ -46,10 +48,18 @@ export class AnnouncementService {
     private readonly announcementRepository: AnnouncementRepository,
     private readonly mailService: BrevoMailService,
     private readonly notificationRepository: NotificationRepository,
-    private readonly announcementViewRepository: AnnouncementViewRepository
+    private readonly announcementViewRepository: AnnouncementViewRepository,
+    private readonly subscriptionRepository: SubscriptionRepository
   ) {}
 
   async createAnnouncement(ownerId: number, dto: CreateAnnouncementDto) {
+    const ownerSubscription =
+      await this.subscriptionRepository.findActiveByUser(ownerId);
+    const isPremium =
+      (ownerSubscription &&
+        ["ANNUAL", "SEMIANNUAL"].includes(ownerSubscription.plan.period)) ||
+      false;
+
     const announcementData: Prisma.AnnouncementCreateInput = {
       title: dto.title,
       description: dto.description,
@@ -64,6 +74,10 @@ export class AnnouncementService {
       audios: dto.audios ?? [],
       status: AnnouncementStatus.PENDING_APPROVAL,
       isPublished: false,
+      isHighlighted: isPremium,
+      highlightExpiredAt: ownerSubscription
+        ? ownerSubscription.endAt
+        : undefined,
       user: {
         connect: { id: ownerId },
       },
@@ -203,7 +217,7 @@ export class AnnouncementService {
         .filter((f) => removed.includes(f));
       await Promise.allSettled(
         actuallyRemoved.map((f) =>
-          minioService.deleteFile(ENV.MINIO_BUCKET_NAME, f)
+          minioService.deleteFile(ENV.AWS_S3_DEFAULT_BUCKET, f)
         )
       );
     }
@@ -235,7 +249,7 @@ export class AnnouncementService {
     await Promise.all(
       files.map(async (file) => {
         if (!file.startsWith("https")) {
-          await minioService.deleteFile(ENV.MINIO_BUCKET_NAME, file);
+          await minioService.deleteFile(ENV.AWS_S3_DEFAULT_BUCKET, file);
         }
       })
     );
@@ -832,7 +846,7 @@ export class AnnouncementService {
     if (!files || files.length === 0) return [];
     return Promise.all(
       files.map((file) =>
-        minioService.generatePresignedUrl(ENV.MINIO_BUCKET_NAME, file)
+        minioService.generatePresignedUrl(ENV.AWS_S3_DEFAULT_BUCKET, file)
       )
     );
   }

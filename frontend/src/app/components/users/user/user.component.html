@@ -22,11 +22,15 @@
         <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
     </button>
-    <div class="mobile-logo">
-      <span style="color: #2563eb; font-weight: 700; font-size: 1.25rem"
-        >Zik</span
-      ><span style="font-weight: 600; font-size: 1.25rem">Muzik</span>
-    </div>
+
+    <!-- Logo centré dans le header mobile -->
+    <a class="mobile-logo" routerLink="/home">
+      <img
+        src="assets/images/logo.svg"
+        alt="LinkedMusic"
+        class="mobile-logo-img"
+      />
+    </a>
   </header>
 
   <!-- BACKDROP pour fermer le menu en mobile -->
@@ -38,6 +42,17 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" [class.open]="isSidebarOpen">
+    <!-- Logo dans le sidebar (visible en desktop et mobile) -->
+    <div class="sidebar-logo">
+      <a routerLink="/home" (click)="closeSidebar()">
+        <img
+          src="assets/images/logo.svg"
+          alt="LinkedMusic"
+          class="sidebar-logo-img"
+        />
+      </a>
+    </div>
+
     <!-- Bouton de fermeture pour mobile -->
     <button class="close-btn" (click)="closeSidebar()" aria-label="Close menu">
       <svg
@@ -57,6 +72,18 @@
     </button>
 
     <nav class="nav-menu">
+      <div class="menu-section">
+        <span class="menu-label">Site</span>
+        <a
+          routerLink="/home"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="closeSidebar()"
+        >
+          <i class="fas fa-home"></i>
+          <span>Retour au site</span>
+        </a>
+      </div>
       <div class="menu-section">
         <span class="menu-label">Main Menu</span>
 
