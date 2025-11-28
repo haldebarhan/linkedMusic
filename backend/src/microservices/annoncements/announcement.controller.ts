@@ -12,11 +12,11 @@ import { formatResponse } from "@/utils/helpers/response-formatter";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import { Order } from "@/utils/enums/order.enum";
 import { saveAnnouncementFiles } from "@/utils/functions/save-file";
-import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
 import { AnnouncementStatus } from "@prisma/client";
 import { paginatedResponse } from "@/utils/helpers/paginated-response";
-const minioService: MinioService = MinioService.getInstance();
+import { S3Service } from "@/utils/services/s3.service";
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class AnnouncementController {
@@ -62,7 +62,7 @@ export class AnnouncementController {
       const ownerImage = announcement.owner.profileImage;
       announcement.owner.profileImage = ownerImage
         ? await minioService.generatePresignedUrl(
-            ENV.MINIO_BUCKET_NAME,
+            ENV.AWS_S3_DEFAULT_BUCKET,
             ownerImage
           )
         : undefined;
@@ -79,7 +79,7 @@ export class AnnouncementController {
           if (f.startsWith("https")) return f;
           else {
             const url = await minioService.generatePresignedUrl(
-              ENV.MINIO_BUCKET_NAME,
+              ENV.AWS_S3_DEFAULT_BUCKET,
               f
             );
             return url;
@@ -250,7 +250,7 @@ export class AnnouncementController {
           if (f.startsWith("https")) return f;
           else {
             const url = await minioService.generatePresignedUrl(
-              ENV.MINIO_BUCKET_NAME,
+              ENV.AWS_S3_DEFAULT_BUCKET,
               f
             );
             return url;

@@ -1,9 +1,9 @@
 import { ENV } from "@/config/env";
-import { MinioService } from "../services/minio.service";
 import { container } from "tsyringe";
 import { MatchingService } from "@/microservices/matching/matching.service";
+import { S3Service } from "../services/s3.service";
 
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 const matching = container.resolve(MatchingService);
 
 export const buildThreadRows = async (data: any[], userId: number) => {
@@ -17,7 +17,7 @@ export const buildThreadRows = async (data: any[], userId: number) => {
       const peerAvatar = isSub
         ? peer.profileImage
           ? await minioService.generatePresignedUrl(
-              ENV.MINIO_BUCKET_NAME,
+              ENV.AWS_S3_DEFAULT_BUCKET,
               peer.profileImage
             )
           : ""

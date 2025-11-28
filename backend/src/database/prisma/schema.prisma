@@ -284,37 +284,38 @@ model FieldOption {
 }
 
 model Announcement {
-    id                Int                @id @default(autoincrement())
-    title             String
-    description       String
-    ownerId           Int
-    categoryId        Int
-    images            String[]
-    videos            String[]
-    audios            String[]
-    price             Int?
-    priceUnit         String?            @map("price_unit")
-    negotiable        Boolean            @default(false)
-    location          String?
-    country           String?
-    countryCode       String?
-    city              String?
-    status            AnnouncementStatus @default(PENDING_APPROVAL)
-    isPublished       Boolean            @default(false)
-    isHighlighted     Boolean            @default(false)
-    highlightLevel    HighlightLevel     @default(STANDARD)
-    views             Int                @default(0)
-    createdAt         DateTime           @default(now()) @map("created_at")
-    updatedAt         DateTime           @updatedAt @map("updated_at")
-    publishedAt       DateTime?          @map("published_at")
-    user              User               @relation(fields: [ownerId], references: [id])
-    category          Category           @relation(fields: [categoryId], references: [id])
-    fieldValues       AnnFieldValue[]
-    Favorites         Favorite[]
-    conversations     Conversation[]
-    matchingAccess    MatchingAccess[]
-    contactRequests   ContactRequest[]
-    announcementViews AnnouncementView[]
+    id                 Int                @id @default(autoincrement())
+    title              String
+    description        String
+    ownerId            Int
+    categoryId         Int
+    images             String[]
+    videos             String[]
+    audios             String[]
+    price              Int?
+    priceUnit          String?            @map("price_unit")
+    negotiable         Boolean            @default(false)
+    location           String?
+    country            String?
+    countryCode        String?
+    city               String?
+    status             AnnouncementStatus @default(PENDING_APPROVAL)
+    isPublished        Boolean            @default(false)
+    isHighlighted      Boolean            @default(false)
+    highlightLevel     HighlightLevel     @default(STANDARD)
+    views              Int                @default(0)
+    createdAt          DateTime           @default(now()) @map("created_at")
+    updatedAt          DateTime           @updatedAt @map("updated_at")
+    publishedAt        DateTime?          @map("published_at")
+    highlightExpiredAt DateTime?          @map("highlight_expired_at")
+    user               User               @relation(fields: [ownerId], references: [id])
+    category           Category           @relation(fields: [categoryId], references: [id])
+    fieldValues        AnnFieldValue[]
+    Favorites          Favorite[]
+    conversations      Conversation[]
+    matchingAccess     MatchingAccess[]
+    contactRequests    ContactRequest[]
+    announcementViews  AnnouncementView[]
 
     @@index([categoryId])
     @@index([ownerId])

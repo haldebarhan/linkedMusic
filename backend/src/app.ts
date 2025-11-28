@@ -23,6 +23,7 @@ import { getAllowedOrigins } from "./utils/functions/allowed-origins";
 import {
   startSubscriptionDailyCron,
   startCheckSubscriptionStatus,
+  startAnnouncementHighlightedCron,
 } from "./events/schedulers/scheduler";
 import path from "path";
 

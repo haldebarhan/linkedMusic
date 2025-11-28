@@ -1,0 +1,14 @@
+<svg width="900" height="300" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+<style>
+    .blue { fill:#1FA4FF; font-family: 'Arial Rounded MT Bold', sans-serif; font-weight:700; }
+    .dark { fill:#3A3F47; font-family: 'Arial Rounded MT Bold', sans-serif; font-weight:700; }
+</style>
+
+<!-- Text -->
+<text x="50" y="150" font-size="140" class="blue">Zik</text>
+<text x="260" y="150" font-size="140" class="dark">Muzik</text>
+
+<!-- Blue curved underline (courbure vers le haut, comme un sourire) -->
+<path d="M150 220 Q 450 140 750 220" stroke="#1FA4FF" stroke-width="35" fill="none" stroke-linecap="round"/>
+
+</svg>

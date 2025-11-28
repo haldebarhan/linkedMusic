@@ -23,7 +23,7 @@ import { NotificationComponent } from './shared/components/notification/notifica
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'ZikMusic';
+  title = 'ZikMuzik';
   private subscriptions = new Subscription();
   constructor(
     private router: Router,

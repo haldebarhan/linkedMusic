@@ -15,6 +15,6 @@ export const getAllowedOrigins = () => {
     origins.push(ENV.ADMIN_URL);
   }
 
-  origins.push("https://scoop-clause-including-first.trycloudflare.com");
+  origins.push("https://specially-survive-prepare-affect.trycloudflare.com");
   return origins;
 };

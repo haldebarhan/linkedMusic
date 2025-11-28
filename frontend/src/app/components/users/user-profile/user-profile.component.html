@@ -3,6 +3,26 @@
     <h5 class="mb-0">Informations personnelles</h5>
   </div>
 
+  <!-- Section Avatar -->
+  <div class="avatar-section mb-4">
+    <div class="avatar-container">
+      <img
+        *ngIf="data?.profileImage"
+        [src]="getAvatarUrl()"
+        alt="Avatar"
+        class="avatar-image"
+        (error)="data.profileImage = null"
+      />
+      <div *ngIf="!data?.profileImage" class="avatar-placeholder">
+        {{ getInitials() }}
+      </div>
+    </div>
+    <div class="avatar-info">
+      <h6 class="mb-1">{{ data?.displayName || data?.email }}</h6>
+      <p class="text-muted mb-0">{{ data?.email }}</p>
+    </div>
+  </div>
+
   <div class="row g-3">
     <div class="col-5">
       <label class="form-label">Email</label>

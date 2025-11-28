@@ -1,10 +1,10 @@
 import { injectable } from "tsyringe";
 import { BannerSlideRepository } from "./banner-slide.repository";
 import createError from "http-errors";
-import { MinioService } from "@/utils/services/minio.service";
 import { ENV } from "@/config/env";
+import { S3Service } from "@/utils/services/s3.service";
 
-const minioService: MinioService = MinioService.getInstance();
+const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class BannerSlideService {
@@ -24,7 +24,7 @@ export class BannerSlideService {
     await Promise.all(
       slides.map(async (slide) => {
         slide.mediaUrl = await minioService.generatePresignedUrl(
-          ENV.MINIO_BUCKET_NAME,
+          ENV.AWS_S3_DEFAULT_BUCKET,
           slide.mediaUrl
         );
         if (slide.mediaType.startsWith("image")) {
@@ -58,7 +58,7 @@ export class BannerSlideService {
     await Promise.all(
       slides.map(async (slide) => {
         slide.mediaUrl = await minioService.generatePresignedUrl(
-          ENV.MINIO_BUCKET_NAME,
+          ENV.AWS_S3_DEFAULT_BUCKET,
           slide.mediaUrl
         );
         if (slide.mediaType.startsWith("image")) {

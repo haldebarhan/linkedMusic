@@ -45,6 +45,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.data = res.data;
         this.data.location = this.formatAddress(
           this.data.location,
+          this.data.city,
           this.data.country
         );
         this.completProfile = {
@@ -65,6 +66,32 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         console.error(err);
       },
     });
+  }
+
+  getAvatarUrl(): string {
+    return this.data.profileImage;
+  }
+
+  getInitials(): string {
+    if (!this.data) return '?';
+
+    const firstName = this.data.firstName || '';
+    const lastName = this.data.lastName || '';
+    const displayName = this.data.displayName || '';
+
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    }
+
+    if (displayName) {
+      const parts = displayName.split(' ');
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      }
+      return displayName.charAt(0).toUpperCase();
+    }
+
+    return this.data.email?.charAt(0).toUpperCase() || '?';
   }
 
   displayValue(value: string) {
@@ -89,8 +116,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.router.navigate(['/users/profile/change-password']);
   }
 
-  private formatAddress(location: string, country: string) {
-    const address = location ? location.replace(':', ',') : '';
+  private formatAddress(location: string, city: string, country: string) {
+    const address =
+      location && city ? `${location}, ${city}` : location ? location : '';
     const fullAddress = country ? `${address}, ${country}` : `${address}`;
     return fullAddress;
   }
