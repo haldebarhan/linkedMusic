@@ -18,12 +18,14 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { SocketService } from '../../../shared/services/socket.service';
+import { Badge } from '../../../shared/enums/badge.enum';
 
 type ThreadRow = {
   id: number;
   peerId: number;
   peerName: string;
   peerAvatar?: string | null;
+  peerBadge?: Badge;
   lastSnippet?: string;
   lastAt?: string;
   unreadCount?: number;
@@ -75,8 +77,12 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
   messages: MessageRow[] = [];
   peerName = '';
   peerAvatar: string | null = null;
+  peerBadge: Badge | null = null;
 
   hasActiveSubscription: boolean = false;
+
+  // Enum Badge accessible dans le template
+  Badge = Badge;
 
   // pagination (façon Gmail)
   page = 1;
@@ -228,6 +234,7 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
     const row = this.threads.find((t) => t.id === threadId);
     this.peerName = row?.peerName ?? '';
     this.peerAvatar = row?.peerAvatar ?? null;
+    this.peerBadge = row?.peerBadge ?? null;
     this.page = 1;
     if (row) row.unreadCount = 0;
 
@@ -350,5 +357,35 @@ export class UserMessagesComponent implements OnInit, OnDestroy, OnChanges {
     } else {
       this.form.disable({ emitEvent: false });
     }
+  }
+
+  /**
+   * Retourne le chemin vers l'icône du badge
+   */
+  getBadgeIcon(badge: Badge): string {
+    const mapping: Record<Badge, string> = {
+      [Badge.STANDARD]: '/assets/badges/badge_STANDARD.svg',
+      [Badge.BRONZE]: '/assets/badges/badge_BRONZE.svg',
+      [Badge.SILVER]: '/assets/badges/badge_ARGENT.svg',
+      [Badge.GOLD]: '/assets/badges/badge_OR.svg',
+      [Badge.VIP]: '/assets/badges/badge_VIP.svg',
+      [Badge.VVIP]: '/assets/badges/badge_VVIP.svg',
+    };
+    return mapping[badge] || '';
+  }
+
+  /**
+   * Retourne le label du badge
+   */
+  getBadgeLabel(badge: Badge): string {
+    const mapping: Record<Badge, string> = {
+      [Badge.STANDARD]: 'Standard',
+      [Badge.BRONZE]: 'Bronze',
+      [Badge.SILVER]: 'Argent',
+      [Badge.GOLD]: 'Or',
+      [Badge.VIP]: 'VIP',
+      [Badge.VVIP]: 'VVIP',
+    };
+    return mapping[badge] || badge;
   }
 }

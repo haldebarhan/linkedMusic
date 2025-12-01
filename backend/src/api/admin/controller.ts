@@ -29,12 +29,20 @@ export class AdminController {
     return this.userController.closeAccount(req, res);
   }
 
+  async activateUserAccount(req: Request, res: Response) {
+    return this.userController.activate(req, res);
+  }
+
   async updateUser(req: Request, res: Response) {
     return this.userController.udpate(req, res);
   }
 
   async findUserById(req: Request, res: Response) {
     return this.userController.findOne(req, res);
+  }
+
+  async assignBadge(req: Request, res: Response) {
+    return this.userController.assignBadge(req, res);
   }
 
   // CONFIGS

@@ -8,6 +8,7 @@ import {
 } from "./announcement.dto";
 import {
   AnnouncementStatus,
+  Badge,
   NotificationType,
   PlanPeriod,
   Prisma,
@@ -720,6 +721,7 @@ export class AnnouncementService {
         id: announcement.user.id!,
         displayName: announcement.user.displayName ?? undefined,
         profileImage: announcement.user.profileImage ?? undefined,
+        badge: announcement.user.badge ?? Badge.STANDARD,
       },
       fieldValues: announcement.fieldValues.map((fv) => ({
         field: {

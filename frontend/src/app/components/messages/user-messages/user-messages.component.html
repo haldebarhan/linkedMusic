@@ -26,11 +26,21 @@
               [class.locked]="!hasActiveSubscription"
               (click)="selectThread(t.id)"
             >
-              <img
-                class="profile-image"
-                [src]="t.peerAvatar || 'https://placehold.co/60x60'"
-                alt="avatar"
-              />
+              <div class="avatar-wrapper position-relative">
+                <img
+                  class="profile-image"
+                  [src]="t.peerAvatar || 'https://placehold.co/60x60'"
+                  alt="avatar"
+                />
+                <!-- Badge utilisateur du contact -->
+                <img
+                  *ngIf="t.peerBadge && t.peerBadge !== 'STANDARD'"
+                  [src]="getBadgeIcon(t.peerBadge)"
+                  [alt]="t.peerBadge"
+                  class="thread-badge-icon"
+                  [title]="getBadgeLabel(t.peerBadge)"
+                />
+              </div>
               <div class="text">
                 <div class="d-flex align-items-center justify-content-between">
                   <h6 class="mb-0">{{ t.peerName }}</h6>
@@ -79,11 +89,21 @@
             <i class="fa-solid fa-arrow-left"></i>
           </button>
 
-          <img
-            class="profile-image"
-            [src]="peerAvatar || 'https://placehold.co/60x60'"
-            alt="peer"
-          />
+          <div class="avatar-wrapper position-relative">
+            <img
+              class="profile-image"
+              [src]="peerAvatar || 'https://placehold.co/60x60'"
+              alt="peer"
+            />
+            <!-- Badge utilisateur du contact actif -->
+            <img
+              *ngIf="peerBadge && peerBadge !== 'STANDARD'"
+              [src]="getBadgeIcon(peerBadge)"
+              [alt]="peerBadge"
+              class="thread-badge-icon"
+              [title]="getBadgeLabel(peerBadge)"
+            />
+          </div>
           <div class="text">
             <h6 class="mb-0">{{ peerName || "–" }}</h6>
             <p class="text-muted mb-0"></p>

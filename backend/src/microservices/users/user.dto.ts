@@ -1,9 +1,11 @@
+import { Badge } from "@/utils/enums/badge.enum";
 import { Role } from "@/utils/enums/role.enum";
 import { Type } from "class-transformer";
 import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MinLength,
@@ -90,4 +92,11 @@ export class ChangePasswordDTO {
   @IsNotEmpty({ message: "password is required" })
   @IsString({ message: "password must be valid string" })
   password: string;
+}
+
+export class AssignBadge {
+  @IsNumber({}, { message: "userId required" })
+  userId: number;
+  @IsEnum(Badge, { message: "Invalid input type" })
+  badge: Badge;
 }

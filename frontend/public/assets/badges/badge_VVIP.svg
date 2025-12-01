@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .label { font-family: Arial, sans-serif; font-weight: 700; }
+    </style>
+  </defs>
+  
+  <circle cx="256" cy="256" r="200" fill="#0B678F" stroke="#D9A500" stroke-width="18" />
+  <circle cx="256" cy="256" r="165" fill="#004060" />
+  
+  <g fill="none" stroke="#D9A500" stroke-width="22" stroke-linecap="round">
+    <path d="M150 340 Q 256 400 362 340" />
+  </g>
+
+  <polygon points="256.0,95.0 267.8,118.8 294.0,122.6 275.0,141.2 279.5,167.4 256.0,155.0 232.5,167.4 237.0,141.2 218.0,122.6 244.2,118.8" fill="#F4C542" />
+  <polygon points="190.0,143.0 196.5,156.1 210.9,158.2 200.5,168.4 202.9,182.8 190.0,176.0 177.1,182.8 179.5,168.4 169.1,158.2 183.5,156.1" fill="#F4C542" />
+  <polygon points="322.0,143.0 328.5,156.1 342.9,158.2 332.5,168.4 334.9,182.8 322.0,176.0 309.1,182.8 311.5,168.4 301.1,158.2 315.5,156.1" fill="#F4C542" />
+  <text x="256" y="295" font-size="110" text-anchor="middle" fill="#FFFFFF" class="label">VVIP</text>
+
+</svg>

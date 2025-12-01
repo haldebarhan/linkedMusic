@@ -30,6 +30,10 @@ const adminController = container.resolve(AdminController);
 router.use(adminMiddleware);
 
 // Users
+router.post("/users/assign-badge", async (req: Request, res: Response) =>
+  adminController.assignBadge(req, res)
+);
+
 router.get("/users", async (req: Request, res: Response) =>
   adminController.getAllUsers(req, res)
 );
@@ -38,8 +42,12 @@ router.get("/users/:id", async (req: Request, res: Response) =>
   adminController.findUserById(req, res)
 );
 
-router.put("/users/:id/close-account", async (req: Request, res: Response) =>
+router.put("/users/close-account/:id", async (req: Request, res: Response) =>
   adminController.closeUserAccount(req, res)
+);
+
+router.put("/users/activate-account/:id", async (req: Request, res: Response) =>
+  adminController.activateUserAccount(req, res)
 );
 
 router.put(

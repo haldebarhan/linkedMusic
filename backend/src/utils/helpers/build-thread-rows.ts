@@ -32,6 +32,7 @@ export const buildThreadRows = async (data: any[], userId: number) => {
         unreadCount: count,
         lastSnippet: isSub ? last.content : "••••••",
         lastAt: last.createdAt,
+        peerBadge: peer.badge,
       };
     })
   );

@@ -26,19 +26,29 @@
             type="button"
             data-bs-toggle="dropdown"
           >
-            <img
-              [src]="user.profileImage || 'assets/avatar-default.png'"
-              alt="Profile"
-              class="profile-img"
-            />
-            <!-- Badge de notification mobile -->
-            <span
-              *ngIf="totalNotifications > 0"
-              class="notification-badge"
-              [class.pulse]="totalNotifications > 0"
-            >
-              {{ totalNotifications > 99 ? "99+" : totalNotifications }}
-            </span>
+            <div class="profile-wrapper position-relative">
+              <img
+                [src]="user.profileImage || 'assets/avatar-default.png'"
+                alt="Profile"
+                class="profile-img"
+              />
+              <!-- Badge utilisateur (si non STANDARD et non ADMIN) -->
+              <img
+                *ngIf="user.role !== 'ADMIN' && user.badge !== 'STANDARD'"
+                [src]="getBadgeIcon(user.badge)"
+                [alt]="user.badge"
+                class="user-badge-icon"
+                [title]="getBadgeLabel(user.badge)"
+              />
+              <!-- Badge de notification mobile -->
+              <span
+                *ngIf="totalNotifications > 0"
+                class="notification-badge"
+                [class.pulse]="totalNotifications > 0"
+              >
+                {{ totalNotifications > 99 ? "99+" : totalNotifications }}
+              </span>
+            </div>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
@@ -127,6 +137,14 @@
                   [src]="user.profileImage"
                   alt="Profile"
                   class="profile-img me-2"
+                />
+                <!-- Badge utilisateur (si non STANDARD et non ADMIN) -->
+                <img
+                  *ngIf="user.role !== 'ADMIN' && user.badge !== 'STANDARD'"
+                  [src]="getBadgeIcon(user.badge)"
+                  [alt]="user.badge"
+                  class="user-badge-icon"
+                  [title]="getBadgeLabel(user.badge)"
                 />
                 <!-- Badge de notification desktop -->
                 <span

@@ -2,6 +2,34 @@
   --blue: #74b9ff;
 }
 
+/* Wrapper pour l'avatar avec badge */
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Badge sur l'avatar dans la liste des threads */
+.thread-badge-icon {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: white;
+  padding: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+
+.thread-badge-icon:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
 /* Container principal avec hauteur FIXE */
 .container-fluid {
   height: 85vh;
@@ -80,7 +108,7 @@
   cursor: pointer;
 }
 .settings-tray--right i:hover {
-  color: var(--blue);
+  color: #74b9ff;
 }
 
 /* Bouton retour mobile */
@@ -97,7 +125,7 @@
 
 .back-button:hover,
 .back-button:focus {
-  color: var(--blue);
+  color: #74b9ff;
   text-decoration: none;
 }
 
@@ -356,6 +384,14 @@ hr {
   .messages-shell .col-12 {
     width: 100%;
     max-width: 100%;
+  }
+
+  /* Badge plus petit sur mobile */
+  .thread-badge-icon {
+    width: 16px;
+    height: 16px;
+    bottom: -1px;
+    right: -1px;
   }
 
   /* Ajustements pour l'overlay d'abonnement sur mobile */

@@ -165,14 +165,24 @@
           <div class="advertiser-card">
             <div class="advertiser-header">
               <div class="advertiser-info">
-                <img
-                  [src]="
-                    advertiser.profileImage ||
-                    'assets/images/default-avatar.png'
-                  "
-                  class="advertiser-avatar"
-                  [alt]="advertiser.displayName"
-                />
+                <div class="advertiser-avatar-wrapper position-relative">
+                  <img
+                    [src]="
+                      advertiser.profileImage ||
+                      'assets/images/default-avatar.png'
+                    "
+                    class="advertiser-avatar"
+                    [alt]="advertiser.displayName"
+                  />
+                  <!-- Badge utilisateur de l'annonceur -->
+                  <img
+                    *ngIf="advertiser.badge && advertiser.badge !== 'STANDARD'"
+                    [src]="getBadgeIcon(advertiser.badge)"
+                    [alt]="advertiser.badge"
+                    class="advertiser-badge-icon"
+                    [title]="getBadgeLabel(advertiser.badge)"
+                  />
+                </div>
                 <div class="advertiser-details">
                   <h3 class="advertiser-name">
                     {{ advertiser.displayName || "Utilisateur" }}
