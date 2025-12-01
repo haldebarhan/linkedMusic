@@ -1,3 +1,5 @@
+import { Badge } from '../enums/badge.enum';
+
 export type UserRole = 'ADMIN' | 'USER' | 'PROVIDER';
 export type SessionSource = 'password' | 'google';
 
@@ -15,6 +17,7 @@ export interface AuthUser {
   profileImage: string;
   phone: string;
   subscriptions: any;
+  badge: Badge;
   [key: string]: any;
 }
 

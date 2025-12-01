@@ -8,7 +8,7 @@ import { paginatedResponse } from "@/utils/helpers/paginated-response";
 import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import createError from "http-errors";
 import { saveFileToBucket } from "@/utils/functions/save-file";
-import { ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
+import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 
 @injectable()
 export class UserController {
@@ -49,7 +49,12 @@ export class UserController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page: pageQuery, limit: limitQuery, order: orderQuery } = req.query;
+    const {
+      page: pageQuery,
+      limit: limitQuery,
+      order: orderQuery,
+      q: searchQuery,
+    } = req.query;
 
     const page = parseInt(pageQuery as string) || 1;
     const limit = parseInt(limitQuery as string) || 10;
@@ -61,6 +66,28 @@ export class UserController {
       : Order.DESC;
 
     const where: any = {};
+    if (searchQuery) {
+      where.OR = [
+        {
+          email: {
+            contains: searchQuery,
+            mode: "insensitive",
+          },
+        },
+        {
+          displayName: {
+            contains: searchQuery,
+            mode: "insensitive",
+          },
+        },
+        {
+          phone: {
+            contains: searchQuery,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
 
     try {
       const users = await this.userService.findAll({
@@ -96,6 +123,17 @@ export class UserController {
       );
       const response = formatResponse(200, updated);
       res.status(201).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async assignBadge(req: Request, res: Response) {
+    try {
+      const dto: AssignBadge = Object.assign(new AssignBadge(), req.body);
+      const result = await this.userService.assignBadge(dto.userId, dto.badge);
+      const response = formatResponse(200, result);
+      res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
     }
@@ -214,6 +252,19 @@ export class UserController {
       await this.userService.closeAccount(userId, comment);
       const response = formatResponse(200, {
         message: "Account closed successfully",
+      });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async activate(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      await this.userService.activateAccount(+id);
+      const response = formatResponse(200, {
+        message: "Account activated successfully",
       });
       res.status(200).json(response);
     } catch (error) {

@@ -23,6 +23,7 @@ import { Role } from "@/utils/enums/role.enum";
 import { Order } from "@/utils/enums/order.enum";
 import { invalideCache } from "@/utils/functions/invalidate-cache";
 import { S3Service } from "@/utils/services/s3.service";
+import { Badge } from "@/utils/enums/badge.enum";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: S3Service = S3Service.getInstance();
@@ -119,11 +120,11 @@ export class UserService {
       this.userRepository.count(where),
     ]);
 
-    const dataWithImages = await Promise.all(
-      data.map((user) => this.attachProfileImageUrl(user))
-    );
+    // const dataWithImages = await Promise.all(
+    //   data.map((user) => this.attachProfileImageUrl(user))
+    // );
     return {
-      data: dataWithImages,
+      data,
       metadata: {
         total,
         page,
@@ -135,6 +136,10 @@ export class UserService {
   async findOne(id: number) {
     const user = await this.userRepository.findOne(id);
     if (!user) throw createError(404, "user not found");
+    user.profileImage = await minioService.generatePresignedUrl(
+      ENV.AWS_S3_DEFAULT_BUCKET,
+      user.profileImage
+    );
     return user;
   }
 
@@ -157,6 +162,11 @@ export class UserService {
     return this.attachProfileImageUrl(updatedUser);
   }
 
+  async assignBadge(userId: number, badge: Badge) {
+    const user = await this.findOne(userId);
+    return await this.userRepository.update(user.id, { badge });
+  }
+
   async login(
     credentials: LoginDTO,
     claims: { userAgent: string; ip: string }
@@ -164,7 +174,18 @@ export class UserService {
     const { email, password } = credentials;
 
     try {
-      const user = await this.userRepository.findByParams({ email });
+      const user = await this.userRepository.findByParams({
+        email,
+        status: {
+          notIn: [
+            Status.DESACTIVATED,
+            Status.CLOSED,
+            Status.SUSPENDED,
+            Status.UNVERIFIED,
+            Status.REMOVED,
+          ],
+        },
+      });
 
       // Utilise 401 pour les identifiants invalides (ne divulgue pas l'existence de l'email)
       if (!user) {
@@ -222,6 +243,15 @@ export class UserService {
   async loginWithGoogle(user: any, claims: { userAgent: string; ip: string }) {
     const authUser = await this.userRepository.findByParams({
       email: user.email,
+      status: {
+        notIn: [
+          Status.DESACTIVATED,
+          Status.CLOSED,
+          Status.SUSPENDED,
+          Status.UNVERIFIED,
+          Status.REMOVED,
+        ],
+      },
     });
     if (!authUser) throw createError(404, "user not found");
 
@@ -315,6 +345,12 @@ export class UserService {
     const user = await this.userRepository.findOne(userId);
     if (!user) throw createError(404, "User not found");
     await this.userRepository.closeAccount(user.id, comment);
+  }
+
+  async activateAccount(userId: number) {
+    const user = await this.userRepository.findOne(userId);
+    if (!user) throw createError(404, "User not found");
+    await this.userRepository.activateAccount(user.id);
   }
 
   private async attachProfileImageUrl(user: User): Promise<User> {

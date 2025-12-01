@@ -24,7 +24,9 @@ import {
   startSubscriptionDailyCron,
   startCheckSubscriptionStatus,
   startAnnouncementHighlightedCron,
+  startUpgradeUsersBadge,
 } from "./events/schedulers/scheduler";
+
 import path from "path";
 
 const allowed = getAllowedOrigins();
@@ -81,6 +83,7 @@ class Server {
     this.setupErrorHandling();
     // startSubscriptionDailyCron();
     // startCheckSubscriptionStatus();
+    // startAnnouncementHighlightedCron();
   }
 
   config() {

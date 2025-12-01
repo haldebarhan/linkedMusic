@@ -3,6 +3,7 @@ import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
 import { PrismaClient, Status, SubscriptionStatus, User } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
+import { Badge } from "@/utils/enums/badge.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -116,7 +117,7 @@ export class UserRepository extends BaseRepository<
 
   async update(
     id: number,
-    data: Partial<UpdateUserDTO> & { profileImage?: string }
+    data: Partial<UpdateUserDTO> & { profileImage?: string; badge?: Badge }
   ): Promise<User> {
     return prisma.user.update({
       where: { id },
@@ -139,6 +140,16 @@ export class UserRepository extends BaseRepository<
             },
           },
         },
+      },
+    });
+  }
+
+  async activateAccount(id: number) {
+    return await prisma.user.update({
+      where: { id },
+      data: {
+        status: Status.ACTIVATED,
+        comments: "",
       },
     });
   }

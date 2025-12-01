@@ -356,6 +356,7 @@ export class AnnouncementResponseDto {
     displayName?: string;
     profileImage?: string;
     totalAnnouncement?: number;
+    badge: string;
   };
 
   fieldValues: Array<{

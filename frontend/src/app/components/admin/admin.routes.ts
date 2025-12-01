@@ -10,6 +10,8 @@ import { SubscriptionFormComponent } from './pages/forms/subscription-form/subsc
 import { PublicationsComponent } from './pages/publications/publications.component';
 import { PublicationDetailsComponent } from './pages/publication-details/publication-details.component';
 import { BannerSlidesComponent } from './pages/banner-slides/banner-slides.component';
+import { UsersComponent } from './pages/users/users.component';
+import { UsersDetailsComponent } from './pages/users-details/users-details.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -72,6 +74,14 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'subscription-plans/edit/:id',
         loadComponent: () => SubscriptionFormComponent,
+      },
+      {
+        path: 'users',
+        loadComponent: () => UsersComponent,
+      },
+      {
+        path: 'users/details/:id',
+        loadComponent: () => UsersDetailsComponent,
       },
     ],
   },

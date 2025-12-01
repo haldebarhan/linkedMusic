@@ -3,6 +3,7 @@ import {
   Announcement,
   Prisma,
   AnnouncementStatus,
+  Status,
 } from "@prisma/client";
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
 import {
@@ -43,6 +44,17 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
     const where: Prisma.AnnouncementWhereInput = {
       isPublished: true,
       status: "PUBLISHED",
+      user: {
+        status: {
+          notIn: [
+            Status.DESACTIVATED,
+            Status.CLOSED,
+            Status.SUSPENDED,
+            Status.UNVERIFIED,
+            Status.REMOVED,
+          ],
+        },
+      },
     };
 
     // Filtre par catégorie
@@ -213,6 +225,7 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
         displayName: true,
         profileImage: true,
         email: true,
+        badge: true,
       },
     },
     fieldValues: {
@@ -365,6 +378,17 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
       isHighlighted: true,
       isPublished: true,
       status: "PUBLISHED",
+      user: {
+        status: {
+          notIn: [
+            Status.DESACTIVATED,
+            Status.CLOSED,
+            Status.SUSPENDED,
+            Status.UNVERIFIED,
+            Status.REMOVED,
+          ],
+        },
+      },
     };
 
     if (categorySlug) {

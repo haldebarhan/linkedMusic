@@ -103,6 +103,7 @@ export class MessageRepository {
             id: true,
             profileImage: true,
             displayName: true,
+            badge: true,
           },
         },
         receiver: {
@@ -110,6 +111,7 @@ export class MessageRepository {
             id: true,
             displayName: true,
             profileImage: true,
+            badge: true,
           },
         },
         messages: {

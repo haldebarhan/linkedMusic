@@ -24,6 +24,15 @@ enum NotificationType {
     SUBSCRIPTION_EXPIRED
 }
 
+enum Badge {
+    STANDARD
+    BRONZE
+    SILVER
+    GOLD
+    VIP
+    VVIP
+}
+
 enum Role {
     USER
     ADMIN
@@ -151,6 +160,7 @@ model User {
     country                String?
     city                   String?
     zipCode                String?                 @map("zip_code")
+    badge                  Badge                   @default(STANDARD)
     createdAt              DateTime                @default(now()) @map("created_at")
     updatedAt              DateTime                @updatedAt @map("updated_at")
     files                  File[]

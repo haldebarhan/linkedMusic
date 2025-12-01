@@ -353,6 +353,13 @@
   gap: 1rem;
 }
 
+/* Wrapper pour l'avatar avec badge */
+.advertiser-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .advertiser-avatar {
   width: 80px;
   height: 80px;
@@ -360,6 +367,28 @@
   object-fit: cover;
   border: 3px solid #1a73e8;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Badge sur l'avatar de l'annonceur */
+.advertiser-badge-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: white;
+  padding: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 2px solid #1a73e8;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+
+.advertiser-badge-icon:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .advertiser-details {
@@ -964,5 +993,19 @@
 
   .request-actions .btn {
     width: 100%;
+  }
+
+  /* Badge plus petit sur mobile */
+  .advertiser-badge-icon {
+    width: 50px;
+    height: 50px;
+    padding: 2px;
+    border-width: 2px;
+  }
+
+  /* Avatar plus petit sur mobile */
+  .advertiser-avatar {
+    width: 70px;
+    height: 70px;
   }
 }
