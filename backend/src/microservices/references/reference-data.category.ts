@@ -13,8 +13,8 @@ import {
   UpdateMusicStyleDto,
   UpdateSoftwareDto,
 } from "./reference-data.dto";
-import { AppError } from "@/utils/classes/app-error";
-import { ErrorCode } from "@/utils/enums/error-code.enum";
+import { AppError } from "../../utils/classes/app-error";
+import { ErrorCode } from "../../utils/enums/error-code.enum";
 
 @injectable()
 export class ReferenceDataService {

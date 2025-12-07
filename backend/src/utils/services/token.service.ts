@@ -3,8 +3,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env";
 import { Role } from "../enums/role.enum";
-import { CreateUserDTO } from "@/microservices/users/user.dto";
-import logger from "@/config/logger";
+import { CreateUserDTO } from "../../microservices/users/user.dto";
+import logger from "../../config/logger";
 
 interface RegisterToken {
   hashEmail: string;

@@ -11,7 +11,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { ENV } from "../../config/env";
-import logger from "@/config/logger";
+import logger from "../../config/logger";
 
 const firebaseClientApp = initClientApp({
   apiKey: ENV.FIREBASE_API_KEY!,

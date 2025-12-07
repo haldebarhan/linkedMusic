@@ -1,5 +1,5 @@
-import { Badge } from "@/utils/enums/badge.enum";
-import { Role } from "@/utils/enums/role.enum";
+import { Badge } from "../../utils/enums/badge.enum";
+import { Role } from "../../utils/enums/role.enum";
 import { Type } from "class-transformer";
 import {
   IsEmail,

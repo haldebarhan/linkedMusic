@@ -1,12 +1,12 @@
 import { injectable } from "tsyringe";
 import { MessageService } from "./message.service";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
+import { handleError } from "../../utils/helpers/handle-error";
 import { CreateMessageDTO, ReplyMessageDTO } from "./message.dto";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class MessageController {

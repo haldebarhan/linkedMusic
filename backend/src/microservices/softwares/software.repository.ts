@@ -1,8 +1,8 @@
 import { injectable } from "tsyringe";
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
 import { PrismaClient, Software } from "@prisma/client";
-import { Order } from "@/utils/enums/order.enum";
-import DatabaseService from "@/utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
+import DatabaseService from "../../utils/services/database.service";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()

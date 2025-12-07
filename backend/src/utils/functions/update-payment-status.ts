@@ -1,6 +1,6 @@
 import { container } from "tsyringe";
 import { WebhookEvent } from "../interfaces/payment-payload";
-import { PaymentRepository } from "@/microservices/payments/payment.repository";
+import { PaymentRepository } from "../../microservices/payments/payment.repository";
 import { PaymentStatus } from "@prisma/client";
 
 const paymentRepository = container.resolve(PaymentRepository);

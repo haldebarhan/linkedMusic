@@ -1,5 +1,5 @@
-import logger from "@/config/logger";
-import DatabaseService from "@/utils/services/database.service";
+import logger from "../../config/logger";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();

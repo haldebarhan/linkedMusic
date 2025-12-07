@@ -9,11 +9,11 @@ import {
   CategoryWithFields,
   FieldWithOptions,
   FormSchema,
-} from "@/utils/types/relation-type";
+} from "../../utils/types/relation-type";
 
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
 import { injectable } from "tsyringe";
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()

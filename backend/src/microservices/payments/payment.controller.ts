@@ -1,12 +1,12 @@
-import { handleError } from "@/utils/helpers/handle-error";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { handleError } from "../../utils/helpers/handle-error";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 import { PaymentDTO } from "./payment.dto";
 import { PaymentService } from "./payment.service";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class PaymentController {

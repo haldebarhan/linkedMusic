@@ -1,6 +1,6 @@
 import { injectable } from "tsyringe";
 import { AnnouncementService } from "./announcement.service";
-import { handleError } from "@/utils/helpers/handle-error";
+import { handleError } from "../../utils/helpers/handle-error";
 import { Request, Response } from "express";
 import {
   AnnouncementQueryDto,
@@ -8,14 +8,14 @@ import {
   likeAnnouncementDTO,
   UpdateAnnouncementDto,
 } from "./announcement.dto";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import { Order } from "@/utils/enums/order.enum";
-import { saveAnnouncementFiles } from "@/utils/functions/save-file";
-import { ENV } from "@/config/env";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
+import { Order } from "../../utils/enums/order.enum";
+import { saveAnnouncementFiles } from "../../utils/functions/save-file";
+import { ENV } from "../../config/env";
 import { AnnouncementStatus } from "@prisma/client";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
-import { S3Service } from "@/utils/services/s3.service";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { S3Service } from "../../utils/services/s3.service";
 const minioService: S3Service = S3Service.getInstance();
 
 @injectable()

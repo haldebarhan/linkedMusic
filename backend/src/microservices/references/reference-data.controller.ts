@@ -1,8 +1,8 @@
 import { injectable } from "tsyringe";
 import { ReferenceDataService } from "./reference-base.service";
 import { Request, Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { handleError } from "../../utils/helpers/handle-error";
+import { formatResponse } from "../../utils/helpers/response-formatter";
 import {
   CreateInstrumentDto,
   CreateLanguageDto,

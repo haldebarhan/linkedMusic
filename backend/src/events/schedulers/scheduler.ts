@@ -1,4 +1,4 @@
-import logger from "@/config/logger";
+import logger from "../../config/logger";
 import cron from "node-cron";
 import { subscriptionDailyJob } from "../workers/subscription-daily.worker";
 import { paymentsStatusCheckJob } from "../workers/payment-status.worker";

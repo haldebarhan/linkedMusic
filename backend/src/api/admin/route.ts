@@ -1,29 +1,29 @@
-import adminMiddleware from "@/middlewares/admin.middleware";
+import adminMiddleware from "../../middlewares/admin.middleware";
 import { Request, Response, Router } from "express";
 import { container } from "tsyringe";
 import { AdminController } from "./controller";
-import { ValidateDtoMiddleware } from "@/middlewares/validate-dto.middleware";
-import { UpdateUserDTO } from "@/microservices/users/user.dto";
-import { CreateConfigDTO } from "@/microservices/configurations/configuration.dto";
+import { ValidateDtoMiddleware } from "../../middlewares/validate-dto.middleware";
+import { UpdateUserDTO } from "../../microservices/users/user.dto";
+import { CreateConfigDTO } from "../../microservices/configurations/configuration.dto";
 import {
   AttachServicesDTO,
   CreateFieldDto,
   CreateFieldOptionDto,
   CreateServiceTypeDTO,
   UpdateFieldDto,
-} from "@/microservices/catalogues/catalogue.dto";
+} from "../../microservices/catalogues/catalogue.dto";
 import {
   CreatePlanDTO,
   UpdatePlanDTO,
-} from "@/microservices/subscriptions/dto/plan.dto";
+} from "../../microservices/subscriptions/dto/plan.dto";
 import {
   CreateCategoryDto,
   CreateCategoryFieldDto,
   LinkFieldsToCategoryDTO,
   UpdateCategoryDto,
-} from "@/microservices/categories/category.dto";
-import uploads from "@/multer-config";
-import { cache } from "@/middlewares/cache.middleware";
+} from "../../microservices/categories/category.dto";
+import uploads from "../../multer-config";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);

@@ -1,5 +1,5 @@
-import { PlanPeriod } from "@/utils/enums/period.enum";
-import { generateRandomUUID } from "@/utils/functions/utilities";
+import { PlanPeriod } from "../../../utils/enums/period.enum";
+import { generateRandomUUID } from "../../../utils/functions/utilities";
 import { Type } from "class-transformer";
 import {
   IsArray,

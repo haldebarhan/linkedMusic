@@ -1,8 +1,8 @@
-import logger from "@/config/logger";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import DatabaseService from "@/utils/services/database.service";
-import { FirebaseService } from "@/utils/services/firebase.service";
+import logger from "../config/logger";
+import { formatResponse } from "../utils/helpers/response-formatter";
+import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
+import DatabaseService from "../utils/services/database.service";
+import { FirebaseService } from "../utils/services/firebase.service";
 import { PrismaClient, Role, Status } from "@prisma/client";
 import { NextFunction } from "express";
 

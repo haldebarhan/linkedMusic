@@ -1,5 +1,5 @@
-import { ENV } from "@/config/env";
-import logger from "@/config/logger";
+import { ENV } from "../../config/env";
+import logger from "../../config/logger";
 import * as SibApiV3Sdk from "@sharekey/sendinblue-client";
 
 export class BrevoMailService {

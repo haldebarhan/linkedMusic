@@ -1,6 +1,6 @@
 import fs from "fs";
-import logger from "@/config/logger";
-import { ENV } from "@/config/env";
+import logger from "../../config/logger";
+import { ENV } from "../../config/env";
 
 import {
   S3Client,

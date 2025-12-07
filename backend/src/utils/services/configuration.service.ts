@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import DatabaseService from "./database.service";
-import logger from "@/config/logger";
+import logger from "../../config/logger";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 export type ConfigValue = string | number | boolean | object;

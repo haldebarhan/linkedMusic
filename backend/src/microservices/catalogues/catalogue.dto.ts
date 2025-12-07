@@ -1,4 +1,4 @@
-import { InputType } from "@/utils/enums/input-type.enum";
+import { InputType } from "../../utils/enums/input-type.enum";
 import { Type } from "class-transformer";
 import {
   IsArray,

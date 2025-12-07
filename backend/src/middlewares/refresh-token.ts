@@ -1,10 +1,10 @@
-import { FirebaseService } from "@/utils/services/firebase.service";
+import { FirebaseService } from "../utils/services/firebase.service";
 import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
 import { NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import logger from "@/config/logger";
+import logger from "../config/logger";
 import { PrismaClient, Status } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../utils/services/database.service";
 
 const firebaseService = FirebaseService.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();

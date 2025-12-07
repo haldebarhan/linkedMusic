@@ -10,19 +10,19 @@ import {
   PrismaClient,
   SubscriptionStatus,
 } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
-import { ENV } from "@/config/env";
-import { BrevoMailService } from "@/utils/services/brevo-mail.service";
+import DatabaseService from "../../utils/services/database.service";
+import { ENV } from "../../config/env";
+import { BrevoMailService } from "../../utils/services/brevo-mail.service";
 import { MatchingService } from "../matching/matching.service";
 import { UserRepository } from "../users/user.repository";
 import { NotificationRepository } from "../notifications/notification.repository";
-import { getIo } from "@/sockets/io-singleton";
-import { userRoom } from "@/sockets/room";
-import { EVENTS } from "@/sockets/event";
-import logger from "@/config/logger";
-import { countUnread } from "@/sockets/handlers/notification.handler";
-import { S3Service } from "@/utils/services/s3.service";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { getIo } from "../../sockets/io-singleton";
+import { userRoom } from "../../sockets/room";
+import { EVENTS } from "../../sockets/event";
+import logger from "../../config/logger";
+import { countUnread } from "../../sockets/handlers/notification.handler";
+import { S3Service } from "../../utils/services/s3.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();

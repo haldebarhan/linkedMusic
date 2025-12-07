@@ -12,10 +12,10 @@ import {
   UpdateFieldDto,
 } from "./catalogue.dto";
 import createError from "http-errors";
-import { Order } from "@/utils/enums/order.enum";
+import { Order } from "../../utils/enums/order.enum";
 import { Prisma, PrismaClient } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import DatabaseService from "../../utils/services/database.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

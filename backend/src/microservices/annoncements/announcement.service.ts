@@ -17,30 +17,30 @@ import {
 import {
   AnnouncementWithDetails,
   FieldValueInput,
-} from "@/utils/types/relation-type";
+} from "../../utils/types/relation-type";
 import {
   PaginatedResponse,
   PaginationParams,
-} from "@/utils/interfaces/pagination";
-import { Order } from "@/utils/enums/order.enum";
+} from "../../utils/interfaces/pagination";
+import { Order } from "../../utils/enums/order.enum";
 import createError from "http-errors";
-import { ENV } from "@/config/env";
+import { ENV } from "../../config/env";
 import {
   definedEntries,
   mergeFileList,
-} from "@/utils/functions/merge-fileList";
-import { BrevoMailService } from "@/utils/services/brevo-mail.service";
+} from "../../utils/functions/merge-fileList";
+import { BrevoMailService } from "../../utils/services/brevo-mail.service";
 import { NotificationRepository } from "../notifications/notification.repository";
-import DatabaseService from "@/utils/services/database.service";
-import { getIo } from "@/sockets/io-singleton";
-import { userRoom } from "@/sockets/room";
-import { EVENTS } from "@/sockets/event";
-import logger from "@/config/logger";
-import { countUnread } from "@/sockets/handlers/notification.handler";
+import DatabaseService from "../../utils/services/database.service";
+import { getIo } from "../../sockets/io-singleton";
+import { userRoom } from "../../sockets/room";
+import { EVENTS } from "../../sockets/event";
+import logger from "../../config/logger";
+import { countUnread } from "../../sockets/handlers/notification.handler";
 import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
-import { S3Service } from "@/utils/services/s3.service";
+import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

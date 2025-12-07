@@ -1,7 +1,7 @@
-import { Order } from "@/utils/enums/order.enum";
-import { PaginationParams } from "@/utils/interfaces/pagination";
-import DatabaseService from "@/utils/services/database.service";
-import { PaymentFilter } from "@/utils/types/payment";
+import { Order } from "../../utils/enums/order.enum";
+import { PaginationParams } from "../../utils/interfaces/pagination";
+import DatabaseService from "../../utils/services/database.service";
+import { PaymentFilter } from "../../utils/types/payment";
 import {
   PaymentProvider,
   PaymentStatus,

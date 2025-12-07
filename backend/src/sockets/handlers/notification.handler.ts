@@ -1,5 +1,5 @@
-import { NotificationRepository } from "@/microservices/notifications/notification.repository";
-import { AuthenticatedSocket } from "@/utils/interfaces/authenticated-socket";
+import { NotificationRepository } from "../../microservices/notifications/notification.repository";
+import { AuthenticatedSocket } from "../../utils/interfaces/authenticated-socket";
 import { Socket } from "socket.io";
 import { userRoom } from "../room";
 import { EVENTS } from "../event";

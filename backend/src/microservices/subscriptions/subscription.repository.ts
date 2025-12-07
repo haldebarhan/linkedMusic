@@ -1,6 +1,6 @@
-import { Order } from "@/utils/enums/order.enum";
-import { SubcriptionStatus } from "@/utils/enums/subscription-status.enum";
-import DatabaseService from "@/utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
+import { SubcriptionStatus } from "../../utils/enums/subscription-status.enum";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 import { CreateBenefit } from "./dto/plan.dto";

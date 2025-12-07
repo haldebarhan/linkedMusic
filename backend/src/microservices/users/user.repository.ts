@@ -1,9 +1,9 @@
-import { BaseRepository } from "@/utils/classes/base.repoository";
+import { BaseRepository } from "../../utils/classes/base.repoository";
 import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
 import { PrismaClient, Status, SubscriptionStatus, User } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
-import { Badge } from "@/utils/enums/badge.enum";
+import DatabaseService from "../../utils/services/database.service";
+import { Badge } from "../../utils/enums/badge.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

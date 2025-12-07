@@ -1,5 +1,5 @@
-import { BaseRepository } from "@/utils/classes/base.repoository";
-import DatabaseService from "@/utils/services/database.service";
+import { BaseRepository } from "../../utils/classes/base.repoository";
+import DatabaseService from "../../utils/services/database.service";
 import { AppConfig, PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 

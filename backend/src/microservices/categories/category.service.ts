@@ -3,9 +3,9 @@ import { CategoryRepository } from "./category.repository";
 import { FieldRepository } from "../fields/field.repository";
 import { FieldOptionRepository } from "../fields/field-option.repository";
 import { CategoryFieldRepository } from "../category-fields/category-field.repository";
-import { AppError } from "@/utils/classes/app-error";
-import { ErrorCode } from "@/utils/enums/error-code.enum";
-import { FormSchema } from "@/utils/types/relation-type";
+import { AppError } from "../../utils/classes/app-error";
+import { ErrorCode } from "../../utils/enums/error-code.enum";
+import { FormSchema } from "../../utils/types/relation-type";
 import {
   CreateCategoryDto,
   CreateCategoryFieldDto,
@@ -17,8 +17,8 @@ import {
   UpdateFieldDto,
   UpdateFieldOptionDto,
 } from "./category.dto";
-import { Order } from "@/utils/enums/order.enum";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { Order } from "../../utils/enums/order.enum";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 @injectable()
 export class CategoryService {

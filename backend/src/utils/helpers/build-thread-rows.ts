@@ -1,6 +1,6 @@
-import { ENV } from "@/config/env";
+import { ENV } from "../../config/env";
 import { container } from "tsyringe";
-import { MatchingService } from "@/microservices/matching/matching.service";
+import { MatchingService } from "../../microservices/matching/matching.service";
 import { S3Service } from "../services/s3.service";
 
 const minioService: S3Service = S3Service.getInstance();

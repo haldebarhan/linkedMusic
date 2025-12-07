@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
-import { UserController } from "@/microservices/users/user.controller";
-import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
-import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
-import { CategoryController } from "@/microservices/categories/category.controller";
-import { AnnouncementController as AnnController } from "@/microservices/annoncements/announcement.controller";
-import { BannerSlideController } from "@/microservices/banner-slides/banner-slide.controller";
+import { UserController } from "../../microservices/users/user.controller";
+import { CatalogueController } from "../../microservices/catalogues/catalogue.controller";
+import { SubscriptionController } from "../../microservices/subscriptions/subscription.controller";
+import { CategoryController } from "../../microservices/categories/category.controller";
+import { AnnouncementController as AnnController } from "../../microservices/annoncements/announcement.controller";
+import { BannerSlideController } from "../../microservices/banner-slides/banner-slide.controller";
 
 @injectable()
 export class AuthController {

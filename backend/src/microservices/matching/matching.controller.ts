@@ -1,9 +1,9 @@
 import { injectable } from "tsyringe";
 import { MatchingService } from "./matching.service";
 import { Request, Response } from "express";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import { handleError } from "@/utils/helpers/handle-error";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
+import { handleError } from "../../utils/helpers/handle-error";
+import { formatResponse } from "../../utils/helpers/response-formatter";
 import createError from "http-errors";
 
 @injectable()

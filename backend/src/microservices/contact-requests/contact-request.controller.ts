@@ -1,10 +1,10 @@
 import { injectable } from "tsyringe";
 import { Request, Response } from "express";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { CreateContactRequestDTO } from "./contact-request.dto";
 import { ContactRequestService } from "./contact-request.service";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { handleError } from "@/utils/helpers/handle-error";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { handleError } from "../../utils/helpers/handle-error";
 
 @injectable()
 export class ContactRequestController {

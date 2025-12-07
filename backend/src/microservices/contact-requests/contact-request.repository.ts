@@ -1,8 +1,8 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient, ContactRequestStatus } from "@prisma/client";
 import { injectable } from "tsyringe";
 import { CreateContactRequestDTO } from "./contact-request.dto";
-import { Order } from "@/utils/enums/order.enum";
+import { Order } from "../../utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 @injectable()

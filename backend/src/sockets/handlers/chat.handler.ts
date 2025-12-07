@@ -2,12 +2,12 @@ import { Server, Socket } from "socket.io";
 import { EventKey, EVENTS } from "../event";
 import { userRoom, threadRoom } from "../room";
 import { PrismaClient } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
-import { AuthenticatedSocket } from "@/utils/interfaces/authenticated-socket";
-import { MessageRepository } from "@/microservices/messages/message.repository";
-import { buildThreadRows } from "@/utils/helpers/build-thread-rows";
+import DatabaseService from "../../utils/services/database.service";
+import { AuthenticatedSocket } from "../../utils/interfaces/authenticated-socket";
+import { MessageRepository } from "../../microservices/messages/message.repository";
+import { buildThreadRows } from "../../utils/helpers/build-thread-rows";
 import createError from "http-errors";
-import logger from "@/config/logger";
+import logger from "../../config/logger";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const messageRepository = new MessageRepository();

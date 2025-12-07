@@ -3,9 +3,9 @@ import { ConfigurationRepository } from "./configuration.repository";
 import { CreateConfigDTO, UpdateConfigDTO } from "./configuration.dto";
 import { Prisma } from "@prisma/client";
 import createError from "http-errors";
-import { Order } from "@/utils/enums/order.enum";
-import { ConfigService } from "@/utils/services/configuration.service";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { Order } from "../../utils/enums/order.enum";
+import { ConfigService } from "../../utils/services/configuration.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 @injectable()
 export class ConfigurationService {

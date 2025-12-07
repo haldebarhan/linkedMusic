@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { UserRepository } from "./user.repository";
-import { TokenService } from "@/utils/services/token.service";
-import { BrevoMailService } from "@/utils/services/brevo-mail.service";
+import { TokenService } from "../../utils/services/token.service";
+import { BrevoMailService } from "../../utils/services/brevo-mail.service";
 import {
   ChangePasswordDTO,
   CreateUserDTO,
@@ -9,21 +9,21 @@ import {
   UpdateUserDTO,
   VerifyToken,
 } from "./user.dto";
-import { FirebaseService } from "@/utils/services/firebase.service";
+import { FirebaseService } from "../../utils/services/firebase.service";
 import { Prisma, Status, User } from "@prisma/client";
 import { UserRecord } from "firebase-admin/lib/auth/user-record";
 import createError from "http-errors";
-import { ENV } from "@/config/env";
+import { ENV } from "../../config/env";
 import {
   changeFirebaseUserPassword,
   createFirebaseUser,
   rollbackFirebaseUser,
-} from "@/utils/functions/create-firebase-user";
-import { Role } from "@/utils/enums/role.enum";
-import { Order } from "@/utils/enums/order.enum";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
-import { S3Service } from "@/utils/services/s3.service";
-import { Badge } from "@/utils/enums/badge.enum";
+} from "../../utils/functions/create-firebase-user";
+import { Role } from "../../utils/enums/role.enum";
+import { Order } from "../../utils/enums/order.enum";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { S3Service } from "../../utils/services/s3.service";
+import { Badge } from "../../utils/enums/badge.enum";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: S3Service = S3Service.getInstance();

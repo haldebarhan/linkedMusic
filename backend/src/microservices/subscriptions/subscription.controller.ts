@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 import { SubscriptionService } from "./subscription.service";
-import { handleError } from "@/utils/helpers/handle-error";
+import { handleError } from "../../utils/helpers/handle-error";
 import { CreatePlanDTO, SubscribeDTO, UpdatePlanDTO } from "./dto/plan.dto";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class SubscriptionController {

@@ -2,8 +2,8 @@ import http from "http";
 import type { Express } from "express";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
-import { getAllowedOrigins } from "@/utils/functions/allowed-origins";
-import { ENV } from "@/config/env";
+import { getAllowedOrigins } from "../utils/functions/allowed-origins";
+import { ENV } from "../config/env";
 
 export type AppSocketData = { userId: number };
 export let io: Server | null = null;

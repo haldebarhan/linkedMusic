@@ -1,9 +1,9 @@
 import { injectable } from "tsyringe";
 import { BannerSlideRepository } from "./banner-slide.repository";
 import createError from "http-errors";
-import { ENV } from "@/config/env";
-import { S3Service } from "@/utils/services/s3.service";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { ENV } from "../../config/env";
+import { S3Service } from "../../utils/services/s3.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const minioService: S3Service = S3Service.getInstance();
 

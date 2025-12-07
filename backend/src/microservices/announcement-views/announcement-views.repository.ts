@@ -1,6 +1,6 @@
-import { Order } from "@/utils/enums/order.enum";
-import { PaginationParams } from "@/utils/interfaces/pagination";
-import DatabaseService from "@/utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
+import { PaginationParams } from "../../utils/interfaces/pagination";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 
