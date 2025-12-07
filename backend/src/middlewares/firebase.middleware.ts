@@ -1,9 +1,9 @@
 import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
 import { NextFunction } from "express";
-import { FirebaseService } from "@/utils/services/firebase.service";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { FirebaseService } from "../utils/services/firebase.service";
+import { formatResponse } from "../utils/helpers/response-formatter";
 import { PrismaClient } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../utils/services/database.service";
 
 const firebaseService = FirebaseService.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();

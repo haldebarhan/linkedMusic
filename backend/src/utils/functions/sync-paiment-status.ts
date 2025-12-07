@@ -1,11 +1,11 @@
-import { enqueuePaymentPendingJob } from "@/events/jobs/payment-pending.job";
+import { enqueuePaymentPendingJob } from "../../events/jobs/payment-pending.job";
 import { PaymentStatus, Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../services/database.service";
 import { addDays } from "date-fns";
 import { container } from "tsyringe";
-import { PaymentRepository } from "@/microservices/payments/payment.repository";
-import { Jeko } from "@/core/payments/Jeko/jeko";
-import { PlanRepository } from "@/microservices/subscriptions/plan.repository";
+import { PaymentRepository } from "../../microservices/payments/payment.repository";
+import { Jeko } from "../../core/payments/Jeko/jeko";
+import { PlanRepository } from "../../microservices/subscriptions/plan.repository";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 const paymentRepository = container.resolve(PaymentRepository);

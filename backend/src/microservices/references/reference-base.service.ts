@@ -3,8 +3,8 @@ import { MusicStyleRepository } from "../musics/music.repository";
 import { InstrumentRepository } from "../instruments/instrument.repository";
 import { LanguageRepository } from "../languages/language.repository";
 import { SoftwareRepository } from "../softwares/software.repository";
-import { AppError } from "@/utils/classes/app-error";
-import { ErrorCode } from "@/utils/enums/error-code.enum";
+import { AppError } from "../../utils/classes/app-error";
+import { ErrorCode } from "../../utils/enums/error-code.enum";
 import {
   CreateInstrumentDto,
   CreateLanguageDto,

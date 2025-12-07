@@ -4,7 +4,7 @@ import { PlanRepository } from "../subscriptions/plan.repository";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
 import { PaymentDTO } from "./payment.dto";
 import createError from "http-errors";
-import { generateRandomUUID } from "@/utils/functions/utilities";
+import { generateRandomUUID } from "../../utils/functions/utilities";
 import {
   PaymentProvider,
   PaymentStatus,
@@ -12,16 +12,16 @@ import {
   PrismaClient,
   SubscriptionStatus,
 } from "@prisma/client";
-import { ENV } from "@/config/env";
-import { enqueuePaymentPendingJob } from "@/events/jobs/payment-pending.job";
-import DatabaseService from "@/utils/services/database.service";
+import { ENV } from "../../config/env";
+import { enqueuePaymentPendingJob } from "../../events/jobs/payment-pending.job";
+import DatabaseService from "../../utils/services/database.service";
 import { addDays } from "date-fns";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
-import { Order } from "@/utils/enums/order.enum";
-import { S3Service } from "@/utils/services/s3.service";
-import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
-import { Jeko } from "@/core/payments/Jeko/jeko";
-import { invalideCache } from "@/utils/functions/invalidate-cache";
+import { Order } from "../../utils/enums/order.enum";
+import { S3Service } from "../../utils/services/s3.service";
+import { syncPaymentStatusByReference } from "../../utils/functions/sync-paiment-status";
+import { Jeko } from "../../core/payments/Jeko/jeko";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();

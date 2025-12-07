@@ -1,10 +1,10 @@
-import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
-import { BannerSlideController } from "@/microservices/banner-slides/banner-slide.controller";
-import { CatalogueController } from "@/microservices/catalogues/catalogue.controller";
-import { CategoryController } from "@/microservices/categories/category.controller";
-import { ConfigurationController } from "@/microservices/configurations/configuration.controller";
-import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
-import { UserController } from "@/microservices/users/user.controller";
+import { AnnouncementController } from "../../microservices/annoncements/announcement.controller";
+import { BannerSlideController } from "../../microservices/banner-slides/banner-slide.controller";
+import { CatalogueController } from "../../microservices/catalogues/catalogue.controller";
+import { CategoryController } from "../../microservices/categories/category.controller";
+import { ConfigurationController } from "../../microservices/configurations/configuration.controller";
+import { SubscriptionController } from "../../microservices/subscriptions/subscription.controller";
+import { UserController } from "../../microservices/users/user.controller";
 import { Request, Response } from "express";
 import { injectable } from "tsyringe";
 

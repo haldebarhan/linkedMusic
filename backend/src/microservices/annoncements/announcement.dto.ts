@@ -16,7 +16,7 @@ import {
 } from "class-validator";
 import { Transform, Type } from "class-transformer";
 import { AnnouncementStatus } from "@prisma/client";
-import { parseMaybeJSON } from "@/middlewares/parse-json.middleware";
+import { parseMaybeJSON } from "../../middlewares/parse-json.middleware";
 
 const toBool = (v: any) =>
   v === true || v === "true"

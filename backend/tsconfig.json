@@ -24,9 +24,9 @@
     "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
-      "@/microservices/*": ["src/microservices/*"],
-      "@/core/*": ["src/core/*"]
+      "../../*": ["src/*"],
+      "../../microservices/*": ["src/microservices/*"],
+      "../../core/*": ["src/core/*"]
     }
   },
   "exclude": ["node_modules"],

@@ -1,12 +1,11 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../utils/services/database.service";
 import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
 import { PrismaClient, Status, SubscriptionStatus } from "@prisma/client";
 import { NextFunction } from "express";
-import { FirebaseService } from "@/utils/services/firebase.service";
-import logger from "@/config/logger";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { S3Service } from "@/utils/services/s3.service";
-import { ENV } from "@/config/env";
+import { FirebaseService } from "../utils/services/firebase.service";
+import { formatResponse } from "../utils/helpers/response-formatter";
+import { S3Service } from "../utils/services/s3.service";
+import { ENV } from "../config/env";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const firebaseService = FirebaseService.getInstance();

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { CategoryService } from "./category.service";
 import { injectable } from "tsyringe";
-import { handleError } from "@/utils/helpers/handle-error";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { handleError } from "../../utils/helpers/handle-error";
+import { formatResponse } from "../../utils/helpers/response-formatter";
 import {
   CreateCategoryDto,
   CreateCategoryFieldDto,
@@ -14,8 +14,8 @@ import {
   UpdateFieldDto,
   UpdateFieldOptionDto,
 } from "./category.dto";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class CategoryController {

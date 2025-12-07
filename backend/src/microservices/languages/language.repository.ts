@@ -1,7 +1,7 @@
 import { Language, PrismaClient } from "@prisma/client";
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
-import { Order } from "@/utils/enums/order.enum";
-import DatabaseService from "@/utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
+import DatabaseService from "../../utils/services/database.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

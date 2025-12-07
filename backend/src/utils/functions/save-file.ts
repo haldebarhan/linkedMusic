@@ -1,4 +1,4 @@
-import { ENV } from "@/config/env";
+import { ENV } from "../../config/env";
 import { S3Service } from "../services/s3.service";
 
 const s3Service: S3Service = S3Service.getInstance();

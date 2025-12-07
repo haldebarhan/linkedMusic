@@ -12,13 +12,12 @@ import {
   ResetPasswordDTO,
   UpdateUserDTO,
   VerifyToken,
-} from "@/microservices/users/user.dto";
-import authMiddleware from "@/middlewares/auth.middleware";
-import refreshTokenMiddleware from "@/middlewares/refresh-token";
-import uploads from "@/multer-config";
-import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
-import { firebaseMiddleware } from "@/middlewares/firebase.middleware";
-import { cache } from "@/middlewares/cache.middleware";
+} from "../../microservices/users/user.dto";
+import authMiddleware from "../../middlewares/auth.middleware";
+import refreshTokenMiddleware from "../../middlewares/refresh-token";
+import uploads from "../../multer-config";
+import { firebaseMiddleware } from "../../middlewares/firebase.middleware";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);

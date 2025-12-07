@@ -1,13 +1,13 @@
 import { injectable } from "tsyringe";
 import { UserService } from "./user.service";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { formatResponse } from "../../utils/helpers/response-formatter";
 import { Request, Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { handleError } from "../../utils/helpers/handle-error";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import createError from "http-errors";
-import { saveFileToBucket } from "@/utils/functions/save-file";
+import { saveFileToBucket } from "../../utils/functions/save-file";
 import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 
 @injectable()

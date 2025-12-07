@@ -1,7 +1,7 @@
-import logger from "@/config/logger";
-import { AuthenticatedSocket } from "@/utils/interfaces/authenticated-socket";
-import DatabaseService from "@/utils/services/database.service";
-import { FirebaseService } from "@/utils/services/firebase.service";
+import logger from "../config/logger";
+import { AuthenticatedSocket } from "../utils/interfaces/authenticated-socket";
+import DatabaseService from "../utils/services/database.service";
+import { FirebaseService } from "../utils/services/firebase.service";
 import { PrismaClient, Status } from "@prisma/client";
 
 const firebaseService = FirebaseService.getInstance();

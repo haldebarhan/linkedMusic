@@ -1,4 +1,4 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 import {
@@ -9,7 +9,7 @@ import {
   UpdateCategoryDTO,
   UpdateFieldDto,
 } from "./catalogue.dto";
-import { Order } from "@/utils/enums/order.enum";
+import { Order } from "../../utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

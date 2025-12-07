@@ -1,4 +1,4 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient, SubscriptionStatus } from "@prisma/client";
 import { injectable } from "tsyringe";
 import createError from "http-errors";

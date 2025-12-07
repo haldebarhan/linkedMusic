@@ -1,7 +1,7 @@
-import logger from "@/config/logger";
-import { PaymentStatus } from "@/utils/enums/payment-status.enum";
-import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
-import DatabaseService from "@/utils/services/database.service";
+import logger from "../../config/logger";
+import { PaymentStatus } from "../../utils/enums/payment-status.enum";
+import { syncPaymentStatusByReference } from "../../utils/functions/sync-paiment-status";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();

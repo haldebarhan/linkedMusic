@@ -1,10 +1,10 @@
 import { injectable } from "tsyringe";
 import { BannerSlideService } from "./banner-slide.service";
 import { Request, Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
-import { saveSlideFiles } from "@/utils/functions/save-file";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { handleError } from "../../utils/helpers/handle-error";
+import { saveSlideFiles } from "../../utils/functions/save-file";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class BannerSlideController {

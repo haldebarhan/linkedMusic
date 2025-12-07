@@ -1,12 +1,10 @@
-import { ENV } from "@/config/env";
-import { PaymentStatus } from "@/utils/enums/payment-status.enum";
-import { generateRandomUUID } from "@/utils/functions/utilities";
-import { JekoPaymentStatusResponse } from "@/utils/interfaces/jeko";
+import { ENV } from "../../../config/env";
+import { JekoPaymentStatusResponse } from "../../../utils/interfaces/jeko";
 import {
   paymentMethod,
   status,
   transactionType,
-} from "@/utils/interfaces/payment-payload";
+} from "../../../utils/interfaces/payment-payload";
 import { Currency } from "@prisma/client";
 import axios, { AxiosInstance } from "axios";
 

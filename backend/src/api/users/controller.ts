@@ -1,13 +1,13 @@
-import { DashBoardController } from "@/microservices/dashboard/dashboard.controller";
-import { MatchingController } from "@/microservices/matching/matching.controller";
-import { MessageController } from "@/microservices/messages/message.controller";
-import { PaymentController } from "@/microservices/payments/payment.controller";
-import { SubscriptionController } from "@/microservices/subscriptions/subscription.controller";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { DashBoardController } from "../../microservices/dashboard/dashboard.controller";
+import { MatchingController } from "../../microservices/matching/matching.controller";
+import { MessageController } from "../../microservices/messages/message.controller";
+import { PaymentController } from "../../microservices/payments/payment.controller";
+import { SubscriptionController } from "../../microservices/subscriptions/subscription.controller";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { Response, Request } from "express";
 import { injectable } from "tsyringe";
-import { AnnouncementController } from "@/microservices/annoncements/announcement.controller";
-import { ContactRequestController } from "@/microservices/contact-requests/contact-request.controller";
+import { AnnouncementController } from "../../microservices/annoncements/announcement.controller";
+import { ContactRequestController } from "../../microservices/contact-requests/contact-request.controller";
 
 @injectable()
 export class UserController {

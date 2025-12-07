@@ -13,10 +13,10 @@ import {
   UpdateCategoryDTO,
   UpdateFieldDto,
 } from "./catalogue.dto";
-import { handleError } from "@/utils/helpers/handle-error";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { handleError } from "../../utils/helpers/handle-error";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class CatalogueController {

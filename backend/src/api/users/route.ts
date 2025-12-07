@@ -1,25 +1,25 @@
 import { Response, Router } from "express";
 import { container } from "tsyringe";
 import { UserController } from "./controller";
-import { ValidateDtoMiddleware } from "@/middlewares/validate-dto.middleware";
+import { ValidateDtoMiddleware } from "../../middlewares/validate-dto.middleware";
 
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import UserAndProviderMiddleware from "@/middlewares/user-provider.middleware";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
+import UserAndProviderMiddleware from "../../middlewares/user-provider.middleware";
 
-import uploads from "@/multer-config";
+import uploads from "../../multer-config";
 import {
   CreateMessageDTO,
   ReplyMessageDTO,
-} from "@/microservices/messages/message.dto";
-import { SubscribeDTO } from "@/microservices/subscriptions/dto/plan.dto";
-import { PaymentDTO } from "@/microservices/payments/payment.dto";
+} from "../../microservices/messages/message.dto";
+import { SubscribeDTO } from "../../microservices/subscriptions/dto/plan.dto";
+import { PaymentDTO } from "../../microservices/payments/payment.dto";
 import {
   CreateAnnouncementDto,
   likeAnnouncementDTO,
   UpdateAnnouncementDto,
-} from "@/microservices/annoncements/announcement.dto";
-import { CreateContactRequestDTO } from "@/microservices/contact-requests/contact-request.dto";
-import { cache } from "@/middlewares/cache.middleware";
+} from "../../microservices/annoncements/announcement.dto";
+import { CreateContactRequestDTO } from "../../microservices/contact-requests/contact-request.dto";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);

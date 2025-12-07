@@ -10,15 +10,15 @@ import {
   AnnouncementWithDetails,
   AnnouncementFilters,
   FieldValueInput,
-} from "@/utils/types/relation-type";
+} from "../../utils/types/relation-type";
 
 import {
   PaginatedResponse,
   PaginationParams,
-} from "@/utils/interfaces/pagination";
+} from "../../utils/interfaces/pagination";
 import { injectable } from "tsyringe";
-import DatabaseService from "@/utils/services/database.service";
-import { Order } from "@/utils/enums/order.enum";
+import DatabaseService from "../../utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

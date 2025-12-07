@@ -1,4 +1,4 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 import { CategoryField, PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 

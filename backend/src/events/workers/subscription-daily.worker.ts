@@ -1,9 +1,9 @@
-import logger from "@/config/logger";
-import { SubscriptionRepository } from "@/microservices/subscriptions/subscription.repository";
-import DatabaseService from "@/utils/services/database.service";
+import logger from "../../config/logger";
+import { SubscriptionRepository } from "../../microservices/subscriptions/subscription.repository";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { container } from "tsyringe";
-import { SubcriptionStatus } from "@/utils/enums/subscription-status.enum";
+import { SubcriptionStatus } from "../../utils/enums/subscription-status.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

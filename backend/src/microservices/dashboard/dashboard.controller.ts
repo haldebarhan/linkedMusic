@@ -1,9 +1,9 @@
 import { injectable } from "tsyringe";
 import { DashboardSerice } from "./dashboard.service";
 import { Request, Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
-import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
-import { formatResponse } from "@/utils/helpers/response-formatter";
+import { handleError } from "../../utils/helpers/handle-error";
+import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
+import { formatResponse } from "../../utils/helpers/response-formatter";
 
 @injectable()
 export class DashBoardController {

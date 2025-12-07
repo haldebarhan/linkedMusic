@@ -1,5 +1,5 @@
-import logger from "@/config/logger";
-import DatabaseService from "@/utils/services/database.service";
+import logger from "../../config/logger";
+import DatabaseService from "../../utils/services/database.service";
 import { Badge, PrismaClient, Status } from "@prisma/client";
 
 interface BadgeSpecs {

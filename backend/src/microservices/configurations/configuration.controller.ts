@@ -1,11 +1,11 @@
 import { injectable } from "tsyringe";
 import { ConfigurationService } from "./configuration.service";
 import { Request, Response } from "express";
-import { handleError } from "@/utils/helpers/handle-error";
+import { handleError } from "../../utils/helpers/handle-error";
 import { CreateConfigDTO, UpdateConfigDTO } from "./configuration.dto";
-import { formatResponse } from "@/utils/helpers/response-formatter";
-import { Order } from "@/utils/enums/order.enum";
-import { paginatedResponse } from "@/utils/helpers/paginated-response";
+import { formatResponse } from "../../utils/helpers/response-formatter";
+import { Order } from "../../utils/enums/order.enum";
+import { paginatedResponse } from "../../utils/helpers/paginated-response";
 
 @injectable()
 export class ConfigurationController {

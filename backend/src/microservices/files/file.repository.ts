@@ -1,4 +1,4 @@
-import DatabaseService from "@/utils/services/database.service";
+import DatabaseService from "../../utils/services/database.service";
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "tsyringe";
 import { CreateFileDTO } from "./file.dto";

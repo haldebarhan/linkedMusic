@@ -1,8 +1,8 @@
 import { FieldOption, PrismaClient } from "@prisma/client";
 import { ReferenceBaseRepository } from "../references/reference-base.repository";
 import { injectable } from "tsyringe";
-import DatabaseService from "@/utils/services/database.service";
-import { Order } from "@/utils/enums/order.enum";
+import DatabaseService from "../../utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 

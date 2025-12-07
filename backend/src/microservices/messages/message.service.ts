@@ -2,11 +2,11 @@ import { injectable } from "tsyringe";
 import { MatchingService } from "../matching/matching.service";
 import createError from "http-errors";
 import { PrismaClient } from "@prisma/client";
-import DatabaseService from "@/utils/services/database.service";
-import { Order } from "@/utils/enums/order.enum";
+import DatabaseService from "../../utils/services/database.service";
+import { Order } from "../../utils/enums/order.enum";
 import { MessageRepository } from "./message.repository";
-import { ENV } from "@/config/env";
-import { S3Service } from "@/utils/services/s3.service";
+import { ENV } from "../../config/env";
+import { S3Service } from "../../utils/services/s3.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();

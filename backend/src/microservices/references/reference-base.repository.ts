@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import {
   PaginationParams,
   PaginatedResponse,
-} from "@/utils/interfaces/pagination";
+} from "../../utils/interfaces/pagination";
 
 export abstract class ReferenceBaseRepository<T> {
   protected prisma: PrismaClient;
