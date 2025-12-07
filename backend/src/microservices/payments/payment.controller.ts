@@ -33,10 +33,10 @@ export class PaymentController {
 
   async checkPaymentStatus(req: AuthenticatedRequest, res: Response) {
     try {
-      const { reference } = req.params;
+      const { externalId } = req.params;
       const { user } = req;
       const payment = await this.paymentService.findPaymentByReference(
-        reference,
+        externalId,
         user.id
       );
       const response = formatResponse(200, payment);

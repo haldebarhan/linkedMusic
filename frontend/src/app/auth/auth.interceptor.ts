@@ -55,20 +55,14 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         // Si erreur 401 et que ce n'est PAS déjà une requête de refresh
         // (pour éviter la boucle infinie)
-        if (error.status === 401 && !isRefreshEndpoint) {
-          // Tenter de refresh le token
+        if (error.status === 401 && !req.url.includes('/auth/refresh')) {
           return this.refreshSvc.refreshToken().pipe(
             switchMap((newToken) => {
-              // Retry la requête avec le nouveau token
+              // Retry avec le nouveau token
               const retryReq = req.clone({
                 setHeaders: { Authorization: `Bearer ${newToken}` },
               });
-
               return next.handle(retryReq);
-            }),
-            catchError((refreshError) => {
-              // Si le refresh échoue aussi, propager l'erreur
-              return throwError(() => error);
             })
           );
         }

@@ -4,6 +4,7 @@
     <div class="spinner"></div>
     <p>Chargement des informations...</p>
   </div>
+
   <!-- Error state -->
   <div *ngIf="error && !loading" class="error-card">
     <svg
@@ -23,6 +24,7 @@
     <p>{{ error }}</p>
     <button (click)="cancel()" class="btn-back">Retour aux plans</button>
   </div>
+
   <!-- Main checkout content -->
   <div *ngIf="!loading && !error && plan" class="checkout-wrapper">
     <!-- Header -->
@@ -119,7 +121,7 @@
         </div>
       </div>
 
-      <!-- Right Column - Payment & Account Info -->
+      <!-- Right Column - Payment Method & Summary -->
       <div class="right-column">
         <!-- Account Section -->
         <div class="account-section" *ngIf="user$ | async as user">
@@ -147,70 +149,30 @@
         </div>
 
         <!-- Payment Method Section -->
-        <div class="payment-section">
-          <h3 class="section-title">Adresse de facturation</h3>
-
-          <!-- On réutilise .payment-methods pour conserver la même largeur/rythme -->
-          <div class="payment-methods">
-            <!-- Adresse -->
-            <div class="payment-method">
-              <div class="method-details" style="width: 100%">
-                <form [formGroup]="form">
-                  <div class="mb-3">
-                    <input
-                      type="text"
-                      class="form-control form-control-lg"
-                      aria-describedby="zipCode"
-                      placeholder="Code Postal:"
-                      formControlName="zipCode"
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <input
-                      type="text"
-                      class="form-control form-control-lg"
-                      aria-describedby="addresse"
-                      placeholder="Addresse: (ex: Rue du gue)"
-                      formControlName="address"
-                    />
-                  </div>
-
-                  <div class="mb-3">
-                    <input
-                      #phoneInput
-                      type="tel"
-                      class="form-control input-soft"
-                      placeholder="Ex: 0102030405"
-                    />
-                    <input type="hidden" formControlName="phone" />
-                  </div>
-
-                  <div class="mb-3">
-                    <input
-                      type="text"
-                      class="form-control form-control-lg"
-                      aria-describedby="city"
-                      placeholder="Ville:"
-                      formControlName="city"
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <select
-                      class="form-control form-control-lg"
-                      aria-describedby="country"
-                      formControlName="country"
-                      (change)="countryChange($event)"
-                    >
-                      <option value="">Choisir votre pays</option>
-                      <option
-                        *ngFor="let country of countries"
-                        [value]="country.name"
-                      >
-                        {{ country.name }}
-                      </option>
-                    </select>
-                  </div>
-                </form>
+        <div class="payment-method-section" *ngIf="!isFreePlan()">
+          <h3 class="section-title">Méthode de paiement</h3>
+          <div class="payment-methods-grid">
+            <div
+              *ngFor="let method of paymentMethods"
+              class="payment-method-card"
+              [class.selected]="selectedPaymentMethod === method.id"
+              (click)="selectPaymentMethod(method.id)"
+            >
+              <div class="method-logo-container">
+                <img
+                  [src]="method.image"
+                  [alt]="method.name"
+                  class="payment-logo-img"
+                />
+              </div>
+              <div class="method-info">
+                <p class="method-name">{{ method.name }}</p>
+              </div>
+              <div class="method-radio">
+                <div
+                  *ngIf="selectedPaymentMethod === method.id"
+                  class="radio-dot"
+                ></div>
               </div>
             </div>
           </div>
@@ -228,6 +190,12 @@
               <span class="summary-label">Période de facturation</span>
               <span class="summary-value">{{
                 getPeriodLabel(plan.period)
+              }}</span>
+            </div>
+            <div *ngIf="selectedPaymentMethod" class="summary-row">
+              <span class="summary-label">Méthode de paiement</span>
+              <span class="summary-value">{{
+                getSelectedPaymentMethodName()
               }}</span>
             </div>
             <div class="summary-divider"></div>
@@ -258,7 +226,7 @@
 
         <!-- Action Button -->
         <button
-          [disabled]="processing || !form.valid"
+          [disabled]="processing || (!isFreePlan() && !selectedPaymentMethod)"
           class="btn-proceed"
           (click)="checkout()"
         >
@@ -266,7 +234,7 @@
             {{
               plan.period === "FREE"
                 ? "Commencer gratuitement"
-                : "Proceder au paiement"
+                : "Procéder au paiement"
             }}
           </span>
           <span *ngIf="processing" class="processing-text">

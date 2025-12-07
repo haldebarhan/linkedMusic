@@ -18,6 +18,7 @@ import {
   UpdateFieldOptionDto,
 } from "./category.dto";
 import { Order } from "@/utils/enums/order.enum";
+import { invalideCache } from "@/utils/functions/invalidate-cache";
 
 @injectable()
 export class CategoryService {
@@ -39,14 +40,32 @@ export class CategoryService {
     const [data, total] = await Promise.all([
       this.categoryRepository.findAll({
         where,
-        orderBy: { createdAt: order },
+        orderBy: { updatedAt: order },
         take: limit,
         skip,
       }),
       this.categoryRepository.count(where),
     ]);
+    const priorities = [
+      "Arrangeurs & Compositeurs",
+      "Chanteurs & Choristes",
+      "DJs & MC / Animateurs",
+      "Ingénieurs du son",
+      "Musiciens & groupes",
+      "Producteurs & Managers",
+      "Studios et Salles de répétition",
+    ];
+    const sortedData = data.sort((a, b) => {
+      const aIndex = priorities.indexOf(a.name);
+      const bIndex = priorities.indexOf(b.name);
+
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return 0;
+    });
     return {
-      data,
+      data: sortedData,
       metadata: {
         total,
         page,
@@ -80,7 +99,8 @@ export class CategoryService {
         409
       );
     }
-
+    await invalideCache("GET:/api/catalog*");
+    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.create(dto);
   }
 
@@ -90,6 +110,8 @@ export class CategoryService {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
 
+    await invalideCache("GET:/api/catalog*");
+    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.update(id, dto);
   }
 
@@ -107,6 +129,8 @@ export class CategoryService {
     if (!category) {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
+    await invalideCache("GET:/api/catalog*");
+    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.update(id, { active: false });
   }
 

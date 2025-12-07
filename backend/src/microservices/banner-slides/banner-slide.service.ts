@@ -3,6 +3,7 @@ import { BannerSlideRepository } from "./banner-slide.repository";
 import createError from "http-errors";
 import { ENV } from "@/config/env";
 import { S3Service } from "@/utils/services/s3.service";
+import { invalideCache } from "@/utils/functions/invalidate-cache";
 
 const minioService: S3Service = S3Service.getInstance();
 
@@ -45,11 +46,19 @@ export class BannerSlideService {
   }
 
   async create(data: { mediaType: string; mediaUrl: string }) {
+    await Promise.all([
+      invalideCache("GET:/api/banner-slides*"),
+      invalideCache("GET:/api/admin/banner-slides*"),
+    ]);
     return await this.bannerSlideRepository.create({ ...data });
   }
 
   async reorder(id: number, newOrder: number) {
     await this.findOne(id);
+    await Promise.all([
+      invalideCache("GET:/api/banner-slides*"),
+      invalideCache("GET:/api/admin/banner-slides*"),
+    ]);
     return await this.bannerSlideRepository.reorder(id, newOrder);
   }
 
@@ -68,16 +77,28 @@ export class BannerSlideService {
         }
       })
     );
+    await Promise.all([
+      invalideCache("GET:/api/banner-slides*"),
+      invalideCache("GET:/api/admin/banner-slides*"),
+    ]);
     return slides;
   }
 
   async toggleStatus(id: number, isActive: boolean) {
     await this.findOne(id);
+    await Promise.all([
+      invalideCache("GET:/api/banner-slides*"),
+      invalideCache("GET:/api/admin/banner-slides*"),
+    ]);
     return await this.bannerSlideRepository.toggleStatus(id, isActive);
   }
 
   async remove(id: number) {
     await this.findOne(id);
+    await Promise.all([
+      invalideCache("GET:/api/banner-slides*"),
+      invalideCache("GET:/api/admin/banner-slides*"),
+    ]);
     return await this.bannerSlideRepository.remove(id);
   }
 

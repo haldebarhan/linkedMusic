@@ -294,7 +294,7 @@
 
 .scroll-indicator {
   color: #3a7bd5;
-  font-size: 1.2rem;
+  font-size: 2rem;
   animation: bounce-down 2s ease-in-out infinite;
   margin-left: 0.5rem;
 }
@@ -314,13 +314,13 @@
 /* Responsive */
 @media (max-width: 768px) {
   .scroll-indicator {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 }
 
 @media (max-width: 576px) {
   .scroll-indicator {
-    font-size: 0.9rem;
+    font-size: 1.5rem;
   }
 }
 
@@ -333,21 +333,21 @@
 
 /* ===== Contenu Principal ===== */
 .main-title {
-  font-size: 2.1rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: #1f2937;
   margin-bottom: 0.5rem;
 }
 
 @media (max-width: 768px) {
   .main-title {
-    font-size: 2rem;
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 576px) {
   .main-title {
-    font-size: 1.75rem;
+    font-size: 0.9rem;
   }
 }
 
@@ -384,8 +384,8 @@
 }
 
 .icon-text i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  margin-bottom: 0.7rem;
   background: linear-gradient(135deg, #3a7bd5, #6e45e2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -407,11 +407,11 @@
 
   .card-custom {
     min-width: 140px;
-    padding: 1.5rem 1rem;
+    padding: 0.7rem 0.7rem;
   }
 
   .icon-text i {
-    font-size: 2.5rem;
+    font-size: 1.7rem;
   }
 
   .icon-text p {

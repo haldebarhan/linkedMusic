@@ -6,20 +6,22 @@ import { PaymentDTO } from "./payment.dto";
 import createError from "http-errors";
 import { generateRandomUUID } from "@/utils/functions/utilities";
 import {
+  PaymentProvider,
   PaymentStatus,
   Prisma,
   PrismaClient,
   SubscriptionStatus,
 } from "@prisma/client";
-import { CinetPayClient } from "@/core/payments/cinet-pay/cinet-pay";
 import { ENV } from "@/config/env";
 import { enqueuePaymentPendingJob } from "@/events/jobs/payment-pending.job";
 import DatabaseService from "@/utils/services/database.service";
 import { addDays } from "date-fns";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
-import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
 import { Order } from "@/utils/enums/order.enum";
 import { S3Service } from "@/utils/services/s3.service";
+import { syncPaymentStatusByReference } from "@/utils/functions/sync-paiment-status";
+import { Jeko } from "@/core/payments/Jeko/jeko";
+import { invalideCache } from "@/utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();
@@ -30,7 +32,7 @@ export class PaymentService {
     private readonly paymentRepository: PaymentRepository,
     private readonly planRepository: PlanRepository,
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly paymentProvider: CinetPayClient
+    private readonly jekoPayment: Jeko
   ) {}
 
   async createSubscriptionPayment(
@@ -42,42 +44,37 @@ export class PaymentService {
     },
     dto: PaymentDTO
   ) {
-    const { planId, address, zipCode, country, city, phone, opts } = dto;
-    const { userId, firstName, lastName, email } = userData;
+    const { planId, paymentMethod, opts } = dto;
+    const { userId } = userData;
     const plan = await this.checkIfPlanIsActive(planId);
     await this.checkIfUserAlreadyClaimed(plan, userId);
 
     const reference = generateRandomUUID();
+    const priceCents = plan.priceCents * 100;
     const payment = await this.paymentRepository.createPayement({
       userId,
       reference,
       amount: plan.priceCents,
+      provider: PaymentProvider.JEKO,
       planId,
       status: plan.isFree ? PaymentStatus.SUCCEEDED : PaymentStatus.PENDING,
     });
 
     if (!plan.isFree) {
-      const createRes = await this.paymentProvider.createPaymentLink({
-        amount: plan.priceCents,
-        description: `Souscription ${plan.name}`,
+      const createRes = await this.jekoPayment.createPaymentLink(
         reference,
-        customerPhone: phone,
-        customerAddress: address,
-        customerCountry: country,
-        customerState: country,
-        customerCity: city,
-        customerZipCode: zipCode,
-        customerEmail: email,
-        customerSurname: firstName,
-        customerName: lastName,
+        priceCents,
+        paymentMethod
+      );
+      await this.paymentRepository.update(payment.id, {
+        externalId: createRes.transactionId,
       });
 
-      await enqueuePaymentPendingJob(payment.reference);
+      await enqueuePaymentPendingJob(payment.externalId!);
       if (createRes.success) {
         return {
           success: createRes.success,
           paymentUrl: createRes.paymentUrl,
-          paymentToken: createRes.paymentToken,
           transactionId: createRes.transactionId,
         };
       } else {
@@ -98,10 +95,11 @@ export class PaymentService {
       ENV.AWS_S3_DEFAULT_BUCKET,
       user.profileImage
     );
+    await invalideCache("GET:/payments*");
 
     return {
       success: true,
-      returnUrl: ENV.PAYMENT_PROVIDER_RETURN_URL,
+      returnUrl: `${ENV.BASE_URL}/payment/success`,
       transactionId: reference,
       user,
     };

@@ -83,7 +83,7 @@ export class UserService {
         user.profileImage
       );
       const accessToken = await firebaseService.loginWithUid(user.uid);
-      await invalideCache("GET:/users*");
+      await invalideCache("GET:/api/admin/users*");
       const userData = { ...user };
       return { user: userData, accessToken };
     } catch (error) {
@@ -119,10 +119,6 @@ export class UserService {
       }),
       this.userRepository.count(where),
     ]);
-
-    // const dataWithImages = await Promise.all(
-    //   data.map((user) => this.attachProfileImageUrl(user))
-    // );
     return {
       data,
       metadata: {
@@ -157,13 +153,14 @@ export class UserService {
     const [updatedUser] = await Promise.all([
       updateUserPromise,
       deleteOldImagePromise,
-      invalideCache("GET:/users*"),
+      invalideCache("GET:/api/admin/users*"),
     ]);
     return this.attachProfileImageUrl(updatedUser);
   }
 
   async assignBadge(userId: number, badge: Badge) {
     const user = await this.findOne(userId);
+    await invalideCache("GET:/api/admin/users*");
     return await this.userRepository.update(user.id, { badge });
   }
 
@@ -289,6 +286,7 @@ export class UserService {
       };
       if (exists) throw createError(409, "User with email already exist");
       const createdUser = await this.userRepository.create({ ...createData });
+      invalideCache("GET:/api/admin/users*");
       return createdUser;
     } catch (error) {
       throw createError(500, `Failed to create user: ${error.message}`);
@@ -344,12 +342,14 @@ export class UserService {
   async closeAccount(userId: number, comment: string) {
     const user = await this.userRepository.findOne(userId);
     if (!user) throw createError(404, "User not found");
+    await invalideCache("GET:/api/admin/users*");
     await this.userRepository.closeAccount(user.id, comment);
   }
 
   async activateAccount(userId: number) {
     const user = await this.userRepository.findOne(userId);
     if (!user) throw createError(404, "User not found");
+    await invalideCache("GET:/api/admin/users*");
     await this.userRepository.activateAccount(user.id);
   }
 

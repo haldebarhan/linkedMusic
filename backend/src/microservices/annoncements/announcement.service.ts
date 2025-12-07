@@ -40,6 +40,7 @@ import { countUnread } from "@/sockets/handlers/notification.handler";
 import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
 import { S3Service } from "@/utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
+import { invalideCache } from "@/utils/functions/invalidate-cache";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -103,6 +104,11 @@ export class AnnouncementService {
         fieldValues
       );
 
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return this.mapToResponseDto(announcement);
   }
 
@@ -222,6 +228,11 @@ export class AnnouncementService {
         )
       );
     }
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return this.mapToResponseDto(updated);
   }
 
@@ -254,7 +265,11 @@ export class AnnouncementService {
         }
       })
     );
-
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     await this.announcementRepository.delete(id);
   }
 
@@ -378,7 +393,11 @@ export class AnnouncementService {
 
     const updatedAnnouncement =
       await this.announcementRepository.updateWithFieldValues(id, updateData);
-
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return this.mapToResponseDto(updatedAnnouncement);
   }
 
@@ -409,6 +428,11 @@ export class AnnouncementService {
     const updatedAnnouncement =
       await this.announcementRepository.updateWithFieldValues(id, updateData);
 
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return this.mapToResponseDto(updatedAnnouncement);
   }
 
@@ -455,7 +479,11 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
-
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return approved;
   }
 
@@ -554,6 +582,11 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
+    await Promise.all([
+      invalideCache("GET:/api/users/announcements*"),
+      invalideCache("GET:/api/admin/announcements*"),
+      invalideCache("GET:/api/announcements*"),
+    ]);
     return rejected;
   }
 

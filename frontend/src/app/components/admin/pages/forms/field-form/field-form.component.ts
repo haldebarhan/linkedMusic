@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FieldInputType } from '../../../../../shared/types/field-input-type';
 import { Toast } from '../../../../../helpers/sweet-alert';
 import { setupKeyGeneration } from '../../../../../helpers/setup-key-generation';
+import { toCamelCase } from '../../../../../helpers/toCamelCase';
 
 @Component({
   selector: 'app-field-form',
@@ -183,8 +184,9 @@ export class FieldFormComponent implements OnInit {
     if (!this.canSubmit()) return;
 
     const v = this.form.value as any;
+    const key = toCamelCase(v.label ?? '');
     const payload: any = {
-      key: (v.key ?? '').trim(),
+      key: key.trim(),
       label: (v.label ?? '').trim(),
       inputType: v.inputType,
       placeholder: v.placeholder || null,

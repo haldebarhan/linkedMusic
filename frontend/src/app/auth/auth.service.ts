@@ -28,6 +28,7 @@ export class AuthService {
     private api: ApiAuthService,
     private userUpdateService: UserUpdateService
   ) {
+    this.init();
     // Gérer le flow redirect (iOS/Safari)
     getRedirectResult(fbAuth).catch(() => {});
 

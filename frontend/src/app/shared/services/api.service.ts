@@ -53,23 +53,17 @@ export class ApiService<T> {
         }
       });
     }
-    return this.http
-      .get<ApiListResponse<T>>(`${this.API_URL}/${endpoint}`, {
-        params: httpParams,
-      })
-      .pipe(catchError(this.handleError));
+    return this.http.get<ApiListResponse<T>>(`${this.API_URL}/${endpoint}`, {
+      params: httpParams,
+    });
   }
 
   getOne(endpoint: string, id: number | string): Observable<ApiResponse<T>> {
-    return this.http
-      .get<ApiResponse<T>>(`${this.API_URL}/${endpoint}/${id}`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<ApiResponse<T>>(`${this.API_URL}/${endpoint}/${id}`);
   }
 
   create(endpoint: string, data: Partial<T>): Observable<ApiResponse<T>> {
-    return this.http
-      .post<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, data)
-      .pipe(catchError(this.handleError));
+    return this.http.post<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, data);
   }
 
   update(
@@ -77,18 +71,17 @@ export class ApiService<T> {
     id: number,
     data: Partial<T>
   ): Observable<ApiResponse<T>> {
-    return this.http
-      .put<ApiResponse<T>>(`${this.API_URL}/${endpoint}/${id}`, data)
-      .pipe(catchError(this.handleError));
+    return this.http.put<ApiResponse<T>>(
+      `${this.API_URL}/${endpoint}/${id}`,
+      data
+    );
   }
 
   delete(endpoint: string, id?: number | string): Observable<ApiResponse<T>> {
     const fullEndpoint = id
       ? `${this.API_URL}/${endpoint}/${id}`
       : `${this.API_URL}/${endpoint}`;
-    return this.http
-      .delete<ApiResponse<T>>(fullEndpoint)
-      .pipe(catchError(this.handleError));
+    return this.http.delete<ApiResponse<T>>(fullEndpoint);
   }
 
   listAnnouncements(data: {
@@ -112,26 +105,20 @@ export class ApiService<T> {
         else params = params.set(k, String(v));
       });
     }
-    return this.http
-      .get<any>(`${this.API_URL}/announcements/${categorySlug}`, {
-        params,
-      })
-      .pipe(catchError(this.handleError));
+    return this.http.get<any>(`${this.API_URL}/announcements/${categorySlug}`, {
+      params,
+    });
   }
 
   getDashboard() {
-    return this.http
-      .get<ApiResponse<any>>(`${this.API_URL}/users/dashboard`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<ApiResponse<any>>(`${this.API_URL}/users/dashboard`);
   }
 
   getEligibility(announcementId: number) {
     const endpoint = 'users/matching/eligibility';
-    return this.http
-      .get<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, {
-        params: { id: announcementId },
-      })
-      .pipe(catchError(this.handleError));
+    return this.http.get<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, {
+      params: { id: announcementId },
+    });
   }
 
   sendMessage(data: any) {
@@ -142,9 +129,7 @@ export class ApiService<T> {
     endpoint: string,
     data: Partial<T>
   ): Observable<ApiResponse<T>> {
-    return this.http
-      .put<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, data)
-      .pipe(catchError(this.handleError));
+    return this.http.put<ApiResponse<T>>(`${this.API_URL}/${endpoint}`, data);
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

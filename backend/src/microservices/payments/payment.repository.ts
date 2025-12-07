@@ -37,6 +37,17 @@ export class PaymentRepository {
     return await prisma.payment.findUnique({ where: { reference } });
   }
 
+  async findByExternalId(externalId: string) {
+    return await prisma.payment.findFirst({ where: { externalId } });
+  }
+
+  async update(id: number, data: any) {
+    return await prisma.payment.update({
+      where: { id },
+      data,
+    });
+  }
+
   async getUserLastPayments(userId: number, limit = 5) {
     return await prisma.payment.findMany({
       where: { userId },
