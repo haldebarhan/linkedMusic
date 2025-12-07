@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import winston from "winston";
-
+import { ENV } from "./env";
 const logFormat = winston.format.printf(
   ({ level, message, timestamp, stack }) => {
     return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
@@ -8,7 +8,7 @@ const logFormat = winston.format.printf(
 );
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL ?? "info",
+  level: ENV.LOG_LEVEL ?? "info",
   format: winston.format.combine(
     winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.errors({ stack: true }),
@@ -17,7 +17,7 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), logFormat),
+      format: winston.format.combine(logFormat, winston.format.colorize()),
       level: process.env.NODE_ENV === "production" ? "error" : "debug",
     }),
     new winston.transports.File({
@@ -28,10 +28,10 @@ const logger = winston.createLogger({
   ],
 });
 
-if (process.env.NODE_ENV === "production") {
+if (ENV.NODE_ENV === "production") {
   logger.add(
     new winston.transports.Http({
-      host: process.env.LOGGING_SERVER_HOST,
+      host: ENV.BASE_URL,
       path: "/logs",
       ssl: true,
     })
