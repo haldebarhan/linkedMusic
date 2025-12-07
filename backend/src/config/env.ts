@@ -26,6 +26,7 @@ export const ENV = {
   SERVER_URL: getEnv("SERVER_URL"),
   LOG_LEVEL: getEnv("LOG_LEVEL"),
   BASE_URL: getEnv("BASE_URL"),
+  LOGGING_SERVER_HOST: getEnv("LOGGING_SERVER_HOST"),
 
   // JWT
   TOKEN_SECRET: getEnv("TOKEN_SECRET"),
