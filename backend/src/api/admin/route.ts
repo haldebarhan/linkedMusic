@@ -23,6 +23,7 @@ import {
   UpdateCategoryDto,
 } from "@/microservices/categories/category.dto";
 import uploads from "@/multer-config";
+import { cache } from "@/middlewares/cache.middleware";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -34,11 +35,11 @@ router.post("/users/assign-badge", async (req: Request, res: Response) =>
   adminController.assignBadge(req, res)
 );
 
-router.get("/users", async (req: Request, res: Response) =>
+router.get("/users", cache, async (req: Request, res: Response) =>
   adminController.getAllUsers(req, res)
 );
 
-router.get("/users/:id", async (req: Request, res: Response) =>
+router.get("/users/:id", cache, async (req: Request, res: Response) =>
   adminController.findUserById(req, res)
 );
 
@@ -61,10 +62,10 @@ router.post(
   ValidateDtoMiddleware(CreateConfigDTO),
   async (req: Request, res: Response) => adminController.createConfig(req, res)
 );
-router.get("/configurations", async (req: Request, res: Response) =>
+router.get("/configurations", cache, async (req: Request, res: Response) =>
   adminController.findConfigs(req, res)
 );
-router.get("/configurations/:id", async (req: Request, res: Response) =>
+router.get("/configurations/:id", cache, async (req: Request, res: Response) =>
   adminController.findConfig(req, res)
 );
 
@@ -105,8 +106,11 @@ router.post(
     adminController.createServiceType(req, res)
 );
 
-router.get("/catalog/service-types/:id", async (req: Request, res: Response) =>
-  adminController.findServiceType(req, res)
+router.get(
+  "/catalog/service-types/:id",
+  cache,
+  async (req: Request, res: Response) =>
+    adminController.findServiceType(req, res)
 );
 
 router.delete(
@@ -121,15 +125,16 @@ router.post(
   async (req: Request, res: Response) => adminController.createField(req, res)
 );
 
-router.get("/catalog/fields", async (req: Request, res: Response) =>
+router.get("/catalog/fields", cache, async (req: Request, res: Response) =>
   adminController.listFields(req, res)
 );
 
-router.get("/catalog/fields/:id", async (req: Request, res: Response) =>
+router.get("/catalog/fields/:id", cache, async (req: Request, res: Response) =>
   adminController.findField(req, res)
 );
 router.put(
   "/catalog/fields/:id",
+  cache,
   ValidateDtoMiddleware(UpdateFieldDto),
   async (req: Request, res: Response) => adminController.updateField(req, res)
 );
@@ -174,8 +179,11 @@ router.post(
   async (req: Request, res: Response) => adminController.createPlan(req, res)
 );
 
-router.get("/subscription-plans/:id", async (req: Request, res: Response) =>
-  adminController.findSubscriptionPlan(req, res)
+router.get(
+  "/subscription-plans/:id",
+  cache,
+  async (req: Request, res: Response) =>
+    adminController.findSubscriptionPlan(req, res)
 );
 
 router.put(
@@ -190,7 +198,7 @@ router.delete("/subscription-plans/:id", async (req: Request, res: Response) =>
 
 // Announcements
 
-router.get("/announcements", async (req: Request, res: Response) =>
+router.get("/announcements", cache, async (req: Request, res: Response) =>
   adminController.listPendingAnnouncement(req, res)
 );
 
@@ -209,7 +217,7 @@ router.post(
   async (req: Request, res: Response) => adminController.createSlides(req, res)
 );
 
-router.get("/banner-slides", async (req: Request, res: Response) =>
+router.get("/banner-slides", cache, async (req: Request, res: Response) =>
   adminController.findSlides(req, res)
 );
 

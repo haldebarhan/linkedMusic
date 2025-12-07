@@ -15,6 +15,7 @@ import createError from "http-errors";
 import { Order } from "@/utils/enums/order.enum";
 import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "@/utils/services/database.service";
+import { invalideCache } from "@/utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -24,6 +25,7 @@ export class CatalogueService {
 
   async createCategory(data: CreateCategoryDTO) {
     try {
+      await Promise.all([invalideCache("GET:/api/catalog*")]);
       return await this.catalogueRepository.createCategory(data);
     } catch (error) {
       if (
@@ -72,6 +74,7 @@ export class CatalogueService {
 
   async removeCategory(id: number) {
     const category = await this.findCategory(id);
+    await invalideCache("GET:/api/catalog*");
     return await this.catalogueRepository.removeCategory(category.id);
   }
 
@@ -116,6 +119,7 @@ export class CatalogueService {
       //         })
       //     )
       //   );
+      await invalideCache("GET:/api/catalog*");
       return created;
     } catch (error) {
       if (
@@ -297,12 +301,14 @@ export class CatalogueService {
 
   async removeField(id: number) {
     const field = await this.findfield(id);
+    await Promise.all([invalideCache("GET:/api/admin/catalog*")]);
     return await this.catalogueRepository.removeField(field.id);
   }
 
   //field options
   async createFieldOption(data: any) {
     try {
+      await Promise.all([invalideCache("GET:/api/admin/catalog*")]);
       return await this.catalogueRepository.createFieldOption(data);
     } catch (error) {
       throw createError(

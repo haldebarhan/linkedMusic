@@ -15,6 +15,5 @@ export const getAllowedOrigins = () => {
     origins.push(ENV.ADMIN_URL);
   }
 
-  origins.push("https://specially-survive-prepare-affect.trycloudflare.com");
   return origins;
 };

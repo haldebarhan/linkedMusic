@@ -115,6 +115,7 @@ enum PaymentStatus {
 
 enum PaymentProvider {
     CINETPAY
+    JEKO
 }
 
 enum Currency {
@@ -524,7 +525,8 @@ model Payment {
     id             Int               @id @default(autoincrement())
     userId         Int               @map("user_id")
     reference      String            @unique
-    amount         Int // Montant en centimes
+    externalId     String?           @map("external_id")
+    amount         Int
     currency       Currency          @default(XOF)
     status         PaymentStatus     @default(PENDING)
     provider       PaymentProvider

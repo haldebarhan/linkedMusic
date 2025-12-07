@@ -1,35 +1,41 @@
 import { enqueuePaymentPendingJob } from "@/events/jobs/payment-pending.job";
-import { PaymentStatus, PrismaClient } from "@prisma/client";
+import { PaymentStatus, Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../services/database.service";
-import { CinetPayClient } from "@/core/payments/cinet-pay/cinet-pay";
 import { addDays } from "date-fns";
 import { container } from "tsyringe";
 import { PaymentRepository } from "@/microservices/payments/payment.repository";
+import { Jeko } from "@/core/payments/Jeko/jeko";
+import { PlanRepository } from "@/microservices/subscriptions/plan.repository";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 const paymentRepository = container.resolve(PaymentRepository);
-const paymentProvider = container.resolve(CinetPayClient);
+const planRepository = container.resolve(PlanRepository);
+const jekoProvider = container.resolve(Jeko);
 
 export const syncPaymentStatusByReference = async (reference: string) => {
   const payment = await paymentRepository.findOneByReference(reference);
   if (!payment) return null;
+  const plan = await planRepository.findById(payment.planId!);
+  if (!plan) return null;
+
   if (payment.status !== PaymentStatus.PENDING) return payment;
-  const check = await paymentProvider.checkPaymentStatus(payment.reference);
   let newStatus: PaymentStatus = PaymentStatus.PENDING;
-  if (check.status === "SUCCESS") newStatus = PaymentStatus.SUCCEEDED;
-  else if (check.status === "FAILED") newStatus = PaymentStatus.FAILED;
-  else if (check.status === "CANCELED") newStatus = PaymentStatus.FAILED;
+  const check = await jekoProvider.checkPaymentStatus(payment.externalId!);
+  if (check.status && check.status === "success")
+    newStatus = PaymentStatus.SUCCEEDED;
+  else if (check.status && check.status === "error")
+    newStatus = PaymentStatus.FAILED;
   if (newStatus !== PaymentStatus.PENDING) {
     const updated = await prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.update({
-        where: { reference },
+      const transaction = await tx.payment.update({
+        where: { id: payment.id },
         data: {
           status: newStatus,
         },
       });
       if (newStatus === PaymentStatus.SUCCEEDED) {
-        await ensureSubscriptionActivated(tx, payment.userId, payment.planId);
-        return payment;
+        await ensureSubscriptionActivated(tx, transaction.userId, plan);
+        return transaction;
       }
       return payment;
     });
@@ -38,18 +44,25 @@ export const syncPaymentStatusByReference = async (reference: string) => {
   await enqueuePaymentPendingJob(payment.reference);
   return payment;
 };
+
 const ensureSubscriptionActivated = async (
-  tx: any,
+  tx: Prisma.TransactionClient,
   userId: number,
   plan: any
 ) => {
   const endAt = computeEndAt(plan.durationDays);
   const autoRenew = true;
   const [sub] = await Promise.all([
-    tx.userSubscription.create(userId, plan.id, new Date(), endAt, autoRenew),
-    plan.isFree
-      ? tx.userSubscription.insertFreeClaim(userId)
-      : Promise.resolve(),
+    tx.userSubscription.create({
+      data: {
+        userId,
+        planId: plan.id,
+        startAt: new Date(),
+        endAt,
+        autoRenew,
+      },
+    }),
+    plan.isFree ? tx.freeClaim.create({ data: { userId } }) : Promise.resolve(),
   ]);
   return sub;
 };

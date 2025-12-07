@@ -10,6 +10,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminApi } from '../../../data/admin-api.service';
 import { setupKeyGeneration } from '../../../../../helpers/setup-key-generation';
+import { toCamelCase } from '../../../../../helpers/toCamelCase';
 
 @Component({
   selector: 'app-categorie-form',
@@ -59,7 +60,8 @@ export class CategorieFormComponent implements OnInit {
 
   onSubmit() {
     this.isSubmit = true;
-    const { name, slug } = this.CategoryForm.value;
+    const { name } = this.CategoryForm.value;
+    const slug = toCamelCase(name);
     if (this.categoryId) {
       this.api
         .updateResource('categories', this.categoryId, { name, slug })

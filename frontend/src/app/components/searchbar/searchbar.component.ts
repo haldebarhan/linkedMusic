@@ -36,7 +36,7 @@ export class SearchbarComponent implements OnInit {
         this.categories = response.items.data;
         this.form.patchValue({
           category:
-            this.categories.find((c) => c.slug === 'musiciens').slug ??
+            this.categories.find((c) => c.slug.startsWith('musiciens')).slug ??
             this.categories[0].slug,
         });
       },

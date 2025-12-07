@@ -1,7 +1,6 @@
 import "reflect-metadata";
 import compression from "compression";
 import express, { Application, NextFunction, Request, Response } from "express";
-import helmet from "helmet";
 import { ENV } from "./config/env";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
@@ -16,7 +15,7 @@ import { setIo } from "./sockets/io-singleton";
 import authRoutes from "./api/auth/route";
 import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
-import pspRoutes from "./api/psp/psp.route";
+
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
 import { getAllowedOrigins } from "./utils/functions/allowed-origins";
@@ -28,6 +27,9 @@ import {
 } from "./events/schedulers/scheduler";
 
 import path from "path";
+import { verifyJekoSignature } from "./utils/functions/signature";
+import { WebhookEvent } from "./utils/interfaces/payment-payload";
+import { updatePayementStatus } from "./utils/functions/update-payment-status";
 
 const allowed = getAllowedOrigins();
 const wsAllowed = [...allowed, "ws:", "wss:"];
@@ -50,8 +52,8 @@ const globalLimiter = rateLimit({
 
 // Rate limiting spécifique pour l'authentification
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 tentatives de connexion
+  windowMs: 10 * 60 * 1000,
+  max: 5,
   message: {
     error: "Trop de tentatives de connexion. réessayez plus tard",
     retryAfter: 15 * 60,
@@ -62,8 +64,8 @@ const authLimiter = rateLimit({
 
 // Rate limiting pour les routes admin
 const adminLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 20, // 20 requêtes par minute
+  windowMs: 60 * 1000,
+  max: 20,
   message: {
     error: "Limite de requêtes admin atteinte",
     retryAfter: 60,
@@ -84,6 +86,7 @@ class Server {
     // startSubscriptionDailyCron();
     // startCheckSubscriptionStatus();
     // startAnnouncementHighlightedCron();
+    // startUpgradeUsersBadge();
   }
 
   config() {
@@ -101,10 +104,15 @@ class Server {
 
     this.app.use(compression());
 
-    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use((req: any, res: any, next: any) => {
+      if (req.path === "/webhook/jeko") {
+        return next();
+      }
+      return express.json({ limit: "10mb" })(req, res, next);
+    });
     this.app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
-    // this.app.use(globalLimiter as any);
+    this.app.use(globalLimiter as any);
     this.app.use(logMiddleware);
     this.app.set("PORT", ENV.PORT ?? 8000);
   }
@@ -120,16 +128,40 @@ class Server {
       });
     });
 
-    this.app.post("/payment/return", (req: Request, res: Response) =>
-      res.sendStatus(200)
+    this.app.post(
+      "/webhook/jeko",
+      express.raw({ type: "application/json" }),
+      async (req: Request, res: Response) => {
+        const signature = req.headers["jeko-signature"];
+        const rawBody = req.body;
+
+        if (!verifyJekoSignature(rawBody, signature, ENV.JEKO_WEBHOOK_SECRET)) {
+          return res.status(401).send("Invalid signature");
+        }
+
+        const webhookData = JSON.parse(rawBody.toString()) as WebhookEvent;
+        await updatePayementStatus(webhookData);
+        return res.status(200).send("OK");
+      }
     );
 
-    this.app.get("/payment/return", (req: Request, res: Response) => {
+    this.app.get("/payment/success", (req: Request, res: Response) => {
+      console.log(req.query);
       const FRONT_URL = ENV.FRONTEND_URL ?? "http://localhost:4200";
       const qs = req.originalUrl.includes("?")
         ? "?" + req.originalUrl.split("?")[1]
         : "";
-      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/return${qs}`;
+      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/success${qs}`;
+      return res.redirect(302, location);
+    });
+
+    this.app.get("/payment/error", (req: Request, res: Response) => {
+      console.log(req.query);
+      const FRONT_URL = ENV.FRONTEND_URL ?? "http://localhost:4200";
+      const qs = req.originalUrl.includes("?")
+        ? "?" + req.originalUrl.split("?")[1]
+        : "";
+      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/error${qs}`;
       return res.redirect(302, location);
     });
 
@@ -142,11 +174,6 @@ class Server {
     this.app.use("/api", authRoutes);
     this.app.use("/api/admin", adminRoutes);
     this.app.use("/api/users", userRoutes);
-    this.app.use("/webhooks/psp", pspRoutes);
-    this.app.use("/api", authRoutes);
-    this.app.use("/api/admin", adminRoutes);
-    this.app.use("/api/users", userRoutes);
-    this.app.use("/webhooks/psp", pspRoutes);
 
     const distPath = path.join(
       __dirname,
@@ -162,7 +189,7 @@ class Server {
     this.app.use((req: Request, res: Response) => {
       if (
         req.path.startsWith("/api") ||
-        req.path.startsWith("/webhooks") ||
+        req.path.startsWith("/webhook") ||
         req.path.startsWith("/health") ||
         req.path.startsWith("/payment") ||
         req.path.startsWith("/socket.io")
@@ -178,9 +205,9 @@ class Server {
     const port = this.app.get("PORT");
     this.socketConfig();
     this.httpServer.listen(port, async () => {
-      logger.info(`🚀 Serveur démarré sur http://localhost:${port}`);
-      logger.info(`📚 Documentation API: http://localhost:${port}/api-docs`);
-      logger.info(`🏥 Health check: http://localhost:${port}/health`);
+      logger.info(`🚀 Serveur démarré sur ${ENV.BASE_URL}:${port}`);
+      logger.info(`📚 Documentation API: ${ENV.BASE_URL}:${port}/api-docs`);
+      logger.info(`🏥 Health check: ${ENV.BASE_URL}:${port}/health`);
       logger.info(`🔧 Environnement: ${ENV.NODE_ENV}`);
     });
 
