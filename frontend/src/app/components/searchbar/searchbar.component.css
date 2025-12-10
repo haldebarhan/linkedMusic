@@ -1,0 +1,18 @@
+.search {
+  background-color: #5a7590;
+}
+
+select {
+  color: #ffff;
+  background-color: #335c67;
+}
+
+input::placeholder {
+  color: #ffff; /* Sets the placeholder text color to red */
+  opacity: 1; /* Ensures full opacity, as some browsers like Firefox might apply a lower opacity by default */
+}
+
+.test {
+  border: 2px solid #3a7bd5;
+  color: #3a7bd5;
+}

@@ -242,8 +242,8 @@
 /* Responsive : logo cohérent sur mobile */
 @media (max-width: 768px) {
   .brand-logo {
-    width: 40px;
-    height: 40px;
+    width: 150px;
+    height: 38px;
   }
 
   .navbar {
@@ -331,4 +331,8 @@
 /* Style pour les nombres élevés */
 .notification-badge:not(:empty) {
   letter-spacing: -0.5px;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
