@@ -1,23 +1,30 @@
 <!-- Navigation principale -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-  <div class="container">
-    <!-- Menu burger -->
+  <!-- Utilisation de 'container-fluid' pour plus d'espace sur mobile si nécessaire, ou 'container' -->
+  <div class="container d-flex justify-content-between align-items-center">
+    <!-- Groupe de gauche: Menu burger -->
+    <!-- Suppression de 'me-2' qui ajoutait un espace inutile ici -->
     <button
-      class="navbar-toggler me-2"
+      class="navbar-toggler"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#navbarContent"
+      aria-controls="navbarContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
     >
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Logo -->
+    <!-- Logo (Centré sur mobile grâce à justify-content-between et l'absence de 'ms-auto' sur le bloc de droite) -->
+    <!-- Ajout de 'mx-auto' pour le centrage horizontal forcé si nécessaire, mais 'justify-content-between' suffit souvent -->
     <a class="navbar-brand d-flex align-items-center" href="#">
       <img src="assets/images/logo.svg" alt="MonSite" class="brand-logo" />
     </a>
 
-    <!-- Mobile (actions à droite) : caché sur desktop -->
-    <div class="ms-auto d-lg-none">
+    <!-- Groupe de droite: Mobile actions / Bouton Se connecter -->
+    <!-- Suppression de 'ms-auto' ici. L'espace restant sera réparti par 'justify-content-between' -->
+    <div class="d-lg-none">
       <ng-container *ngIf="user$ | async as user; else loggedOutMobile">
         <!-- Connecté (mobile) -->
         <div class="dropdown">
@@ -26,6 +33,7 @@
             type="button"
             data-bs-toggle="dropdown"
           >
+            <!-- ... (Contenu du profil connecté mobile inchangé) ... -->
             <div class="profile-wrapper position-relative">
               <img
                 [src]="user.profileImage || 'assets/avatar-default.png'"
@@ -51,6 +59,7 @@
             </div>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
+            <!-- ... (Liens du menu déroulant inchangés) ... -->
             <li>
               <a class="dropdown-item" routerLink="/users"
                 ><i class="fas fa-user me-2"></i>Profil</a
@@ -86,14 +95,17 @@
 
       <ng-template #loggedOutMobile>
         <!-- Non connecté (mobile) -->
+        <!-- Utilisation d'un simple bouton icône pour gagner de la place et s'aligner -->
         <button class="btn btn-outline-primary btn-sm" (click)="goToLogin()">
-          <i class="fas fa-sign-in-alt"></i> Se connecter
+          <i class="fa-solid fa-user-gear"></i>
+          <!-- Texte caché sur mobile pour un look plus épuré si désiré, sinon laissez le texte -->
         </button>
       </ng-template>
     </div>
 
-    <!-- Contenu collapsible -->
+    <!-- Contenu collapsible (reste inchangé, il gère le menu principal et le bouton de connexion desktop) -->
     <div class="collapse navbar-collapse" id="navbarContent">
+      <!-- ... (Reste du code inchangé) ... -->
       <!-- Navigation centrale -->
       <ul class="navbar-nav mx-auto">
         <li class="nav-item">
