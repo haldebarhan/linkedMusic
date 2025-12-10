@@ -83,10 +83,10 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    // startSubscriptionDailyCron();
-    // startCheckSubscriptionStatus();
-    // startAnnouncementHighlightedCron();
-    // startUpgradeUsersBadge();
+    startSubscriptionDailyCron();
+    startCheckSubscriptionStatus();
+    startAnnouncementHighlightedCron();
+    startUpgradeUsersBadge();
   }
 
   config() {
@@ -147,7 +147,7 @@ class Server {
 
     this.app.get("/payment/success", (req: Request, res: Response) => {
       console.log(req.query);
-      const FRONT_URL = ENV.FRONTEND_URL ?? "http://localhost:4200";
+      const FRONT_URL = ENV.FRONTEND_URL;
       const qs = req.originalUrl.includes("?")
         ? "?" + req.originalUrl.split("?")[1]
         : "";
@@ -156,8 +156,7 @@ class Server {
     });
 
     this.app.get("/payment/error", (req: Request, res: Response) => {
-      console.log(req.query);
-      const FRONT_URL = ENV.FRONTEND_URL ?? "http://localhost:4200";
+      const FRONT_URL = ENV.FRONTEND_URL;
       const qs = req.originalUrl.includes("?")
         ? "?" + req.originalUrl.split("?")[1]
         : "";
@@ -194,10 +193,10 @@ class Server {
         req.path.startsWith("/payment") ||
         req.path.startsWith("/socket.io")
       ) {
-        res.status(404).json({ error: "Route non trouvée" });
+        return res.status(404).json({ error: "Route non trouvée" });
       }
 
-      res.sendFile(path.join(distPath, "index.html"));
+      return res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
