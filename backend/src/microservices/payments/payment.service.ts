@@ -64,7 +64,7 @@ export class PaymentService {
       const createRes = await this.jekoPayment.createPaymentLink(
         reference,
         priceCents,
-        paymentMethod
+        paymentMethod!
       );
       await this.paymentRepository.update(payment.id, {
         externalId: createRes.transactionId,

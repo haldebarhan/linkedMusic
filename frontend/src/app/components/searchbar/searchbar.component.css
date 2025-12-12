@@ -11,6 +11,41 @@ input::placeholder {
   color: #ffff; /* Sets the placeholder text color to red */
   opacity: 1; /* Ensures full opacity, as some browsers like Firefox might apply a lower opacity by default */
 }
+input[type="text"] {
+  color: #ffff;
+  border-right: none;
+}
+
+.ad-button {
+  border: 2px solid #3a7bd5;
+  color: #3a7bd5;
+}
+
+.ad-button:hover {
+  outline: 2px solid #3a7bd5;
+  outline-offset: 2px;
+  color: #3a7bd5;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge, Opera) */
+input:focus::-webkit-input-placeholder {
+  color: transparent;
+}
+
+/* Mozilla Firefox */
+input:focus::-moz-placeholder {
+  color: transparent;
+}
+
+/* Microsoft Internet Explorer 10+ */
+input:focus:-ms-input-placeholder {
+  color: transparent;
+}
+
+/* Older Firefox */
+input:-moz-placeholder {
+  color: transparent;
+}
 
 .test {
   border: 2px solid #3a7bd5;

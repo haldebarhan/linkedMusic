@@ -114,6 +114,7 @@ class Server {
 
     this.app.use(globalLimiter as any);
     this.app.use(logMiddleware);
+    this.app.set("trust proxy", 1);
     this.app.set("PORT", ENV.PORT ?? 8000);
   }
 
@@ -145,24 +146,18 @@ class Server {
       }
     );
 
-    this.app.get("/payment/success", (req: Request, res: Response) => {
-      console.log(req.query);
-      const FRONT_URL = ENV.FRONTEND_URL;
-      const qs = req.originalUrl.includes("?")
-        ? "?" + req.originalUrl.split("?")[1]
-        : "";
-      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/success${qs}`;
-      return res.redirect(302, location);
-    });
-
-    this.app.get("/payment/error", (req: Request, res: Response) => {
-      const FRONT_URL = ENV.FRONTEND_URL;
-      const qs = req.originalUrl.includes("?")
-        ? "?" + req.originalUrl.split("?")[1]
-        : "";
-      const location = `${FRONT_URL.replace(/\/$/, "")}/payment/error${qs}`;
-      return res.redirect(302, location);
-    });
+    this.app.get(
+      "/payments/callback/:reference/return",
+      (req: Request, res: Response) => {
+        const { reference } = req.params;
+        const FRONT_URL = ENV.FRONTEND_URL;
+        const location = `${FRONT_URL.replace(
+          /\/$/,
+          ""
+        )}/payments/callback/return/${reference}`;
+        return res.redirect(302, location);
+      }
+    );
 
     this.app.use(
       "/api-docs",
@@ -190,7 +185,7 @@ class Server {
         req.path.startsWith("/api") ||
         req.path.startsWith("/webhook") ||
         req.path.startsWith("/health") ||
-        req.path.startsWith("/payment") ||
+        req.path.startsWith("/payments") ||
         req.path.startsWith("/socket.io")
       ) {
         return res.status(404).json({ error: "Route non trouvée" });

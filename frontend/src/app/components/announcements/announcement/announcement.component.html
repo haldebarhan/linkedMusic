@@ -4,7 +4,11 @@
     <ol class="breadcrumb bg-light rounded p-2">
       <li class="breadcrumb-item"><a href="/">Accueil</a></li>
       <li class="breadcrumb-item">Annonces</li>
-      <li class="breadcrumb-item active" aria-current="page">
+      <li
+        class="breadcrumb-item active"
+        aria-current="page"
+        *ngIf="categoryName"
+      >
         {{ categoryName || (slug | titlecase) }}
       </li>
     </ol>

@@ -363,7 +363,7 @@
 
 .card-custom {
   background: white;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 0.5rem 2rem;
   min-width: 160px;
   box-shadow: 0 4px 12px rgba(90, 117, 144, 0.9);

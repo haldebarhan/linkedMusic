@@ -39,6 +39,7 @@ export class UserService {
   async createUser(data: CreateUserDTO, profileImage: string) {
     const { email, password, role, pseudo } = data;
     await this.checkUserExistence(email);
+    await this.checkForignUsername(pseudo);
     const token = await this.tokenService.generateAndStoreToken({
       email,
       password,
@@ -184,7 +185,6 @@ export class UserService {
         },
       });
 
-      // Utilise 401 pour les identifiants invalides (ne divulgue pas l'existence de l'email)
       if (!user) {
         throw createError(401, "Invalid credentials");
       }
@@ -192,15 +192,12 @@ export class UserService {
       const { userCredential } =
         await firebaseService.LoginUserWithEmailAndPassword(email, password);
 
-      // Si Firebase ne renvoie pas d'utilisateur, considère comme invalid credentials
       if (!userCredential?.user) {
         throw createError(401, "Invalid credentials");
       }
 
-      // Ajoute/Met à jour des claims "non sensibles"
       await firebaseService.setCustomUserClaims(user.uid, claims);
 
-      // Force un token fraîchement signé
       const accessToken = await userCredential.user.getIdToken(true);
 
       const provider =
@@ -212,10 +209,8 @@ export class UserService {
           )
         : "";
 
-      // Normalise le retour pour le front
       return { accessToken, user: { ...user, provider } };
     } catch (error: any) {
-      // Mapping propre des erreurs Firebase -> 401
       const fbCode = error?.code as string | undefined;
       if (
         fbCode === "auth/user-not-found" ||
@@ -227,12 +222,10 @@ export class UserService {
         throw createError(401, "Invalid credentials");
       }
 
-      // Si c'est déjà un http-error avec status défini, relance tel quel
       if (error?.status) {
         throw error;
       }
 
-      // Sinon, 500 générique
       throw createError(500, "Login failed");
     }
   }
@@ -383,6 +376,35 @@ export class UserService {
     ]);
 
     this.validateUserNotExists(firebaseUser?.user, userWithEmail);
+  }
+
+  private async checkForignUsername(pseudo: string) {
+    const forbiddenList = [
+      "administrateur",
+      "administrator",
+      "superadmin",
+      "superadministrateur",
+      "infos",
+      "contact",
+      "contacts",
+      "mail",
+      "mails",
+      "admin",
+      "root",
+      "support",
+      "help",
+      "aide",
+      "moderator",
+      "moderateur",
+      "staff",
+      "system",
+      "systeme",
+      "adminxxxx",
+    ];
+    const normalizedPseudo = pseudo.toLowerCase().trim();
+    if (forbiddenList.includes(normalizedPseudo)) {
+      throw createError(400, "Ce nom d'utilisateur n'est pas autorisé");
+    }
   }
 
   private async checkPhoneOrUsernameConflicts(

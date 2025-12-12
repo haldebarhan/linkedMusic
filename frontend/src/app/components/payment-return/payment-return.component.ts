@@ -36,8 +36,8 @@ export class PaymentReturnComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      this.transactionId = params['transaction_id'];
+    this.route.paramMap.subscribe((params) => {
+      this.transactionId = params.get('reference');
       if (this.transactionId) {
         this.verifyTransaction(this.transactionId);
       }
