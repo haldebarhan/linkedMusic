@@ -1,7 +1,10 @@
-<<<<<<< Updated upstream
-=======
 .search {
   background-color: #5a7590;
+}
+
+select {
+  color: #ffff;
+  background-color: #335c67;
 }
 
 input::placeholder {
@@ -43,4 +46,8 @@ input:focus:-ms-input-placeholder {
 input:-moz-placeholder {
   color: transparent;
 }
->>>>>>> Stashed changes
+
+.test {
+  border: 2px solid #3a7bd5;
+  color: #3a7bd5;
+}

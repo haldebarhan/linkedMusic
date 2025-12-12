@@ -366,7 +366,7 @@
   border-radius: 10px;
   padding: 0.5rem 2rem;
   min-width: 160px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(90, 117, 144, 0.9);
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
