@@ -8,6 +8,7 @@
           <div class="input-group">
             <input
               type="text"
+<<<<<<< Updated upstream
               class="form-control"
               placeholder="Recherchez ?"
               formControlName="query"
@@ -25,6 +26,18 @@
               </option>
             </select>
             <button class="btn btn-primary" type="button" (click)="onSubmit()">
+=======
+              class="form-control search"
+              placeholder="Précisez vos besoins"
+              formControlName="query"
+            />
+            <button
+              style="background-color: #335c67; color: #fff"
+              class="btn"
+              type="button"
+              (click)="onSubmit()"
+            >
+>>>>>>> Stashed changes
               <i class="fas fa-search"></i>
             </button>
           </div>
@@ -44,7 +57,7 @@
             routerLink="profile/likees"
             class="btn btn-outline-primary text-decoration-none px-2 py-2 rounded d-flex align-items-center"
           >
-            <i class="fas fa-heart me-1"></i> Favorites
+            <i class="fa-regular fa-heart me-1"></i> Favorites
           </a>
           <a
             routerLink="profile/memorises"
@@ -60,8 +73,13 @@
 
       <!-- Bouton "Passer une annonce" mobile -->
       <div class="col-12 mt-3 d-lg-none">
+<<<<<<< Updated upstream
         <button class="btn btn-success w-100" (click)="createAnnouncement()">
           <i class="fas fa-plus me-2"></i> Passer une annonce
+=======
+        <button class="btn w-100 ad-button" (click)="createAnnouncement()">
+          <i class="fa-solid fa-bullhorn"></i> Passer une annonce
+>>>>>>> Stashed changes
         </button>
       </div>
 
@@ -86,8 +104,16 @@
             routerLink="profile/memorises"
             class="text-decoration-none text-primary text-center mobile-link"
           >
+<<<<<<< Updated upstream
             <i class="fas fa-search d-block mb-1"></i>
             <small>Mes recherches</small>
+=======
+            <i
+              class="fa-solid fa-clock-rotate-left"
+              style="margin-right: 10px"
+            ></i>
+            <small>Mon historique</small>
+>>>>>>> Stashed changes
           </a>
         </div>
       </div>

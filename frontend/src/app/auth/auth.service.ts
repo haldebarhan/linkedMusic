@@ -165,6 +165,14 @@ export class AuthService {
     this.persist(next);
   }
 
+  async forgotPassword(email: string) {
+    return await firstValueFrom(this.api.forgotPassword(email));
+  }
+
+  async resetPassword(token: string, password: string) {
+    return await firstValueFrom(this.api.resetPassword(password, token));
+  }
+
   private persist(state: AuthState): void {
     this._auth$.next(state);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

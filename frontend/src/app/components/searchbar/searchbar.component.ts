@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../shared/services/api.service';
 import {
@@ -15,8 +15,7 @@ import {
   templateUrl: './searchbar.component.html',
   styleUrl: './searchbar.component.css',
 })
-export class SearchbarComponent implements OnInit {
-  categories: any[] = [];
+export class SearchbarComponent {
   form: FormGroup;
 
   constructor(
@@ -27,20 +26,6 @@ export class SearchbarComponent implements OnInit {
     this.form = this.fb.group({
       query: [''],
       category: [''],
-    });
-  }
-
-  ngOnInit(): void {
-    this.api.getAll({ endpoint: 'categories' }).subscribe({
-      next: (response: any) => {
-        this.categories = response.items.data;
-        this.form.patchValue({
-          category:
-            this.categories.find((c) => c.slug.startsWith('musiciens')).slug ??
-            this.categories[0].slug,
-        });
-      },
-      error: (error) => console.error('Error fetching categories: ', error),
     });
   }
 

@@ -166,11 +166,10 @@ export class CheckoutComponent implements OnInit {
       next: (res) => {
         this.userUpdateService.notifyUserUpdate(res.data.user);
         if (res.data.returnUrl) {
-          this.router.navigate(['/payments/return'], {
-            queryParams: {
-              transaction_id: res.data.transactionId,
-            },
-          });
+          this.router.navigate([
+            '/payments/callback/return',
+            res.data.transactionId,
+          ]);
         }
         if (res.data.paymentUrl) {
           window.location.href = res.data.paymentUrl;

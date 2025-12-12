@@ -1,7 +1,15 @@
 <!-- Navigation principale -->
+<<<<<<< Updated upstream
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
   <div class="container">
     <!-- Menu burger -->
+=======
+<nav class="navbar navbar-expand-lg shadow-sm navigation">
+  <!-- Utilisation de 'container-fluid' pour plus d'espace sur mobile si nécessaire, ou 'container' -->
+  <div class="container d-flex justify-content-between align-items-center">
+    <!-- Groupe de gauche: Menu burger -->
+    <!-- Suppression de 'me-2' qui ajoutait un espace inutile ici -->
+>>>>>>> Stashed changes
     <button
       class="navbar-toggler me-2"
       type="button"
@@ -28,7 +36,7 @@
           >
             <div class="profile-wrapper position-relative">
               <img
-                [src]="user.profileImage || 'assets/avatar-default.png'"
+                [src]="user.profileImage || 'assets/images/avatar.jpg'"
                 alt="Profile"
                 class="profile-img"
               />
@@ -87,7 +95,12 @@
       <ng-template #loggedOutMobile>
         <!-- Non connecté (mobile) -->
         <button class="btn btn-outline-primary btn-sm" (click)="goToLogin()">
+<<<<<<< Updated upstream
           <i class="fas fa-sign-in-alt"></i> Se connecter
+=======
+          <i class="fa-solid fa-user-lock"></i>
+          <!-- Texte caché sur mobile pour un look plus épuré si désiré, sinon laissez le texte -->
+>>>>>>> Stashed changes
         </button>
       </ng-template>
     </div>

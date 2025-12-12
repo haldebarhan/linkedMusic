@@ -3,8 +3,9 @@ import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { SubscribeOption } from "../subscriptions/dto/plan.dto";
 
 export class PaymentDTO {
+  @IsOptional()
   @IsString({ message: "paymentMethod is required" })
-  paymentMethod: string;
+  paymentMethod?: string;
 
   @IsNumber({}, { message: "planId is required" })
   planId: number;

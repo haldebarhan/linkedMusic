@@ -162,7 +162,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       'ingenieurs-son': 'fa-solid fa-record-vinyl',
       studios: 'fas fa-microphone',
       divers: 'fa-solid fa-sliders',
-      djs: 'bi bi-music-player',
+      djs: 'fa-solid fa-circle-play',
     };
 
     return iconMap[slug] || 'fas fa-music';

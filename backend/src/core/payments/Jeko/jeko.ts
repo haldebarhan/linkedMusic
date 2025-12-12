@@ -66,8 +66,8 @@ export class Jeko {
           type: "redirect",
           data: {
             paymentMethod,
-            successUrl: `${ENV.BASE_URL}/payment/success`,
-            errorUrl: `${ENV.BASE_URL}/payment/error`,
+            successUrl: `${ENV.BASE_URL}/payments/callback/${reference}/return`,
+            errorUrl: `${ENV.BASE_URL}/payments/callback/${reference}/return`,
           },
         },
       };

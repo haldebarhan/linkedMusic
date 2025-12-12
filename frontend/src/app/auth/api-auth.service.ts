@@ -81,4 +81,20 @@ export class ApiAuthService {
       data: any;
     }>(`${environment.apiUrl}/auth/me/change-password`, { password });
   }
+
+  forgotPassword(email: string) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${environment.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(password: string, token: string) {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${environment.apiUrl}/auth/reset-password`, { password, token });
+  }
 }

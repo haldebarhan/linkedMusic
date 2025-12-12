@@ -36,14 +36,6 @@ export const ENV = {
   FRONTEND_URL: getEnv("FRONTEND_URL"),
   ADMIN_URL: getEnv("ADMIN_URL"),
 
-  // MINIO
-  MINIO_ENDPOINT: getEnv("MINIO_ENDPOINT", true),
-  MINIO_PORT: getEnv("MINIO_PORT", true),
-  MINIO_ACCESS_KEY: getEnv("MINIO_ACCESS_KEY", true),
-  MINIO_SECRET_KEY: getEnv("MINIO_SECRET_KEY", true),
-  MINIO_BUCKET_NAME: getEnv("MINIO_BUCKET_NAME", true),
-  MINIO_USE_SSL: getEnv("MINIO_BUCKET_NAME", true),
-
   // MAIL
   MAILER_API_KEY: getEnv("MAILER_API_KEY", true),
   MAILER_PASS: getEnv("MAILER_PASS", true),
