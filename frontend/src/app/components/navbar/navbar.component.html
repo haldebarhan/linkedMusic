@@ -1,5 +1,5 @@
 <!-- Navigation principale -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg shadow-sm navigation">
   <!-- Utilisation de 'container-fluid' pour plus d'espace sur mobile si nécessaire, ou 'container' -->
   <div class="container d-flex justify-content-between align-items-center">
     <!-- Groupe de gauche: Menu burger -->
@@ -36,7 +36,7 @@
             <!-- ... (Contenu du profil connecté mobile inchangé) ... -->
             <div class="profile-wrapper position-relative">
               <img
-                [src]="user.profileImage || 'assets/avatar-default.png'"
+                [src]="user.profileImage || 'assets/images/avatar.jpg'"
                 alt="Profile"
                 class="profile-img"
               />
@@ -97,7 +97,7 @@
         <!-- Non connecté (mobile) -->
         <!-- Utilisation d'un simple bouton icône pour gagner de la place et s'aligner -->
         <button class="btn btn-outline-primary btn-sm" (click)="goToLogin()">
-          <i class="fa-solid fa-user-gear"></i>
+          <i class="fa-solid fa-user-lock"></i>
           <!-- Texte caché sur mobile pour un look plus épuré si désiré, sinon laissez le texte -->
         </button>
       </ng-template>

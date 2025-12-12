@@ -107,6 +107,25 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'auth/forgot-password',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    data: { guestPolicy: 'redirectIfAuth', redirectTo: '/home' },
+    loadComponent: () =>
+      import('./components/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent
+      ),
+  },
+  {
+    path: 'auth/reset-password',
+    canMatch: [guestCanMatch],
+    canActivate: [guestCanActivate],
+    loadComponent: () =>
+      import('./components/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
+  },
+  {
     path: 'pack/pricing-plan',
     canMatch: [guestCanMatch],
     canActivate: [guestCanActivate],
@@ -127,7 +146,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'payments/return',
+    path: 'payments/callback/return/:reference',
     canMatch: [authCanMatch],
     canActivate: [authCanMatch],
     data: { guestPolicy: 'allow' },

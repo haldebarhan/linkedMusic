@@ -9,23 +9,11 @@
             <input
               type="text"
               class="form-control search"
-              placeholder="Recherchez ?"
+              placeholder="Précisez vos besoins"
               formControlName="query"
             />
-            <select
-              class="form-select"
-              style="max-width: 200px"
-              formControlName="category"
-            >
-              <option
-                *ngFor="let category of categories"
-                [value]="category.slug"
-              >
-                {{ category.name }}
-              </option>
-            </select>
             <button
-              style="background-color: #5a7590; color: #fff; border-left: none"
+              style="background-color: #335c67; color: #fff"
               class="btn"
               type="button"
               (click)="onSubmit()"
@@ -49,7 +37,7 @@
             routerLink="profile/likees"
             class="btn btn-outline-primary text-decoration-none px-2 py-2 rounded d-flex align-items-center"
           >
-            <i class="fas fa-heart me-1"></i> Favorites
+            <i class="fa-regular fa-heart me-1"></i> Favorites
           </a>
           <a
             routerLink="profile/memorises"
@@ -65,7 +53,7 @@
 
       <!-- Bouton "Passer une annonce" mobile -->
       <div class="col-12 mt-3 d-lg-none">
-        <button class="btn w-100 test" (click)="createAnnouncement()">
+        <button class="btn w-100 ad-button" (click)="createAnnouncement()">
           <i class="fa-solid fa-bullhorn"></i> Passer une annonce
         </button>
       </div>
@@ -94,8 +82,11 @@
             class="bg-primary-subtle text-decoration-none text-primary text-center mobile-link px-1"
             style="border-radius: 4px"
           >
-            <i class="fas fa-search" style="margin-right: 10px"></i>
-            <small>Mes recherches</small>
+            <i
+              class="fa-solid fa-clock-rotate-left"
+              style="margin-right: 10px"
+            ></i>
+            <small>Mon historique</small>
           </a>
         </div>
       </div>
