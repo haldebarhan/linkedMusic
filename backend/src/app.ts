@@ -83,10 +83,10 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    startSubscriptionDailyCron();
-    startCheckSubscriptionStatus();
-    startAnnouncementHighlightedCron();
-    startUpgradeUsersBadge();
+    // startSubscriptionDailyCron();
+    // startCheckSubscriptionStatus();
+    // startAnnouncementHighlightedCron();
+    // startUpgradeUsersBadge();
   }
 
   config() {

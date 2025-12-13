@@ -206,7 +206,7 @@ export class UserAnnouncementsDetailsComponent implements OnInit {
   }
 
   editAnnouncement(announcementid: number) {
-    this.router.navigate(['/announcemnts/edit', announcementid]);
+    this.router.navigate(['/announcements/edit', announcementid]);
   }
 
   styles(): string[] {

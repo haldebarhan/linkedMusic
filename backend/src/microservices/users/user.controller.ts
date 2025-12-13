@@ -17,15 +17,13 @@ export class UserController {
   async create(req: Request, res: Response) {
     try {
       const file = req.file as Express.Multer.File;
-      const result = await saveFileToBucket("profiles", file);
-      const link = await this.userService.createUser(
-        req.body,
-        result.objectName
-      );
+      const result = file
+        ? await saveFileToBucket("profiles", file)
+        : undefined;
+      await this.userService.createUser(req.body, result?.objectName ?? "");
       const response = formatResponse(200, {
         message:
           "a confirmation link has been sent to the address you provided",
-        link,
       });
       res.status(201).json(response);
     } catch (error) {

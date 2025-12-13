@@ -46,37 +46,13 @@ export class ResetPasswordComponent implements OnInit {
   private initForm(): void {
     this.resetPasswordForm = this.fb.group(
       {
-        password: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(8),
-            this.passwordStrengthValidator,
-          ],
-        ],
+        password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', Validators.required],
       },
       {
         validators: this.passwordMatchValidator,
       }
     );
-  }
-
-  private passwordStrengthValidator(
-    control: AbstractControl
-  ): { [key: string]: boolean } | null {
-    const value = control.value;
-    if (!value) return null;
-
-    const hasUpperCase = /[A-Z]/.test(value);
-    const hasLowerCase = /[a-z]/.test(value);
-    const hasNumeric = /[0-9]/.test(value);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
-
-    const passwordValid =
-      hasUpperCase && hasLowerCase && hasNumeric && hasSpecialChar;
-
-    return !passwordValid ? { weakPassword: true } : null;
   }
 
   private passwordMatchValidator(
@@ -104,22 +80,6 @@ export class ResetPasswordComponent implements OnInit {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  getPasswordStrength(): string {
-    const password = this.password?.value || '';
-    if (password.length === 0) return '';
-    if (password.length < 8) return 'weak';
-
-    let strength = 0;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
-
-    if (strength <= 2) return 'weak';
-    if (strength === 3) return 'medium';
-    return 'strong';
-  }
-
   async onSubmit(): Promise<void> {
     if (this.resetPasswordForm.invalid) {
       this.resetPasswordForm.markAllAsTouched();
@@ -145,26 +105,6 @@ export class ResetPasswordComponent implements OnInit {
       this.errorMessage =
         error?.error?.message || error?.message || 'Une erreur est survenue';
     }
-  }
-
-  hasUpperCase(): boolean {
-    const value = this.password?.value || '';
-    return /[A-Z]/.test(value);
-  }
-
-  hasLowerCase(): boolean {
-    const value = this.password?.value || '';
-    return /[a-z]/.test(value);
-  }
-
-  hasNumeric(): boolean {
-    const value = this.password?.value || '';
-    return /[0-9]/.test(value);
-  }
-
-  hasSpecialChar(): boolean {
-    const value = this.password?.value || '';
-    return /[!@#$%^&*(),.?":{}|<>]/.test(value);
   }
 
   goToLogin(): void {

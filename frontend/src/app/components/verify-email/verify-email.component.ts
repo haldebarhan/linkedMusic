@@ -12,7 +12,7 @@ import { interval, Subscription } from 'rxjs';
 export class VerifyEmailComponent implements OnInit {
   email?: string;
   maskedEmail = '';
-  adminMail = 'noreply@tondomaine.com';
+  adminMail = 'info@zikmuzik.com';
 
   constructor(private route: ActivatedRoute) {}
 

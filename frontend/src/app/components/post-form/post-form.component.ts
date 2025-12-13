@@ -25,7 +25,7 @@ import {
   FieldValueDto,
 } from '../../shared/types/field-input-type';
 import { formatLabel } from '../../helpers/input-label';
-import { Toast } from '../../helpers/sweet-alert';
+import { SweetAlert, Toast } from '../../helpers/sweet-alert';
 import { MediaGalleryComponent } from '../../shared/components/media-gallery/media-gallery.component';
 import {
   baseName,
@@ -67,6 +67,11 @@ export class PostFormComponent implements OnInit, OnDestroy {
   private fileUrls: PreviewItem[] = [];
   private removedExisting = new Set<string>();
   private objectUrlToFile = new Map<string, File>();
+
+  readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
+  readonly MAX_INDIVIDUAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB par fichier
+
+  fileSizeError: string | null = null;
 
   // Catégorie et données
   slug: string | null = null;
@@ -536,9 +541,41 @@ export class PostFormComponent implements OnInit, OnDestroy {
     const list = Array.from(input.files || []);
     this.files = list;
 
+    this.fileSizeError = null;
+    const oversizedFiles = list.filter(
+      (file) => file.size > this.MAX_INDIVIDUAL_FILE_SIZE
+    );
+
+    if (oversizedFiles.length > 0) {
+      this.fileSizeError = `Certains fichiers dépassent la limite de ${this.formatFileSize(
+        this.MAX_INDIVIDUAL_FILE_SIZE
+      )} par fichier`;
+      SweetAlert.fire({
+        icon: 'error',
+        text: this.fileSizeError,
+        title: 'Taille excedée',
+      });
+      input.value = ''; // Réinitialiser l'input
+      return;
+    }
+
+    const totalSize = list.reduce((sum, file) => sum + file.size, 0);
+
+    if (totalSize > this.MAX_FILE_SIZE) {
+      this.fileSizeError = `La taille totale des fichiers (${this.formatFileSize(
+        totalSize
+      )}) dépasse la limite de ${this.formatFileSize(this.MAX_FILE_SIZE)}`;
+      SweetAlert.fire({
+        icon: 'error',
+        text: this.fileSizeError,
+        title: 'Taille excedée',
+      });
+      input.value = ''; // Réinitialiser l'input
+      return;
+    }
+
     this.clearNewFileUrls();
     this.objectUrlToFile.clear();
-
     this.fileUrls = list.map((file) => {
       const url = URL.createObjectURL(file);
       this.objectUrlToFile.set(url, file);
@@ -703,5 +740,18 @@ export class PostFormComponent implements OnInit, OnDestroy {
     }
 
     return 'Champ invalide';
+  }
+
+  /**
+   * Formate une taille en bytes en format lisible
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }

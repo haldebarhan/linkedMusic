@@ -32,7 +32,7 @@ export class RegisterComponent {
   ) {
     this.signupForm = this.fb.group({
       pseudo: ['', Validators.required],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       email: ['', [Validators.required, Validators.email]],
       photo: [null],
     });
