@@ -36,7 +36,11 @@
             <!-- ... (Contenu du profil connecté mobile inchangé) ... -->
             <div class="profile-wrapper position-relative">
               <img
-                [src]="user.profileImage || 'assets/images/avatar.jpg'"
+                [src]="
+                  user.profileImage !== ''
+                    ? user.profileImage
+                    : 'assets/images/avatar.jpg'
+                "
                 alt="Profile"
                 class="profile-img"
               />
@@ -147,9 +151,13 @@
             >
               <div class="profile-wrapper position-relative">
                 <img
-                  [src]="user.profileImage"
+                  [src]="
+                    user.profileImage !== ''
+                      ? user.profileImage
+                      : 'assets/images/avatar.jpg'
+                  "
                   alt="Profile"
-                  class="profile-img me-2"
+                  class="profile-img"
                 />
                 <!-- Badge utilisateur (si non STANDARD et non ADMIN) -->
                 <img

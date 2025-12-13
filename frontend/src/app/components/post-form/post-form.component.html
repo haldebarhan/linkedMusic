@@ -545,8 +545,11 @@
             multiple
           />
           <small class="text-muted d-block mt-1">
-            Images, audio ou vidéo. Plusieurs fichiers acceptés.
+            Images, audio ou vidéo. Max 50MB au total, 20MB par fichier.
           </small>
+          <div class="invalid-feedback d-block" *ngIf="fileSizeError">
+            {{ fileSizeError }}
+          </div>
         </div>
       </div>
 
