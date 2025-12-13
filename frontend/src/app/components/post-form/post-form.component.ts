@@ -358,7 +358,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
         Toast.fire({
           icon: 'success',
           text: this.announcementId ? 'Annonce mise à jour' : 'Annonce créée',
-          //   didClose: () => this.router.navigate(['/profile/announcements']),
+          didClose: () => this.router.navigate(['/profile/announcements']),
         });
       },
       error: (err) => {

@@ -4,6 +4,7 @@ import { AdminApi } from '../../data/admin-api.service';
 import { Router } from '@angular/router';
 import { Badge } from '../../../../shared/enums/badge.enum';
 import { FormsModule } from '@angular/forms';
+import { Status } from '../../../../shared/enums/status.enum';
 
 @Component({
   selector: 'app-users',
@@ -89,5 +90,18 @@ export class UsersComponent implements OnInit {
       [Badge.VVIP]: 'VVIP',
     };
     return maping[badge] || badge;
+  }
+
+  formatStatus(status: Status) {
+    const maping: Record<Status, string> = {
+      [Status.ACTIVATED]: 'Actif',
+      [Status.CLOSED]: 'Fermé',
+      [Status.DESACTIVATED]: 'Inactif',
+      [Status.REMOVED]: 'Supprimé',
+      [Status.SUSPENDED]: 'Suspendu',
+      [Status.UNVERIFIED]: 'Non Vérifié',
+      [Status.VERIFIED]: 'Vérifié',
+    };
+    return maping[status] || status;
   }
 }

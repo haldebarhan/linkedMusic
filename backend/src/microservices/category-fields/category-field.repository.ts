@@ -66,4 +66,15 @@ export class CategoryFieldRepository {
       orderBy: { order: "asc" },
     });
   }
+
+  async findCategoryField(categoryId: number, fieldId: number) {
+    return prisma.categoryField.findUnique({
+      where: {
+        categoryId_fieldId: {
+          categoryId,
+          fieldId,
+        },
+      },
+    });
+  }
 }

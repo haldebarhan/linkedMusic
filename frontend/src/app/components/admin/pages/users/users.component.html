@@ -32,6 +32,7 @@
             <th>Pseudo</th>
             <th>Contact</th>
             <th>Date d'inscription</th>
+            <th>Statut</th>
             <th>Badge</th>
             <th>Role</th>
             <th>Actions</th>
@@ -53,7 +54,10 @@
               {{ user.phone }}
             </td>
             <td data-label="searchable">
-              {{ user.createdAt | date }}
+              {{ user.createdAt | date : "d MMM y 'à' HH:mm" }}
+            </td>
+            <td data-label="searchable">
+              {{ formatStatus(user.status) }}
             </td>
             <td data-label="searchable">
               {{ user.role === "ADMIN" ? "" : formatBadge(user.badge) }}

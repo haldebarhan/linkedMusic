@@ -194,7 +194,7 @@ export class CatalogueService {
   }
 
   async updateField(id: number, data: UpdateFieldDto) {
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const { options, optionsToRemove, ...rest } = data;
 
       // 1) Vérifie que le field existe (et verrouille si besoin)
@@ -263,6 +263,9 @@ export class CatalogueService {
 
       return updated;
     });
+    await invalideCache("GET:/api/admin/catalog/*");
+    await invalideCache("GET:/api/catalog/*");
+    return result;
   }
 
   // fields

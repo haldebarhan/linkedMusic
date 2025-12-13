@@ -149,6 +149,8 @@ export class CategoryService {
         });
       }
     }
+    await invalideCache("GET:/api/admin/catalog/*");
+    await invalideCache("GET:/api/catalog/*");
     return this.fieldRepository.findById(field.id);
   }
 
@@ -234,7 +236,15 @@ export class CategoryService {
         throw new AppError(ErrorCode.BAD_REQUEST, "No fields to attach", 400);
       }
       const results = await Promise.allSettled(
-        dto.fields.map((field) => this.categoryFieldRepository.create(field))
+        dto.fields.map(async (field) => {
+          const check = await this.categoryFieldRepository.findCategoryField(
+            field.categoryId,
+            field.fieldId
+          );
+          if (!check) {
+            await this.categoryFieldRepository.create(field);
+          }
+        })
       );
       const successful = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.filter((r) => r.status === "rejected");
@@ -257,6 +267,8 @@ export class CategoryService {
           ),
         };
       }
+      await invalideCache("GET:/api/admin/catalog/fields/*");
+      await invalideCache("GET:/api/categories/*");
       return results.map((r) => r);
     } catch (error) {
       throw new AppError(
@@ -282,6 +294,8 @@ export class CategoryService {
    * Dissocie un champ d'une catégorie
    */
   async removeFieldFromCategory(categoryId: number, fieldId: number) {
+    await invalideCache("GET:/api/admin/catalog/fields/*");
+    await invalideCache("GET:/api/categories/*");
     return this.categoryFieldRepository.delete(categoryId, fieldId);
   }
 

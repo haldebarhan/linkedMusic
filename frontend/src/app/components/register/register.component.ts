@@ -10,7 +10,7 @@ import {
 import { Router } from '@angular/router';
 import { ApiAuthService } from '../../auth/api-auth.service';
 import { AuthService } from '../../auth/auth.service';
-import { Toast } from '../../helpers/sweet-alert';
+import { SweetAlert, Toast } from '../../helpers/sweet-alert';
 
 @Component({
   selector: 'app-register',
@@ -67,7 +67,15 @@ export class RegisterComponent {
           },
         });
       },
-      error: (err) => console.error('Registration failed', err),
+      error: (err) => {
+        SweetAlert.fire({
+          title: 'Erreur rencontée',
+          text: `${err.error.data.message}`,
+          icon: 'error',
+          didClose: () => (this.submitted = false),
+        });
+      },
+      complete: () => {},
     });
   }
 

@@ -134,7 +134,6 @@ router.get("/catalog/fields/:id", cache, async (req: Request, res: Response) =>
 );
 router.put(
   "/catalog/fields/:id",
-  cache,
   ValidateDtoMiddleware(UpdateFieldDto),
   async (req: Request, res: Response) => adminController.updateField(req, res)
 );

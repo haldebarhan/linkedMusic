@@ -15,6 +15,7 @@ import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
 import { PaymentRepository } from "../payments/payment.repository";
 import { PaymentDTO } from "../payments/payment.dto";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -161,7 +162,7 @@ export class SubscriptionService {
   }
 
   async update(id: number, data: UpdatePlanDTO) {
-    return await prisma.$transaction(async (tx) => {
+    const update = await prisma.$transaction(async (tx) => {
       const { benefits, benefitsToRemove, parentId, ...planData } = data;
       const plan = await this.findOne(id);
 
@@ -204,6 +205,9 @@ export class SubscriptionService {
         parentId,
       });
     });
+    await invalideCache("GET:/api/subscription*");
+    await invalideCache("GET:/api/admin/*");
+    return update;
   }
 
   async removePlan(id: number) {

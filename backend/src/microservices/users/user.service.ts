@@ -162,6 +162,7 @@ export class UserService {
   async assignBadge(userId: number, badge: Badge) {
     const user = await this.findOne(userId);
     await invalideCache("GET:/api/admin/users*");
+    await invalideCache("GET:/api/auth/me");
     return await this.userRepository.update(user.id, { badge });
   }
 
@@ -366,7 +367,10 @@ export class UserService {
     const conflicts: string[] = [];
     if (fbUser || dbUserWithEmail) conflicts.push("email");
 
-    throw createError(409, `Already in use: ${conflicts.join(" and ")}`);
+    throw createError(
+      409,
+      `Ces données sont deja utilisées: ${conflicts.join(" et ")}`
+    );
   }
 
   private async checkUserExistence(email: string): Promise<void> {
@@ -403,6 +407,10 @@ export class UserService {
     ];
     const normalizedPseudo = pseudo.toLowerCase().trim();
     if (forbiddenList.includes(normalizedPseudo)) {
+      throw createError(400, "Ce nom d'utilisateur n'est pas autorisé");
+    }
+
+    if (normalizedPseudo.startsWith("zik")) {
       throw createError(400, "Ce nom d'utilisateur n'est pas autorisé");
     }
   }
