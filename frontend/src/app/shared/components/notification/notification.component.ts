@@ -219,6 +219,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
   private getNotificationType(type: string): NotificationToast['type'] {
     const typeMap: { [key: string]: NotificationToast['type'] } = {
       ANNOUNCEMENT_APPROVED: 'success',
+      ANNOUNCEMENT_CREATED: 'success',
       ANNOUNCEMENT_REJECTED: 'error',
       CONTACT_REQUEST_RECEIVED: 'info',
       CONTACT_REQUEST_ACCEPTED: 'success',
