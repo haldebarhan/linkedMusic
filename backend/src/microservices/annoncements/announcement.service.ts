@@ -40,7 +40,6 @@ import { countUnread } from "../../sockets/handlers/notification.handler";
 import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
 import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
-import { invalideCache } from "../../utils/functions/invalidate-cache";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -104,11 +103,6 @@ export class AnnouncementService {
         fieldValues
       );
 
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     return this.mapToResponseDto(announcement);
   }
 
@@ -180,8 +174,8 @@ export class AnnouncementService {
       location: dto.location,
       country: dto.country,
       city: dto.city,
-      status: dto.status,
-      isPublished: dto.isPublished,
+      status: AnnouncementStatus.PENDING_APPROVAL,
+      isPublished: false,
       isHighlighted: dto.isHighlighted,
     });
 
@@ -228,11 +222,6 @@ export class AnnouncementService {
         )
       );
     }
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     return this.mapToResponseDto(updated);
   }
 
@@ -265,11 +254,6 @@ export class AnnouncementService {
         }
       })
     );
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     await this.announcementRepository.delete(id);
   }
 
@@ -299,7 +283,11 @@ export class AnnouncementService {
     const filters = {
       categorySlug: query.categorySlug,
       city: query.city,
-      countryCode: query.country === "ALL" ? undefined : query.country,
+      countryCode: query.country
+        ? query.country === "ALL"
+          ? undefined
+          : query.country
+        : "CI",
       minPrice: query.minPrice,
       maxPrice: query.maxPrice,
       search: query.search,
@@ -393,11 +381,7 @@ export class AnnouncementService {
 
     const updatedAnnouncement =
       await this.announcementRepository.updateWithFieldValues(id, updateData);
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
+
     return this.mapToResponseDto(updatedAnnouncement);
   }
 
@@ -428,11 +412,6 @@ export class AnnouncementService {
     const updatedAnnouncement =
       await this.announcementRepository.updateWithFieldValues(id, updateData);
 
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     return this.mapToResponseDto(updatedAnnouncement);
   }
 
@@ -479,11 +458,6 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     return approved;
   }
 
@@ -582,11 +556,6 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
-    await Promise.all([
-      invalideCache("GET:/api/users/announcements*"),
-      invalideCache("GET:/api/admin/announcements*"),
-      invalideCache("GET:/api/announcements*"),
-    ]);
     return rejected;
   }
 
@@ -794,7 +763,7 @@ export class AnnouncementService {
       userId: ownerId,
       type: NotificationType.ANNOUNCEMENT_REJECTED,
       title: "Votre annonce a été rejetée",
-      message: `Nous sommes désolés de vous informer que votre annonce "${announcement.title}" a été rejetée. Raison : ${reason}`,
+      message: `Votre annonce "${announcement.title}" a été rejetée. Raison : ${reason}`,
       actionUrl: `${ENV.FRONTEND_URL}/profile/announcements/${announcement.id}`,
     });
   }

@@ -51,7 +51,7 @@ export class LoginComponent implements OnInit {
     } catch (error: any) {
       const msg = this.extractError(error);
       Toast.fire({
-        title: msg,
+        text: msg,
         icon: 'error',
         didClose: () => {
           this.submitted = false;
@@ -88,11 +88,9 @@ export class LoginComponent implements OnInit {
     const e = err.error;
     if (typeof e === 'string') return e;
     return (
-      e?.message ||
-      e?.data?.message ||
       e?.error ||
       (err.status === 401
-        ? 'Identifiants invalides.'
+        ? 'Email ou mot de passe invalide.'
         : err.statusText || 'Une erreur est survenue.')
     );
   }

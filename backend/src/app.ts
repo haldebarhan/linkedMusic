@@ -24,6 +24,7 @@ import {
   startCheckSubscriptionStatus,
   startAnnouncementHighlightedCron,
   startUpgradeUsersBadge,
+  startAlertAdminJob,
 } from "./events/schedulers/scheduler";
 
 import path from "path";
@@ -87,6 +88,7 @@ class Server {
     startCheckSubscriptionStatus();
     startAnnouncementHighlightedCron();
     startUpgradeUsersBadge();
+    startAlertAdminJob();
   }
 
   config() {

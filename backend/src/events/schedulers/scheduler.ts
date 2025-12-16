@@ -5,6 +5,7 @@ import { paymentsStatusCheckJob } from "../workers/payment-status.worker";
 import { announcementEndHighlightJob } from "../workers/announcement-highligth.worker";
 import { upgradeBadgeJob } from "../workers/badge.worker";
 import { Badge } from "@prisma/client";
+import { alertAdminJob } from "../workers/alert-admin.worker";
 
 export const startSubscriptionDailyCron = () => {
   cron.schedule("0 0 * * *", async () => {
@@ -51,5 +52,11 @@ export const startUpgradeUsersBadge = () => {
   cron.schedule("20 0 * * *", async () => {
     logger.info("⏰ Cron lancé : vérification des badges");
     await upgradeBadgeJob(Badge.VIP);
+  });
+};
+
+export const startAlertAdminJob = () => {
+  cron.schedule("*/30 * * * *", async () => {
+    await alertAdminJob();
   });
 };

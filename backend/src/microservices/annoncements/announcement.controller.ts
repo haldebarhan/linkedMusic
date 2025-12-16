@@ -437,10 +437,10 @@ export class AnnouncementController {
   async rejectAnnouncement(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const reason: string = req.body;
+      const reason = req.body;
       const status = await this.announcementService.rejectAnnouncement(
         +id,
-        reason
+        reason.reason
       );
       const response = formatResponse(200, status);
       res.status(200).json(response);

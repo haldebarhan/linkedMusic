@@ -17,35 +17,31 @@ import authMiddleware from "../../middlewares/auth.middleware";
 import refreshTokenMiddleware from "../../middlewares/refresh-token";
 import uploads from "../../multer-config";
 import { firebaseMiddleware } from "../../middlewares/firebase.middleware";
-import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
 
 // Announcements
-router.get(
-  "/announcements/details/:id",
-  cache,
-  async (req: Request, res: Response) =>
-    authController.getAnnouncementDetails(req, res)
+router.get("/announcements/details/:id", async (req: Request, res: Response) =>
+  authController.getAnnouncementDetails(req, res)
 );
 
 router.get(
   "/announcements/search",
-  cache,
+
   async (req: Request, res: Response) =>
     authController.searchAnnouncement(req, res)
 );
 
 // Subscription plans
 
-router.get("/subscription-plans", cache, async (req: Request, res: Response) =>
+router.get("/subscription-plans", async (req: Request, res: Response) =>
   authController.findSubscriptionPlans(req, res)
 );
 
 router.get(
   "/subscription-plans/:id",
-  cache,
+
   async (req: Request, res: Response) =>
     authController.getSubscriptionPlan(req, res)
 );
@@ -137,40 +133,40 @@ router.get(
     authController.getMe(req, res)
 );
 
-router.get("/banner-slides", cache, async (req: Request, res: Response) =>
+router.get("/banner-slides", async (req: Request, res: Response) =>
   authController.findActiveSlides(req, res)
 );
 
 router.get(
   "/catalog/categories/:category/filters",
-  cache,
+
   async (req: Request, res: Response) =>
     authController.getFilterSchema(req, res)
 );
 
-router.get("/catalog/categories", cache, async (req: Request, res: Response) =>
+router.get("/catalog/categories", async (req: Request, res: Response) =>
   authController.listCategories(req, res)
 );
 
 router.get(
   "/catalog/categories/:id",
-  cache,
+
   async (req: Request, res: Response) => authController.findCategory(req, res)
 );
 
 router.get(
   "/catalog/service-types",
-  cache,
+
   async (req: Request, res: Response) =>
     authController.listServiceTypes(req, res)
 );
 
 // Categories
-router.get("/categories", cache, async (req: Request, res: Response) =>
+router.get("/categories", async (req: Request, res: Response) =>
   authController.getCategories(req, res)
 );
 
-router.get("/categories/:slug", cache, async (req: Request, res: Response) =>
+router.get("/categories/:slug", async (req: Request, res: Response) =>
   authController.getCategoryBySlug(req, res)
 );
 

@@ -24,7 +24,7 @@ export class PaymentController {
         },
         dto
       );
-      const response = formatResponse(201, created);
+      const response = formatResponse(201, { ...created, user });
       res.status(201).json(response);
     } catch (error) {
       handleError(res, error);
