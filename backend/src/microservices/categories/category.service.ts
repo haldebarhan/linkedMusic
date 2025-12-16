@@ -18,7 +18,6 @@ import {
   UpdateFieldOptionDto,
 } from "./category.dto";
 import { Order } from "../../utils/enums/order.enum";
-import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 @injectable()
 export class CategoryService {
@@ -99,8 +98,6 @@ export class CategoryService {
         409
       );
     }
-    await invalideCache("GET:/api/catalog*");
-    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.create(dto);
   }
 
@@ -110,8 +107,6 @@ export class CategoryService {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
 
-    await invalideCache("GET:/api/catalog*");
-    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.update(id, dto);
   }
 
@@ -129,8 +124,6 @@ export class CategoryService {
     if (!category) {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
-    await invalideCache("GET:/api/catalog*");
-    await invalideCache("GET:/api/categories*");
     return this.categoryRepository.update(id, { active: false });
   }
 
@@ -149,8 +142,6 @@ export class CategoryService {
         });
       }
     }
-    await invalideCache("GET:/api/admin/catalog/*");
-    await invalideCache("GET:/api/catalog/*");
     return this.fieldRepository.findById(field.id);
   }
 
@@ -267,8 +258,6 @@ export class CategoryService {
           ),
         };
       }
-      await invalideCache("GET:/api/admin/catalog/fields/*");
-      await invalideCache("GET:/api/categories/*");
       return results.map((r) => r);
     } catch (error) {
       throw new AppError(
@@ -294,8 +283,6 @@ export class CategoryService {
    * Dissocie un champ d'une catégorie
    */
   async removeFieldFromCategory(categoryId: number, fieldId: number) {
-    await invalideCache("GET:/api/admin/catalog/fields/*");
-    await invalideCache("GET:/api/categories/*");
     return this.categoryFieldRepository.delete(categoryId, fieldId);
   }
 

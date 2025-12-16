@@ -19,7 +19,6 @@ import {
   UpdateAnnouncementDto,
 } from "../../microservices/annoncements/announcement.dto";
 import { CreateContactRequestDTO } from "../../microservices/contact-requests/contact-request.dto";
-import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -57,21 +56,21 @@ router.post(
 
 router.get(
   "/announcements/like-status/:id",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.announcementlikeStatus(req, res)
 );
 
 router.get(
   "/announcements/recent-views",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myRecentViews(req, res)
 );
 
 router.get(
   "/announcements/liked",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myLikedAnnouncements(req, res)
 );
@@ -115,14 +114,14 @@ router.post(
 
 router.get(
   "/announcements",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myAnnouncements(req, res)
 );
 
 router.get(
   "/announcements/:id",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myAnnouncement(req, res)
 );
@@ -138,14 +137,14 @@ router.post(
 
 router.get(
   "/contact-requests/my-request/:announcementId",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.getMyRequest(req, res)
 );
 
 router.get(
   "/contact-requests/announcement/:announcementId",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.getAnnouncementRequests(req, res)
 );
@@ -216,7 +215,7 @@ router.post(
 
 router.get(
   "/payments",
-  cache,
+
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myPayments(req, res)
 );

@@ -1,7 +1,13 @@
 import { BaseRepository } from "../../utils/classes/base.repoository";
 import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
-import { PrismaClient, Status, SubscriptionStatus, User } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  Status,
+  SubscriptionStatus,
+  User,
+} from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
 import { Badge } from "../../utils/enums/badge.enum";
 
@@ -73,6 +79,14 @@ export class UserRepository extends BaseRepository<
             },
           },
         },
+      },
+    });
+  }
+
+  async findAdmin() {
+    return prisma.user.findMany({
+      where: {
+        role: Role.ADMIN,
       },
     });
   }

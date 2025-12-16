@@ -22,7 +22,6 @@ import { EVENTS } from "../../sockets/event";
 import logger from "../../config/logger";
 import { countUnread } from "../../sockets/handlers/notification.handler";
 import { S3Service } from "../../utils/services/s3.service";
-import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();
@@ -95,7 +94,6 @@ export class ContactRequestService {
         annoncement
       ),
     ]);
-    await invalideCache("GET:/contact-requests*");
     return create;
   }
 
@@ -220,7 +218,6 @@ export class ContactRequestService {
       });
       return { request: updatedRequest, conversation };
     });
-    await invalideCache("GET:/contact-requests*");
     return result.request;
   }
 
@@ -332,7 +329,6 @@ export class ContactRequestService {
     } catch (error) {
       logger.log("Erreur lors de l'émission Socket.IO:", error);
     }
-    await invalideCache("GET:/contact-requests*");
     return updatedRequest;
   }
 
@@ -366,7 +362,6 @@ export class ContactRequestService {
       where: { id: requestId },
     });
 
-    await invalideCache("GET:/contact-requests*");
     return updatedRequest;
   }
 

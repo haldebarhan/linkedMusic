@@ -176,7 +176,6 @@ export class CheckoutComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error(err);
         this.processing = false;
         SweetAlert.fire({
           title: err.data?.title || 'Erreur',

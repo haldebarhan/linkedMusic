@@ -35,6 +35,7 @@ import {
   stableIdFromUrl,
 } from '../../helpers/path-part';
 import { country_list } from '../../helpers/countries';
+import { VideoTrimmerComponent } from '../../shared/components/video-trimmer/video-trimmer.component';
 
 type PreviewItem = {
   url: string;
@@ -53,6 +54,7 @@ type PreviewItem = {
     ReactiveFormsModule,
     CommonModule,
     MediaGalleryComponent,
+    VideoTrimmerComponent,
   ],
   templateUrl: './post-form.component.html',
   styleUrl: './post-form.component.css',
@@ -70,6 +72,11 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
   readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
   readonly MAX_INDIVIDUAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB par fichier
+  readonly MAX_VIDEO_DURATION = 60; // 60 secondes
+
+  showVideoTrimmer = false;
+  currentVideoToTrim: { file: File; url: string; index: number } | null = null;
+  videosToTrim: Array<{ file: File; url: string; needsTrim: boolean }> = [];
 
   fileSizeError: string | null = null;
 
@@ -205,7 +212,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
     const group: any = {
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: ['', [Validators.required, Validators.minLength(20)]],
-      country: [''],
+      country: ['Côte d’Ivoire'],
       city: [''],
       price: [''],
     };
@@ -357,7 +364,8 @@ export class PostFormComponent implements OnInit, OnDestroy {
         this.resetForm();
         Toast.fire({
           icon: 'success',
-          text: this.announcementId ? 'Annonce mise à jour' : 'Annonce créée',
+          title: this.announcementId ? 'Annonce mise à jour' : 'Annonce créée',
+          text: 'En cours de validation',
           didClose: () => this.router.navigate(['/profile/announcements']),
         });
       },
@@ -536,12 +544,59 @@ export class PostFormComponent implements OnInit, OnDestroy {
   // GESTION DES FICHIERS
   // ============================================
 
-  onfileChange(event: Event): void {
+  async onfileChange(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const list = Array.from(input.files || []);
-    this.files = list;
 
     this.fileSizeError = null;
+
+    // Vérifier les formats vidéo non supportés
+    const unsupportedVideoFormats = list.filter((file) => {
+      const ext = file.name.toLowerCase().split('.').pop();
+      return ['avi', 'wmv', 'flv', 'mov'].includes(ext || '');
+    });
+
+    if (unsupportedVideoFormats.length > 0) {
+      const formatList = unsupportedVideoFormats
+        .map((f) => {
+          const ext = f.name.split('.').pop()?.toUpperCase();
+          return `${f.name} (${ext})`;
+        })
+        .join(', ');
+
+      await SweetAlert.fire({
+        icon: 'warning',
+        title: 'Format non supporté',
+        html: `
+        <div class="text-start">
+          <p>Les formats vidéo suivants ne sont pas supportés pour le découpage :</p>
+          <ul class="list-unstyled mb-3">
+            ${unsupportedVideoFormats
+              .map(
+                (f) => `
+              <li class="mb-2">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                <strong>${f.name}</strong>
+              </li>
+            `
+              )
+              .join('')}
+          </ul>
+          <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Formats recommandés :</strong> MP4, WebM, OGG
+            <br>
+            <small class="text-muted">Convertissez vos vidéos avec un outil comme HandBrake ou FFmpeg</small>
+          </div>
+        </div>
+      `,
+        confirmButtonText: 'Compris',
+      });
+      input.value = '';
+      return;
+    }
+
+    // Vérifier la taille individuelle
     const oversizedFiles = list.filter(
       (file) => file.size > this.MAX_INDIVIDUAL_FILE_SIZE
     );
@@ -550,15 +605,11 @@ export class PostFormComponent implements OnInit, OnDestroy {
       this.fileSizeError = `Certains fichiers dépassent la limite de ${this.formatFileSize(
         this.MAX_INDIVIDUAL_FILE_SIZE
       )} par fichier`;
-      SweetAlert.fire({
-        icon: 'error',
-        text: this.fileSizeError,
-        title: 'Taille excedée',
-      });
-      input.value = ''; // Réinitialiser l'input
+      input.value = '';
       return;
     }
 
+    // Vérifier la taille totale
     const totalSize = list.reduce((sum, file) => sum + file.size, 0);
 
     if (totalSize > this.MAX_FILE_SIZE) {
@@ -568,20 +619,178 @@ export class PostFormComponent implements OnInit, OnDestroy {
       SweetAlert.fire({
         icon: 'error',
         text: this.fileSizeError,
-        title: 'Taille excedée',
+        title: 'Taille excédée',
       });
-      input.value = ''; // Réinitialiser l'input
+      input.value = '';
       return;
     }
 
-    this.clearNewFileUrls();
-    this.objectUrlToFile.clear();
-    this.fileUrls = list.map((file) => {
+    // Séparer les vidéos et les autres fichiers
+    const videoFiles = list.filter((file) => file.type.startsWith('video/'));
+    const nonVideoFiles = list.filter(
+      (file) => !file.type.startsWith('video/')
+    );
+
+    if (videoFiles.length > 0) {
+      // Vérifier la durée des vidéos
+      const videoChecks = await Promise.all(
+        videoFiles.map(async (file) => {
+          try {
+            const duration = await this.getVideoDuration(file);
+            const needsTrim = duration > this.MAX_VIDEO_DURATION;
+            const url = URL.createObjectURL(file);
+            return { file, url, duration, needsTrim, error: false };
+          } catch (error) {
+            console.error(`Erreur lecture vidéo ${file.name}:`, error);
+            return {
+              file,
+              url: '',
+              duration: 0,
+              needsTrim: false,
+              error: true,
+            };
+          }
+        })
+      );
+
+      // Filtrer les vidéos en erreur
+      const errorVideos = videoChecks.filter((v) => v.error);
+      if (errorVideos.length > 0) {
+        await SweetAlert.fire({
+          icon: 'error',
+          title: 'Vidéos illisibles',
+          html: `
+          <div class="text-start">
+            <p>Impossible de lire les métadonnées de ces vidéos :</p>
+            <ul class="list-unstyled mb-3">
+              ${errorVideos
+                .map(
+                  (v) => `
+                <li class="mb-2">
+                  <i class="fas fa-times-circle text-danger me-2"></i>
+                  <strong>${v.file.name}</strong>
+                </li>
+              `
+                )
+                .join('')}
+            </ul>
+            <div class="alert alert-info mb-0">
+              <i class="fas fa-info-circle me-2"></i>
+              Vérifiez que le format est supporté (MP4, WebM, OGG)
+            </div>
+          </div>
+        `,
+          confirmButtonText: 'Compris',
+        });
+        input.value = '';
+        return;
+      }
+
+      const validVideoChecks = videoChecks.filter((v) => !v.error);
+      const videosNeedingTrim = validVideoChecks.filter((v) => v.needsTrim);
+
+      if (videosNeedingTrim.length > 0) {
+        const result = await SweetAlert.fire({
+          icon: 'warning',
+          title: 'Vidéos trop longues',
+          html: `
+          <div class="text-start">
+            <p><strong>${
+              videosNeedingTrim.length
+            } vidéo(s)</strong> dépassent la durée maximale de ${
+            this.MAX_VIDEO_DURATION
+          } secondes :</p>
+            <ul class="list-unstyled mb-3">
+              ${videosNeedingTrim
+                .map(
+                  (v) => `
+                <li class="mb-2">
+                  <i class="fas fa-video text-warning me-2"></i>
+                  <strong>${v.file.name}</strong><br>
+                  <small class="text-muted ms-4">Durée: ${Math.round(
+                    v.duration
+                  )}s / Max: ${this.MAX_VIDEO_DURATION}s</small>
+                </li>
+              `
+                )
+                .join('')}
+            </ul>
+            <div class="alert alert-info mb-0">
+              <i class="fas fa-cut me-2"></i>
+              Voulez-vous découper ces vidéos maintenant ?
+            </div>
+          </div>
+        `,
+          showCancelButton: true,
+          confirmButtonText:
+            '<i class="fas fa-cut me-1"></i> Découper les vidéos',
+          cancelButtonText: 'Annuler',
+          confirmButtonColor: '#2f4e32',
+        });
+
+        if (result.isConfirmed) {
+          // IMPORTANT: Ajouter d'abord les fichiers qui ne nécessitent PAS de découpage
+          const okVideos = validVideoChecks.filter((v) => !v.needsTrim);
+          const filesToAdd = [...nonVideoFiles, ...okVideos.map((v) => v.file)];
+
+          // Ajouter ces fichiers immédiatement
+          this.files = [...this.files, ...filesToAdd];
+
+          // Créer les previews pour les fichiers OK
+          filesToAdd.forEach((file) => {
+            const url = URL.createObjectURL(file);
+            this.objectUrlToFile.set(url, file);
+
+            const kind = kindFromMimeOrName(file.type, file.name);
+            this.fileUrls.push({
+              url,
+              id: url,
+              name: file.name,
+              mime: file.type || guessMime(file.name),
+              kind:
+                kind === 'image' || kind === 'audio' || kind === 'video'
+                  ? kind
+                  : undefined,
+              __revoke__: () => URL.revokeObjectURL(url),
+            });
+          });
+
+          // Préparer les vidéos à découper (sans les ajouter à this.files)
+          this.videosToTrim = videosNeedingTrim.map((v) => ({
+            file: v.file,
+            url: v.url,
+            needsTrim: true,
+          }));
+
+          // Mettre à jour la preview
+          this.recomputePreview();
+
+          // Commencer le découpage
+          this.startTrimmingNextVideo();
+          input.value = '';
+          return;
+        } else {
+          // Annulation - nettoyer les URLs
+          validVideoChecks.forEach((v) => URL.revokeObjectURL(v.url));
+          input.value = '';
+          return;
+        }
+      }
+
+      // Toutes les vidéos sont OK, nettoyer les URLs temporaires
+      validVideoChecks.forEach((v) => URL.revokeObjectURL(v.url));
+    }
+
+    // Tout est OK, ajouter tous les fichiers
+    this.files = [...this.files, ...list];
+
+    // Créer les previews
+    list.forEach((file) => {
       const url = URL.createObjectURL(file);
       this.objectUrlToFile.set(url, file);
 
       const kind = kindFromMimeOrName(file.type, file.name);
-      return {
+      this.fileUrls.push({
         url,
         id: url,
         name: file.name,
@@ -591,11 +800,19 @@ export class PostFormComponent implements OnInit, OnDestroy {
             ? kind
             : undefined,
         __revoke__: () => URL.revokeObjectURL(url),
-      };
+      });
     });
 
     this.recomputePreview();
     this.syncNativeFileInput();
+
+    if (videoFiles.length > 0) {
+      Toast.fire({
+        icon: 'success',
+        title: `${videoFiles.length} vidéo(s) validée(s)`,
+        timer: 2000,
+      });
+    }
   }
 
   hydrateExistingFiles(urls: string[]): void {
@@ -753,5 +970,119 @@ export class PostFormComponent implements OnInit, OnDestroy {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  private getVideoDuration(file: File): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+
+      const timeout = setTimeout(() => {
+        URL.revokeObjectURL(video.src);
+        reject(new Error('Timeout lors de la lecture de la vidéo'));
+      }, 10000);
+
+      video.onloadedmetadata = () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(video.src);
+
+        if (isNaN(video.duration) || video.duration === Infinity) {
+          reject(new Error('Durée invalide'));
+          return;
+        }
+
+        resolve(video.duration);
+      };
+
+      video.onerror = (e) => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(video.src);
+        reject(new Error('Impossible de lire la vidéo - format non supporté'));
+      };
+
+      try {
+        video.src = URL.createObjectURL(file);
+      } catch (error) {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    });
+  }
+  private startTrimmingNextVideo(): void {
+    if (this.videosToTrim.length === 0) {
+      Toast.fire({
+        icon: 'success',
+        title: 'Toutes les vidéos ont été découpées !',
+      });
+      return;
+    }
+
+    const videoData = this.videosToTrim[0];
+    this.currentVideoToTrim = {
+      file: videoData.file,
+      url: videoData.url,
+      index: 0,
+    };
+    this.showVideoTrimmer = true;
+  }
+
+  onVideoTrimmed(trimmedFile: File): void {
+    if (!this.currentVideoToTrim) return;
+
+    this.files.push(trimmedFile);
+
+    const url = URL.createObjectURL(trimmedFile);
+    this.objectUrlToFile.set(url, trimmedFile);
+
+    const kind = kindFromMimeOrName(trimmedFile.type, trimmedFile.name);
+    this.fileUrls.push({
+      url,
+      id: url,
+      name: trimmedFile.name,
+      mime: trimmedFile.type,
+      kind: kind === 'video' ? 'video' : undefined,
+      __revoke__: () => URL.revokeObjectURL(url),
+    });
+
+    URL.revokeObjectURL(this.currentVideoToTrim.url);
+
+    this.videosToTrim.shift();
+
+    this.currentVideoToTrim = null;
+    this.showVideoTrimmer = false;
+
+    if (this.videosToTrim.length > 0) {
+      setTimeout(() => {
+        this.startTrimmingNextVideo();
+      }, 300);
+    } else {
+      this.recomputePreview();
+      this.syncNativeFileInput();
+      Toast.fire({
+        icon: 'success',
+        title: 'Découpage terminé !',
+        text: 'Vous pouvez maintenant publier votre annonce',
+      });
+    }
+  }
+
+  onTrimmerClosed(): void {
+    if (this.currentVideoToTrim) {
+      URL.revokeObjectURL(this.currentVideoToTrim.url);
+    }
+
+    this.videosToTrim.forEach((v) => URL.revokeObjectURL(v.url));
+    this.videosToTrim = [];
+    this.currentVideoToTrim = null;
+    this.showVideoTrimmer = false;
+
+    Toast.fire({
+      icon: 'info',
+      title: 'Découpage annulé',
+    });
+  }
+
+  hasVideoFiles(): boolean {
+    return this.files?.some((f) => f.type.startsWith('video/')) ?? false;
   }
 }

@@ -1,0 +1,144 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick()">
+  <div class="trimmer-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="trimmer-header">
+      <h5 class="mb-0">
+        <i class="fas fa-cut me-2"></i>
+        Découper la vidéo
+      </h5>
+      <button class="btn-close-custom" (click)="close()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Video Preview -->
+    <div class="video-preview-container">
+      <video
+        #videoPlayer
+        [src]="videoUrl"
+        class="video-preview"
+        (loadedmetadata)="onVideoLoaded()"
+        (timeupdate)="onTimeUpdate()"
+      ></video>
+
+      <!-- Play/Pause overlay -->
+      <div class="play-overlay" *ngIf="!isPlaying" (click)="togglePlay()">
+        <div class="play-button">
+          <i class="fas fa-play"></i>
+        </div>
+      </div>
+
+      <!-- Duration info -->
+      <div class="duration-info">
+        <span class="badge bg-dark">
+          {{ formatTime(currentTime) }} / {{ formatTime(videoDuration) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-container">
+      <div class="timeline-labels mb-2">
+        <small class="text-muted">Début: {{ formatTime(startTime) }}</small>
+        <small class="text-primary fw-bold">
+          Durée: {{ formatTime(endTime - startTime) }}
+        </small>
+        <small class="text-muted">Fin: {{ formatTime(endTime) }}</small>
+      </div>
+
+      <!-- Range sliders -->
+      <div class="range-container">
+        <input
+          type="range"
+          class="range-slider range-start"
+          [min]="0"
+          [max]="videoDuration"
+          [step]="0.1"
+          [(ngModel)]="startTime"
+          (input)="onStartChange()"
+        />
+        <input
+          type="range"
+          class="range-slider range-end"
+          [min]="0"
+          [max]="videoDuration"
+          [step]="0.1"
+          [(ngModel)]="endTime"
+          (input)="onEndChange()"
+        />
+        <div
+          class="selected-range"
+          [style.left.%]="(startTime / videoDuration) * 100"
+          [style.width.%]="((endTime - startTime) / videoDuration) * 100"
+        ></div>
+      </div>
+
+      <!-- Quick selection buttons -->
+      <div class="quick-actions mt-3">
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          (click)="selectFirst30s()"
+          [disabled]="videoDuration < 30"
+        >
+          <i class="fas fa-forward me-1"></i>
+          30 premières secondes
+        </button>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          (click)="selectLast30s()"
+          [disabled]="videoDuration < 30"
+        >
+          <i class="fas fa-backward me-1"></i>
+          30 dernières secondes
+        </button>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          (click)="selectMiddle30s()"
+          [disabled]="videoDuration < 30"
+        >
+          <i class="fas fa-compress me-1"></i>
+          30s au milieu
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert for max duration -->
+    <div class="alert alert-info mt-3" *ngIf="maxDuration">
+      <i class="fas fa-info-circle me-2"></i>
+      <small>
+        <strong>Note:</strong> La durée maximale autorisée est de
+        {{ maxDuration }} secondes.
+        <span *ngIf="endTime - startTime > maxDuration" class="text-danger">
+          Votre sélection ({{ formatTime(endTime - startTime) }}) dépasse cette
+          limite.
+        </span>
+      </small>
+    </div>
+
+    <!-- Processing indicator -->
+    <div class="processing-overlay" *ngIf="processing">
+      <div class="spinner-border text-light me-2"></div>
+      <span>Découpage en cours... {{ processingProgress }}%</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="trimmer-footer">
+      <button
+        class="btn btn-secondary"
+        (click)="close()"
+        [disabled]="processing"
+      >
+        <i class="fas fa-times me-1"></i>
+        Annuler
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="trimVideo()"
+        [disabled]="!canTrim() || processing"
+      >
+        <i class="fas fa-check me-1"></i>
+        Valider le découpage
+      </button>
+    </div>
+  </div>
+</div>

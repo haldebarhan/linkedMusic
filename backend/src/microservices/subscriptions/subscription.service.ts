@@ -4,18 +4,11 @@ import { SubscriptionRepository } from "./subscription.repository";
 import { addDays } from "date-fns";
 import createError from "http-errors";
 import { PlanPeriod } from "../../utils/enums/period.enum";
-import {
-  CreateBenefit,
-  CreatePlanDTO,
-  SubscribeDTO,
-  UpdatePlanDTO,
-} from "./dto/plan.dto";
+import { CreatePlanDTO, SubscribeDTO, UpdatePlanDTO } from "./dto/plan.dto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
 import { PaymentRepository } from "../payments/payment.repository";
-import { PaymentDTO } from "../payments/payment.dto";
-import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -205,8 +198,6 @@ export class SubscriptionService {
         parentId,
       });
     });
-    await invalideCache("GET:/api/subscription*");
-    await invalideCache("GET:/api/admin/*");
     return update;
   }
 
