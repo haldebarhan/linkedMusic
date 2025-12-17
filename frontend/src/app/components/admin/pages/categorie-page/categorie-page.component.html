@@ -37,6 +37,12 @@
             <td>
               <div class="d-flex justify-content-start px-3 gap-4">
                 <i
+                  class="fas fa-cog fa-1x text-primary"
+                  style="cursor: pointer; margin-right: 10px"
+                  (click)="goToDetails(c)"
+                  title="Gérer les champs"
+                ></i>
+                <i
                   class="fas fa-pencil fa-1x text-success"
                   style="cursor: pointer mr-10"
                   (click)="goToEdit(c)"

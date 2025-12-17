@@ -12,6 +12,7 @@ import { PublicationDetailsComponent } from './pages/publication-details/publica
 import { BannerSlidesComponent } from './pages/banner-slides/banner-slides.component';
 import { UsersComponent } from './pages/users/users.component';
 import { UsersDetailsComponent } from './pages/users-details/users-details.component';
+import { CategorieDetailsComponent } from './pages/categorie-details/categorie-details.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -26,6 +27,10 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'categories',
         loadComponent: () => CategoriePageComponent,
+      },
+      {
+        path: 'categories/:id',
+        loadComponent: () => CategorieDetailsComponent,
       },
       {
         path: 'banner-slides',

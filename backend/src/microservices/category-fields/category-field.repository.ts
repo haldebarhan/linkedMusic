@@ -77,4 +77,23 @@ export class CategoryFieldRepository {
       },
     });
   }
+
+  async reorderFields(
+    categoryId: number,
+    fieldOrders: { fieldId: number; order: number }[]
+  ): Promise<void> {
+    await Promise.all(
+      fieldOrders.map((fo) =>
+        prisma.categoryField.update({
+          where: {
+            categoryId_fieldId: {
+              categoryId,
+              fieldId: fo.fieldId,
+            },
+          },
+          data: { order: fo.order },
+        })
+      )
+    );
+  }
 }

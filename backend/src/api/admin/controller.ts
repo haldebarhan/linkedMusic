@@ -158,6 +158,14 @@ export class AdminController {
     return await this.categoryController.createCategory(req, res);
   }
 
+  async findCategory(req: Request, res: Response) {
+    return await this.categoryController.findCategoryById(req, res);
+  }
+
+  async reorderCategoryFields(req: Request, res: Response) {
+    return await this.categoryController.reorderCategoryFields(req, res);
+  }
+
   async updateCategory(req: Request, res: Response) {
     return await this.categoryController.updateCategory(req, res);
   }

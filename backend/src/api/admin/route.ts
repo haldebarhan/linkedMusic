@@ -81,6 +81,16 @@ router.post(
     adminController.createCategory(req, res)
 );
 
+router.get("/catalog/categories/:id", async (req: Request, res: Response) =>
+  adminController.findCategory(req, res)
+);
+
+router.put(
+  "/catalog/categories/reorder/:id",
+  async (req: Request, res: Response) =>
+    adminController.reorderCategoryFields(req, res)
+);
+
 router.put(
   "/catalog/categories/:id",
   ValidateDtoMiddleware(UpdateCategoryDto),

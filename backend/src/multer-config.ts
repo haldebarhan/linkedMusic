@@ -1,10 +1,11 @@
 import multer from "multer";
 import path from "path";
+import createError from "http-errors";
 
 const fileFilter = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  cb: any
 ) => {
   const allowedExtensions = [".jpg", ".jpeg", ".png", ".pdf", ".mp4", ".mp3"];
   const extension = path.extname(file.originalname).toLocaleLowerCase();
@@ -12,7 +13,7 @@ const fileFilter = (
     cb(null, true);
   } else {
     cb(
-      new Error(
+      createError(
         "Invalid file type. Only JPG, JPEG, PNG, mp3, mp4 and PDF are allowed."
       )
     );

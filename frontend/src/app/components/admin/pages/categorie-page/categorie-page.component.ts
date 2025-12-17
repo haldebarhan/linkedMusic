@@ -95,6 +95,10 @@ export class CategoriePageComponent implements OnInit {
     this.router.navigate(['/admin/categories/new']);
   }
 
+  goToDetails(category: any) {
+    this.router.navigate(['/admin/categories', category.id]);
+  }
+
   get start() {
     return this.total ? (this.page - 1) * this.limit + 1 : 0;
   }

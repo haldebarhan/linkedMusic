@@ -338,12 +338,35 @@ export class PostFormComponent implements OnInit, OnDestroy {
   /**
    * Soumet le formulaire
    */
-  submit(): void {
+  async submit(): Promise<void> {
+    // CHANGEMENT: Ajout async pour await si besoin
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       Toast.fire({
         icon: 'warning',
         text: 'Veuillez remplir tous les champs obligatoires',
+      });
+      return;
+    }
+
+    // CHANGEMENT: Vérification de la taille totale au submit (comme demandé)
+    const totalSize = this.files.reduce((acc, file) => acc + file.size, 0);
+    if (totalSize > this.MAX_FILE_SIZE) {
+      Toast.fire({
+        icon: 'error',
+        text: `La taille totale des nouveaux fichiers (${this.formatFileSize(
+          totalSize
+        )}) dépasse la limite de ${this.formatFileSize(
+          this.MAX_FILE_SIZE
+        )}. Supprimez des fichiers ou découpez les vidéos plus court.`,
+      });
+      return;
+    }
+
+    if (this.files.length > 5) {
+      Toast.fire({
+        icon: 'error',
+        text: 'Vous ne pouvez pas ajouter plus de 5 fichiers.',
       });
       return;
     }
@@ -596,40 +619,26 @@ export class PostFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Vérifier la taille individuelle
-    const oversizedFiles = list.filter(
+    // CHANGEMENT: Séparer vidéos et non-vidéos AVANT les checks de taille
+    const videoFiles = list.filter((file) => file.type.startsWith('video/'));
+    const nonVideoFiles = list.filter(
+      (file) => !file.type.startsWith('video/')
+    );
+
+    // CHANGEMENT: Check taille individuelle SEULEMENT pour non-vidéos (images/audio). Pour vidéos, on permettra le trim même si >20MB
+    const oversizedNonVideos = nonVideoFiles.filter(
       (file) => file.size > this.MAX_INDIVIDUAL_FILE_SIZE
     );
 
-    if (oversizedFiles.length > 0) {
-      this.fileSizeError = `Certains fichiers dépassent la limite de ${this.formatFileSize(
+    if (oversizedNonVideos.length > 0) {
+      this.fileSizeError = `Certains fichiers non-vidéo dépassent la limite de ${this.formatFileSize(
         this.MAX_INDIVIDUAL_FILE_SIZE
       )} par fichier`;
       input.value = '';
       return;
     }
 
-    // Vérifier la taille totale
-    const totalSize = list.reduce((sum, file) => sum + file.size, 0);
-
-    if (totalSize > this.MAX_FILE_SIZE) {
-      this.fileSizeError = `La taille totale des fichiers (${this.formatFileSize(
-        totalSize
-      )}) dépasse la limite de ${this.formatFileSize(this.MAX_FILE_SIZE)}`;
-      SweetAlert.fire({
-        icon: 'error',
-        text: this.fileSizeError,
-        title: 'Taille excédée',
-      });
-      input.value = '';
-      return;
-    }
-
-    // Séparer les vidéos et les autres fichiers
-    const videoFiles = list.filter((file) => file.type.startsWith('video/'));
-    const nonVideoFiles = list.filter(
-      (file) => !file.type.startsWith('video/')
-    );
+    // CHANGEMENT: Suppression du check de taille totale ici (déplacé au submit, car trim réduira les vidéos)
 
     if (videoFiles.length > 0) {
       // Vérifier la durée des vidéos
@@ -637,7 +646,10 @@ export class PostFormComponent implements OnInit, OnDestroy {
         videoFiles.map(async (file) => {
           try {
             const duration = await this.getVideoDuration(file);
-            const needsTrim = duration > this.MAX_VIDEO_DURATION;
+            // CHANGEMENT: needsTrim si durée >60s OU taille >20MB (pour forcer trim sur lourdes vidéos)
+            const needsTrim =
+              duration > this.MAX_VIDEO_DURATION ||
+              file.size > this.MAX_INDIVIDUAL_FILE_SIZE;
             const url = URL.createObjectURL(file);
             return { file, url, duration, needsTrim, error: false };
           } catch (error) {
@@ -692,14 +704,12 @@ export class PostFormComponent implements OnInit, OnDestroy {
       if (videosNeedingTrim.length > 0) {
         const result = await SweetAlert.fire({
           icon: 'warning',
-          title: 'Vidéos trop longues',
+          title: 'Vidéos à découper',
           html: `
           <div class="text-start">
             <p><strong>${
               videosNeedingTrim.length
-            } vidéo(s)</strong> dépassent la durée maximale de ${
-            this.MAX_VIDEO_DURATION
-          } secondes :</p>
+            } vidéo(s)</strong> doivent être découpées (durée ou taille excessive) :</p>
             <ul class="list-unstyled mb-3">
               ${videosNeedingTrim
                 .map(
@@ -709,7 +719,11 @@ export class PostFormComponent implements OnInit, OnDestroy {
                   <strong>${v.file.name}</strong><br>
                   <small class="text-muted ms-4">Durée: ${Math.round(
                     v.duration
-                  )}s / Max: ${this.MAX_VIDEO_DURATION}s</small>
+                  )}s / Taille: ${this.formatFileSize(
+                    v.file.size
+                  )} (Max: 60s / ${this.formatFileSize(
+                    this.MAX_INDIVIDUAL_FILE_SIZE
+                  )})</small>
                 </li>
               `
                 )
@@ -1026,9 +1040,41 @@ export class PostFormComponent implements OnInit, OnDestroy {
     this.showVideoTrimmer = true;
   }
 
-  onVideoTrimmed(trimmedFile: File): void {
+  async onVideoTrimmed(trimmedFile: File): Promise<void> {
+    // CHANGEMENT: Ajout async pour await getVideoDuration
     if (!this.currentVideoToTrim) return;
 
+    // CHANGEMENT: Vérification post-trim (taille et durée)
+    const duration = await this.getVideoDuration(trimmedFile);
+    if (duration > this.MAX_VIDEO_DURATION) {
+      await SweetAlert.fire({
+        icon: 'warning',
+        title: 'Clip trop long',
+        text: `La durée du clip (${Math.round(
+          duration
+        )}s) dépasse la limite de ${
+          this.MAX_VIDEO_DURATION
+        }s. Veuillez sélectionner un segment plus court.`,
+        confirmButtonText: 'Réessayer',
+      });
+      return; // Ne pas ajouter, rester dans le trimmer
+    }
+
+    if (trimmedFile.size > this.MAX_INDIVIDUAL_FILE_SIZE) {
+      await SweetAlert.fire({
+        icon: 'warning',
+        title: 'Clip trop lourd',
+        text: `La taille du clip (${this.formatFileSize(
+          trimmedFile.size
+        )}) dépasse la limite de ${this.formatFileSize(
+          this.MAX_INDIVIDUAL_FILE_SIZE
+        )}. Veuillez sélectionner un segment plus court ou réduire la qualité.`,
+        confirmButtonText: 'Réessayer',
+      });
+      return; // Ne pas ajouter, rester dans le trimmer
+    }
+
+    // Si OK, ajouter
     this.files.push(trimmedFile);
 
     const url = URL.createObjectURL(trimmedFile);
