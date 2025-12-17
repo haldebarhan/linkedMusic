@@ -317,6 +317,24 @@ export class UpdateFieldOptionDto {
 }
 
 // ============================================================================
+// REORDER CATEGORY FIELD DTOS
+// ============================================================================
+
+export class FieldOrder {
+  @IsNumber({}, { message: "fieldId must be a number" })
+  fieldId: number;
+
+  @IsNumber({}, { message: "order must be a number" })
+  order: number;
+}
+
+export class ReorderCategoryFieldsDTO {
+  @IsArray({ message: "fields must be an array" })
+  @ValidateNested({ each: true })
+  @Type(() => FieldOrder)
+  fields: FieldOrder[];
+}
+
 // CATEGORY FIELD (RELATION) DTOS
 // ============================================================================
 

@@ -1,0 +1,256 @@
+<div class="admin-card">
+  <!-- Header -->
+  <div class="card-head d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <button class="btn btn-sm btn-outline-secondary mb-2" (click)="goBack()">
+        <i class="fas fa-arrow-left me-1"></i>Retour
+      </button>
+      <h5 class="mb-1 mt-2">
+        <i class="fas fa-cog me-2 text-primary"></i>Détails de la catégorie
+      </h5>
+      <div class="text-muted small" *ngIf="category">
+        Gérer l'ordre des champs pour "{{ category.name }}"
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="text-muted mt-3">Chargement des informations...</p>
+  </div>
+
+  <!-- Category Info -->
+  <div *ngIf="!loading && category" class="mb-4">
+    <div class="row">
+      <div class="col-md-4 col-sm-6 mb-3">
+        <div class="info-box">
+          <label class="text-muted small mb-1">
+            <i class="fas fa-tag me-1"></i>Nom
+          </label>
+          <div class="fw-bold">{{ category.name }}</div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6 mb-3">
+        <div class="info-box">
+          <label class="text-muted small mb-1">
+            <i class="fas fa-link me-1"></i>Slug
+          </label>
+          <div class="fw-bold">{{ category.slug }}</div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6 mb-3">
+        <div class="info-box">
+          <label class="text-muted small mb-1">
+            <i class="fas fa-circle me-1"></i>Statut
+          </label>
+          <div>
+            <span
+              class="badge"
+              [class.bg-success]="category.active"
+              [class.bg-secondary]="!category.active"
+            >
+              {{ category.active ? "Active" : "Inactive" }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Fields Management -->
+  <div *ngIf="!loading && category">
+    <div
+      class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2"
+    >
+      <div>
+        <h6 class="mb-1">
+          <i class="fas fa-list-ol me-2"></i>Champs de la catégorie
+          <span class="badge bg-primary ms-2">{{ fields.length }}</span>
+        </h6>
+        <small class="text-muted">
+          <i class="fas fa-hand-pointer me-1"></i>
+          Glissez-déposez pour réorganiser l'ordre des champs
+        </small>
+      </div>
+      <div class="d-flex gap-2">
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          (click)="resetOrder()"
+          [disabled]="!hasChanges || saving"
+          title="Annuler les modifications"
+        >
+          <i class="fas fa-undo me-1"></i>Annuler
+        </button>
+        <button
+          class="btn btn-sm btn-primary"
+          (click)="saveOrder()"
+          [disabled]="fields.length === 0 || !hasChanges || saving"
+        >
+          <span *ngIf="!saving">
+            <i class="fas fa-save me-1"></i>Enregistrer l'ordre
+          </span>
+          <span *ngIf="saving">
+            <span
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+            ></span>
+            Enregistrement...
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Changes Indicator -->
+    <div
+      *ngIf="hasChanges"
+      class="alert alert-warning alert-dismissible fade show mb-3"
+      role="alert"
+    >
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>Modifications non sauvegardées</strong> - N'oubliez pas
+      d'enregistrer vos changements !
+    </div>
+
+    <!-- Fields List -->
+    <div class="fields-container">
+      <div
+        *ngFor="let field of fields; index as i"
+        class="field-item"
+        [class.dragging]="draggedIndex === i"
+        draggable="true"
+        (dragstart)="onDragStart($event, i)"
+        (dragover)="onDragOver($event, i)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event, i)"
+        (dragend)="onDragEnd($event)"
+      >
+        <div class="field-content">
+          <!-- Drag Handle -->
+          <div class="drag-handle" title="Glisser-déposer">
+            <i class="fas fa-grip-vertical"></i>
+          </div>
+
+          <!-- Order Badge -->
+          <div class="order-badge" [attr.data-order]="i + 1">
+            {{ i + 1 }}
+          </div>
+
+          <!-- Field Info -->
+          <div class="field-info flex-grow-1">
+            <div class="field-label">
+              <i
+                class="fas {{
+                  getInputTypeIcon(field.field.inputType)
+                }} me-2 text-primary"
+              ></i>
+              {{ field.field.label }}
+              <span class="badge bg-danger ms-2" *ngIf="field.required">
+                <i class="fas fa-asterisk fa-xs"></i> Requis
+              </span>
+            </div>
+
+            <div class="field-details text-muted small mt-1">
+              <span class="me-3">
+                <i class="fas fa-key me-1"></i>
+                <code>{{ field.field.key }}</code>
+              </span>
+              <span class="me-3">
+                <i class="fas fa-tag me-1"></i>
+                {{ getInputTypeLabel(field.field.inputType) }}
+              </span>
+            </div>
+
+            <div class="field-visibility mt-2">
+              <span
+                class="visibility-badge"
+                [class.active]="field.visibleInForm"
+                [class.inactive]="!field.visibleInForm"
+                title="Visible dans le formulaire"
+              >
+                <i class="fas fa-edit"></i> Formulaire
+              </span>
+              <span
+                class="visibility-badge"
+                [class.active]="field.visibleInList"
+                [class.inactive]="!field.visibleInList"
+                title="Visible dans la liste"
+              >
+                <i class="fas fa-list"></i> Liste
+              </span>
+              <span
+                class="visibility-badge"
+                [class.active]="field.visibleInFilter"
+                [class.inactive]="!field.visibleInFilter"
+                title="Visible dans les filtres"
+              >
+                <i class="fas fa-filter"></i> Filtre
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="field-actions">
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="moveUp(i)"
+              [disabled]="i === 0"
+              title="Monter"
+            >
+              <i class="fas fa-chevron-up"></i>
+            </button>
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="moveDown(i)"
+              [disabled]="i === fields.length - 1"
+              title="Descendre"
+            >
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="fields.length === 0" class="empty-state text-center py-5">
+        <div class="empty-icon">
+          <i class="fas fa-inbox fa-4x text-muted"></i>
+        </div>
+        <h5 class="mt-3 text-muted">Aucun champ associé</h5>
+        <p class="text-muted">
+          Cette catégorie n'a pas encore de champs configurés.
+        </p>
+      </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="help-section mt-4 p-3 bg-light rounded">
+      <h6 class="mb-2">
+        <i class="fas fa-info-circle me-2 text-info"></i>Guide rapide
+      </h6>
+      <ul class="small mb-0">
+        <li>
+          Utilisez le <i class="fas fa-grip-vertical"></i> pour glisser-déposer
+          les champs
+        </li>
+        <li>
+          Les boutons <i class="fas fa-chevron-up"></i>
+          <i class="fas fa-chevron-down"></i> permettent de déplacer un champ
+          d'une position
+        </li>
+        <li>
+          N'oubliez pas de cliquer sur "Enregistrer l'ordre" pour sauvegarder
+          vos modifications
+        </li>
+        <li>
+          Les badges indiquent la visibilité du champ dans les différentes
+          sections
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

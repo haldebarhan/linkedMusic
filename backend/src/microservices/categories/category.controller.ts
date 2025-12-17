@@ -9,6 +9,7 @@ import {
   CreateFieldDto,
   CreateFieldOptionDto,
   LinkFieldsToCategoryDTO,
+  ReorderCategoryFieldsDTO,
   UpdateCategoryDto,
   UpdateCategoryFieldDto,
   UpdateFieldDto,
@@ -86,6 +87,35 @@ export class CategoryController {
       handleError(res, error);
     }
   }
+
+  async findCategoryById(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await this.categoryService.findCategoryById(id);
+      const response = formatResponse(200, category);
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  async reorderCategoryFields(req: Request, res: Response) {
+    try {
+      const categoryId = parseInt(req.params.id);
+      const dto: ReorderCategoryFieldsDTO = Object.assign(
+        new ReorderCategoryFieldsDTO(),
+        req.body
+      );
+      await this.categoryService.reorderCategoryFields(categoryId, dto);
+      const response = formatResponse(200, {
+        message: "Champs réordonnés avec succès",
+      });
+      res.status(200).json(response);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
   async updateCategory(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);

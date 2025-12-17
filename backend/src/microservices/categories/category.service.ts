@@ -12,6 +12,7 @@ import {
   CreateFieldDto,
   CreateFieldOptionDto,
   LinkFieldsToCategoryDTO,
+  ReorderCategoryFieldsDTO,
   UpdateCategoryDto,
   UpdateCategoryFieldDto,
   UpdateFieldDto,
@@ -54,15 +55,16 @@ export class CategoryService {
       "Producteurs & Managers",
       "Studios et Salles de répétition",
     ];
-    const sortedData = data.sort((a, b) => {
-      const aIndex = priorities.indexOf(a.name);
-      const bIndex = priorities.indexOf(b.name);
 
-      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
-      return 0;
-    });
+    const priorityCategories = data.filter((cat) =>
+      priorities.includes(cat.name)
+    );
+
+    const otherCategories = data.filter(
+      (cat) => !priorities.includes(cat.name)
+    );
+
+    const sortedData = [...priorityCategories, ...otherCategories];
     return {
       data: sortedData,
       metadata: {
@@ -99,6 +101,39 @@ export class CategoryService {
       );
     }
     return this.categoryRepository.create(dto);
+  }
+
+  async findCategoryById(id: number) {
+    const include = {
+      categoryFields: {
+        include: {
+          field: {
+            select: {
+              id: true,
+              key: true,
+              label: true,
+              inputType: true,
+            },
+          },
+        },
+        orderBy: { order: Order.ASC },
+      },
+    };
+    const category = await this.categoryRepository.findById(id, include);
+    if (!category)
+      throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
+    return category;
+  }
+
+  async reorderCategoryFields(
+    categoryId: number,
+    dto: ReorderCategoryFieldsDTO
+  ) {
+    const category = await this.categoryRepository.findById(categoryId);
+    if (!category)
+      throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
+    const { fields } = dto;
+    return await this.categoryFieldRepository.reorderFields(categoryId, fields);
   }
 
   async updateCategory(id: number, dto: UpdateCategoryDto) {
