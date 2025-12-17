@@ -88,6 +88,9 @@
             formControlName="description"
             placeholder="Décrivez votre annonce en détail..."
           ></textarea>
+          <small class="text-danger d-block mt-1">
+            * Les numéros, liens (Youtube, Facebook, ...) ne sont pas autorisés
+          </small>
           <div
             class="invalid-feedback"
             *ngIf="
@@ -601,11 +604,6 @@
         <strong>Astuce :</strong> Les champs marqués d'une
         <span class="text-danger">*</span> sont obligatoires.
       </div>
-      <div class="alert alert-danger mt-4" role="alert">
-        <i class="fas fa-info-circle me-2"></i>
-        <strong>Alerte :</strong> Les numéros et liens externes (Youtube,
-        Facebook, ...) ne sont pas autorisés
-      </div>
     </div>
   </form>
 
@@ -619,18 +617,4 @@
     (trimmed)="onVideoTrimmed($event)"
     (closed)="onTrimmerClosed()"
   ></app-video-trimmer>
-
-  <!-- Message d'information sur les vidéos -->
-  <div class="alert alert-info mt-3" *ngIf="files.length > 0">
-    <i class="fas fa-info-circle me-2"></i>
-    <strong>Astuce :</strong>
-    <span *ngIf="hasVideoFiles()">
-      Les vidéos de plus de {{ MAX_VIDEO_DURATION }} secondes seront
-      automatiquement proposées au découpage.
-    </span>
-    <span *ngIf="!hasVideoFiles()">
-      Vous pouvez ajouter des images, vidéos (max {{ MAX_VIDEO_DURATION }}s) et
-      audio.
-    </span>
-  </div>
 </div>
