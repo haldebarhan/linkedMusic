@@ -112,6 +112,14 @@
                         *ngIf="!fieldValue.valueBoolean"
                       ></i>
                     </ng-container>
+                    <ng-container *ngSwitchCase="'RADIO'">
+                      <span
+                        class="badge badge-secondary me-1"
+                        *ngFor="let opt of fieldValue.options"
+                      >
+                        {{ opt.label }}
+                      </span>
+                    </ng-container>
                     <ng-container *ngSwitchCase="'DATE'">
                       {{ fieldValue.valueDate | date : "d MMMM y" }}
                     </ng-container>
