@@ -138,6 +138,16 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearNewFileUrls();
+
+    this.fileUrls.forEach((f) => {
+      try {
+        f.__revoke__?.();
+      } catch {}
+    });
+
+    if (this.currentVideoToTrim?.url) {
+      URL.revokeObjectURL(this.currentVideoToTrim.url);
+    }
   }
 
   /**
@@ -750,7 +760,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
           // Ajouter ces fichiers immédiatement
           this.files = [...this.files, ...filesToAdd];
 
-          // Créer les previews pour les fichiers OK
+          // Créer les previews pour les fichiers
           filesToAdd.forEach((file) => {
             const url = URL.createObjectURL(file);
             this.objectUrlToFile.set(url, file);
@@ -1023,6 +1033,22 @@ export class PostFormComponent implements OnInit, OnDestroy {
     });
   }
   private startTrimmingNextVideo(): void {
+    if (this.isIOS()) {
+      SweetAlert.fire({
+        icon: 'info',
+        title: 'Découpage non disponible sur iPhone',
+        html: `
+      <p>Le découpage vidéo n’est pas supporté sur iOS.</p>
+      <p>Veuillez :</p>
+      <ul class="text-start">
+        <li>Découper la vidéo avant l’envoi</li>
+        <li>Ou réduire sa résolution / qualité</li>
+      </ul>
+    `,
+      });
+      return;
+    }
+
     if (this.videosToTrim.length === 0) {
       Toast.fire({
         icon: 'success',
@@ -1120,5 +1146,9 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
   hasVideoFiles(): boolean {
     return this.files?.some((f) => f.type.startsWith('video/')) ?? false;
+  }
+
+  isIOS(): boolean {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent);
   }
 }
