@@ -22,7 +22,7 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
 
   @Input() videoUrl: string = '';
   @Input() fileName: string = '';
-  @Input() maxDuration: number = 60;
+  @Input() maxDuration: number = 55;
   @Input() isOpen: boolean = false;
 
   @Output() trimmed = new EventEmitter<File>();

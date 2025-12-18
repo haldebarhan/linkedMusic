@@ -36,12 +36,27 @@ export const alertAdminJob = async () => {
     await Promise.all(
       admins.map(async (admin) => {
         try {
-          const notification = await notificationRepository.notify({
-            userId: admin.id,
-            title: "Annonces en attente de validation",
-            type: NotificationType.ANNOUNCEMENT_CREATED,
-            message: `Il y a ${pendingAnnouncementsCount} annonce(s) en attente de validation.`,
-            actionUrl: `${ENV.FRONTEND_URL}/admin/publications`,
+          const existingNotification = await prisma.notification.findFirst({
+            where: {
+              title: "Annonces en attente de validation",
+              userId: admin.id,
+            },
+          });
+
+          const notification = await prisma.notification.upsert({
+            where: {
+              id: existingNotification?.id || 0,
+            },
+            update: {
+              message: `Il y a ${pendingAnnouncementsCount} annonce(s) en attente de validation.`,
+            },
+            create: {
+              userId: admin.id,
+              title: "Annonces en attente de validation",
+              type: NotificationType.ANNOUNCEMENT_CREATED,
+              message: `Il y a ${pendingAnnouncementsCount} annonce(s) en attente de validation.`,
+              actionUrl: `${ENV.FRONTEND_URL}/admin/publications`,
+            },
           });
 
           const io = getIo();

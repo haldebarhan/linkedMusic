@@ -72,7 +72,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
   readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
   readonly MAX_INDIVIDUAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB par fichier
-  readonly MAX_VIDEO_DURATION = 60; // 60 secondes
+  readonly MAX_VIDEO_DURATION = 55; // 55 secondes
 
   showVideoTrimmer = false;
   currentVideoToTrim: { file: File; url: string; index: number } | null = null;
@@ -1041,73 +1041,63 @@ export class PostFormComponent implements OnInit, OnDestroy {
   }
 
   async onVideoTrimmed(trimmedFile: File): Promise<void> {
-    // CHANGEMENT: Ajout async pour await getVideoDuration
     if (!this.currentVideoToTrim) return;
 
-    // CHANGEMENT: Vérification post-trim (taille et durée)
     const duration = await this.getVideoDuration(trimmedFile);
+
     if (duration > this.MAX_VIDEO_DURATION) {
       await SweetAlert.fire({
         icon: 'warning',
         title: 'Clip trop long',
         text: `La durée du clip (${Math.round(
           duration
-        )}s) dépasse la limite de ${
-          this.MAX_VIDEO_DURATION
-        }s. Veuillez sélectionner un segment plus court.`,
+        )}s) dépasse la limite de ${this.MAX_VIDEO_DURATION}s.`,
         confirmButtonText: 'Réessayer',
       });
-      return; // Ne pas ajouter, rester dans le trimmer
+      return;
     }
 
     if (trimmedFile.size > this.MAX_INDIVIDUAL_FILE_SIZE) {
       await SweetAlert.fire({
         icon: 'warning',
         title: 'Clip trop lourd',
-        text: `La taille du clip (${this.formatFileSize(
+        text: `Cette vidéo est trop lourde (${this.formatFileSize(
           trimmedFile.size
-        )}) dépasse la limite de ${this.formatFileSize(
-          this.MAX_INDIVIDUAL_FILE_SIZE
-        )}. Veuillez sélectionner un segment plus court ou réduire la qualité.`,
+        )}). Sa qualité est trop élevée (bitrate / résolution).`,
         confirmButtonText: 'Réessayer',
       });
-      return; // Ne pas ajouter, rester dans le trimmer
+      return;
     }
 
-    // Si OK, ajouter
+    // ✅ Ajout définitif
     this.files.push(trimmedFile);
 
     const url = URL.createObjectURL(trimmedFile);
     this.objectUrlToFile.set(url, trimmedFile);
 
-    const kind = kindFromMimeOrName(trimmedFile.type, trimmedFile.name);
     this.fileUrls.push({
       url,
       id: url,
       name: trimmedFile.name,
       mime: trimmedFile.type,
-      kind: kind === 'video' ? 'video' : undefined,
+      kind: 'video',
       __revoke__: () => URL.revokeObjectURL(url),
     });
 
     URL.revokeObjectURL(this.currentVideoToTrim.url);
 
     this.videosToTrim.shift();
-
     this.currentVideoToTrim = null;
     this.showVideoTrimmer = false;
 
     if (this.videosToTrim.length > 0) {
-      setTimeout(() => {
-        this.startTrimmingNextVideo();
-      }, 300);
+      setTimeout(() => this.startTrimmingNextVideo(), 300);
     } else {
       this.recomputePreview();
       this.syncNativeFileInput();
       Toast.fire({
         icon: 'success',
-        title: 'Découpage terminé !',
-        text: 'Vous pouvez maintenant publier votre annonce',
+        title: 'Découpage terminé',
       });
     }
   }

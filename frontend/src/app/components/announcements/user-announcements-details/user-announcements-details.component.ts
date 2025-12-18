@@ -98,6 +98,7 @@ export class UserAnnouncementsDetailsComponent implements OnInit {
       .subscribe({
         next: ({ announcement: annRes, eligibility: elRes, requests }) => {
           this.announcement = annRes.data;
+          console.log(annRes.data);
           this.eligibility = elRes?.data || null;
           this.hasActiveSubscription = this.eligibility?.hasActivePass ?? false;
           this.contactRequests = requests?.data || null;

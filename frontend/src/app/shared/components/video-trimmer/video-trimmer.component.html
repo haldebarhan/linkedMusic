@@ -2,10 +2,7 @@
   <div class="trimmer-modal" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="trimmer-header">
-      <h5 class="mb-0">
-        <i class="fas fa-cut me-2"></i>
-        Découper la vidéo
-      </h5>
+      <h5 class="mb-0">Découper la vidéo</h5>
       <button class="btn-close-custom" (click)="close()">
         <i class="fas fa-times"></i>
       </button>
@@ -91,23 +88,14 @@
           <i class="fas fa-backward me-1"></i>
           30 dernières secondes
         </button>
-        <button
-          class="btn btn-sm btn-outline-secondary"
-          (click)="selectMiddle30s()"
-          [disabled]="videoDuration < 30"
-        >
-          <i class="fas fa-compress me-1"></i>
-          30s au milieu
-        </button>
       </div>
     </div>
 
     <!-- Alert for max duration -->
-    <div class="alert alert-info mt-3" *ngIf="maxDuration">
+    <div class="alert alert-info" *ngIf="maxDuration">
       <i class="fas fa-info-circle me-2"></i>
       <small>
-        <strong>Note:</strong> La durée maximale autorisée est de
-        {{ maxDuration }} secondes.
+        <strong>Note:</strong>Durée maximale autorisée: {{ maxDuration }}s.
         <span *ngIf="endTime - startTime > maxDuration" class="text-danger">
           Votre sélection ({{ formatTime(endTime - startTime) }}) dépasse cette
           limite.
@@ -136,8 +124,8 @@
         (click)="trimVideo()"
         [disabled]="!canTrim() || processing"
       >
-        <i class="fas fa-check me-1"></i>
-        Valider le découpage
+        <i class="fa-solid fa-scissors me-1"></i>
+        Découper
       </button>
     </div>
   </div>
