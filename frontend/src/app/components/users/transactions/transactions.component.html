@@ -146,7 +146,9 @@
               <td>
                 <div class="method-badge">
                   <i class="fa-solid fa-credit-card"></i>
-                  {{ payment.provider }}
+                  {{
+                    (payment.providerData?.paymentMethod | uppercase) || "N/A"
+                  }}
                 </div>
               </td>
               <td>
@@ -159,8 +161,14 @@
               </td>
               <td>
                 <div class="amount">
-                  <strong>{{ payment.amount | number : "1.0-0" }}</strong>
-                  <span class="currency">{{ payment.currency }}</span>
+                  <strong>{{
+                    payment.amount > 0
+                      ? (payment.amount | number : "1.0-0")
+                      : "GRATUIT"
+                  }}</strong>
+                  <span *ngIf="payment.amount > 0" class="currency">{{
+                    payment.currency
+                  }}</span>
                 </div>
               </td>
               <td>
@@ -269,7 +277,9 @@
 
         <div class="detail-row">
           <span class="label">Méthode de paiement</span>
-          <span class="value">{{ selectedPayment.provider }}</span>
+          <span class="value">{{
+            (selectedPayment.providerData?.paymentMethod | uppercase) || "N/A"
+          }}</span>
         </div>
 
         <div class="detail-row">

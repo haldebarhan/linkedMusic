@@ -146,7 +146,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'payments/callback/return/:reference',
+    path: 'transactions/callback/return/:reference',
     canMatch: [authCanMatch],
     canActivate: [authCanMatch],
     data: { guestPolicy: 'allow' },
