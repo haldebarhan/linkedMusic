@@ -108,6 +108,7 @@ export class PaymentService {
     if (!payment || payment.userId !== userId) {
       throw createError(404, "Reference not found");
     }
+    console.log(payment);
     return payment;
   }
   async findUserPayments(

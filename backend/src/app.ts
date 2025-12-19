@@ -156,7 +156,7 @@ class Server {
         const location = `${FRONT_URL.replace(
           /\/$/,
           ""
-        )}/payments/callback/return/${reference}`;
+        )}/transactions/callback/return/${reference}`;
         return res.redirect(302, location);
       }
     );

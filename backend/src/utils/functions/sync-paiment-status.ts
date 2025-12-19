@@ -31,6 +31,7 @@ export const syncPaymentStatusByReference = async (reference: string) => {
         where: { id: payment.id },
         data: {
           status: newStatus,
+          providerData: check.raw as any,
         },
       });
       if (newStatus === PaymentStatus.SUCCEEDED) {
