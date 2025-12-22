@@ -19,6 +19,7 @@ import {
   UpdateAnnouncementDto,
 } from "../../microservices/annoncements/announcement.dto";
 import { CreateContactRequestDTO } from "../../microservices/contact-requests/contact-request.dto";
+import { TrimVideoDTO } from "../../microservices/trim-video/trim-video.dto";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -231,6 +232,14 @@ router.post(
   ValidateDtoMiddleware(SubscribeDTO),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.subscribe(req, res)
+);
+
+router.post(
+  "/trimm-video",
+  uploads.single("video"),
+  ValidateDtoMiddleware(TrimVideoDTO),
+  async (req: AuthenticatedRequest, res: Response) =>
+    userController.trimVideo(req, res)
 );
 
 export default router;
