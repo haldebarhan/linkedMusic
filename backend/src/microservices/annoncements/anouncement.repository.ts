@@ -43,7 +43,7 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
   ): Promise<PaginatedResponse<AnnouncementWithDetails>> {
     const where: Prisma.AnnouncementWhereInput = {
       isPublished: true,
-      status: "PUBLISHED",
+      status: AnnouncementStatus.PUBLISHED,
       user: {
         status: {
           notIn: [
