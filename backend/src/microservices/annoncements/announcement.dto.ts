@@ -128,6 +128,10 @@ export class CreateAnnouncementDto {
 
   @IsOptional()
   @IsString()
+  countryCode?: string;
+
+  @IsOptional()
+  @IsString()
   city?: string;
 
   @IsOptional()

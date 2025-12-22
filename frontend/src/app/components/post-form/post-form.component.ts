@@ -109,6 +109,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
   // Pays
   countries: Array<{ name: string; code: string }> = [];
+  countryCode: string = 'CI';
 
   constructor(
     private readonly apiService: ApiService<any>,
@@ -236,6 +237,10 @@ export class PostFormComponent implements OnInit, OnDestroy {
     });
 
     this.form = this.fb.group(group);
+    this.form.get('country')?.valueChanges.subscribe((value) => {
+      const country = this.countries.find((c) => c.name === value);
+      this.countryCode = country ? country.code : '';
+    });
   }
 
   /**
@@ -515,6 +520,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
       country: formValues.country || undefined,
       city: formValues.city || undefined,
       fieldValues: fieldValues,
+      countryCode: this.countryCode,
     };
   }
 

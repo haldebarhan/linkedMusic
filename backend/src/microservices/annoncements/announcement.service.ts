@@ -69,6 +69,7 @@ export class AnnouncementService {
       negotiable: dto.negotiable ?? false,
       location: dto.location,
       country: dto.country,
+      countryCode: dto.countryCode,
       city: dto.city,
       images: dto.images ?? [],
       videos: dto.videos ?? [],
@@ -283,11 +284,7 @@ export class AnnouncementService {
     const filters = {
       categorySlug: query.categorySlug,
       city: query.city,
-      countryCode: query.country
-        ? query.country === "ALL"
-          ? undefined
-          : query.country
-        : "CI",
+      countryCode: query.country === "ALL" ? undefined : query.country,
       minPrice: query.minPrice,
       maxPrice: query.maxPrice,
       search: query.search,
