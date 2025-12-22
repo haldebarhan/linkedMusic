@@ -213,4 +213,12 @@ export class ApiService<T> {
       { params }
     );
   }
+
+  sendTrimVideoRequest(data: any) {
+    return this.http.post<any>(`${this.API_URL}/users/trimm-video`, data, {
+      reportProgress: true,
+      observe: 'events',
+      responseType: 'blob' as any,
+    });
+  }
 }

@@ -24,9 +24,11 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
   @Input() fileName: string = '';
   @Input() maxDuration: number = 55;
   @Input() isOpen: boolean = false;
+  @Input() fileSize: number = 0;
 
   @Output() trimmed = new EventEmitter<File>();
   @Output() closed = new EventEmitter<void>();
+  @Output() validated = new EventEmitter<{ start: number; end: number }>();
 
   videoDuration: number = 0;
   currentTime: number = 0;
@@ -69,13 +71,7 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
     if (this.videoPlayer) {
       const video = this.videoPlayer.nativeElement;
       video.currentTime = this.startTime;
-      video.addEventListener(
-        'seeked',
-        () => {
-          console.log('Seek to start completed:', video.currentTime);
-        },
-        { once: true }
-      );
+      video.addEventListener('seeked', () => {}, { once: true });
     }
   }
 
@@ -135,13 +131,6 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
     this.videoPlayer.nativeElement.currentTime = this.startTime;
   }
 
-  selectMiddle30s(): void {
-    const middle = this.videoDuration / 2;
-    this.startTime = Math.max(0, middle - 15);
-    this.endTime = Math.min(this.videoDuration, middle + 15);
-    this.videoPlayer.nativeElement.currentTime = this.startTime;
-  }
-
   canTrim(): boolean {
     const duration = this.endTime - this.startTime;
     return duration > 0 && duration <= this.maxDuration;
@@ -153,22 +142,18 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
     this.processing = true;
     this.processingProgress = 0;
     this.stopVideo();
+    const start = Math.floor(this.startTime);
+    const end = Math.floor(this.endTime);
 
-    try {
-      const video = this.videoPlayer.nativeElement;
-      const trimmedFile = await this.extractVideoSegment(
-        video,
-        this.startTime,
-        this.endTime
-      );
+    console.log(`Trimming video from ${start}s to ${end}s`);
 
-      this.trimmed.emit(trimmedFile);
-    } catch (error) {
-      console.error('Erreur lors du découpage:', error);
-      alert('Erreur lors du découpage de la vidéo');
-    } finally {
-      this.processing = false;
-    }
+    // Émettre l'événement validated pour que le parent gère l'envoi au backend
+    this.validated.emit({ start, end });
+
+    // Fermer le modal (optionnel, mais recommandé pour UX)
+    this.close();
+
+    this.processing = false;
   }
 
   formatTime(seconds: number): string {
@@ -186,85 +171,5 @@ export class VideoTrimmerComponent implements OnInit, OnDestroy {
     if (!this.processing) {
       this.close();
     }
-  }
-
-  private async extractVideoSegment(
-    video: HTMLVideoElement,
-    start: number,
-    end: number
-  ): Promise<File> {
-    console.log('Starting extract from', start, 'to', end);
-
-    // Canvas pour le rendu vidéo
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d')!;
-
-    const videoStream = (video as any).captureStream();
-
-    const canvasStream = canvas.captureStream(30);
-
-    const combinedStream = new MediaStream([
-      ...canvasStream.getVideoTracks(),
-      ...videoStream.getAudioTracks(), // AUDIO OK
-    ]);
-
-    const recorder = new MediaRecorder(combinedStream, {
-      mimeType: 'video/webm;codecs=vp8,opus',
-      videoBitsPerSecond: 2_500_000,
-    });
-
-    const chunks: Blob[] = [];
-
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-
-    return new Promise((resolve, reject) => {
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const file = new File([blob], this.fileName, { type: 'video/webm' });
-        console.log('Recording stopped');
-        resolve(file);
-      };
-
-      recorder.onerror = (e) => {
-        console.error('Recorder error:', e);
-        reject(e);
-      };
-
-      const drawFrame = () => {
-        if (video.currentTime >= end) {
-          recorder.stop();
-          video.pause();
-          return;
-        }
-
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const progress = ((video.currentTime - start) / (end - start)) * 100;
-        this.processingProgress = Math.round(progress);
-
-        requestAnimationFrame(drawFrame);
-      };
-
-      video.pause();
-      video.currentTime = start;
-
-      const onSeeked = async () => {
-        video.removeEventListener('seeked', onSeeked);
-
-        try {
-          recorder.start();
-          await video.play();
-          requestAnimationFrame(drawFrame);
-        } catch (err) {
-          reject(err);
-        }
-      };
-
-      video.addEventListener('seeked', onSeeked);
-    });
   }
 }
