@@ -8,6 +8,7 @@ import { Response, Request } from "express";
 import { injectable } from "tsyringe";
 import { AnnouncementController } from "../../microservices/annoncements/announcement.controller";
 import { ContactRequestController } from "../../microservices/contact-requests/contact-request.controller";
+import { TrimVideoController } from "../../microservices/trim-video/trim-video.controller";
 
 @injectable()
 export class UserController {
@@ -19,7 +20,8 @@ export class UserController {
     private readonly dashboardController: DashBoardController,
     private readonly announcementController: AnnouncementController,
     private readonly contactController: ContactRequestController,
-    private readonly paimentController: PaymentController
+    private readonly paimentController: PaymentController,
+    private readonly trimVideoController: TrimVideoController
   ) {}
 
   // Announcement New Version
@@ -148,5 +150,9 @@ export class UserController {
   // Paiments
   async myPayments(req: AuthenticatedRequest, res: Response) {
     return await this.paimentController.getUserPayments(req, res);
+  }
+
+  async trimVideo(req: Request, res: Response) {
+    return await this.trimVideoController.trimVideo(req, res);
   }
 }
