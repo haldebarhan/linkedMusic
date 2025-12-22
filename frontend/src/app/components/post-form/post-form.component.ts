@@ -17,11 +17,9 @@ import {
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import {
-  Category,
   CategoryField,
   CategorySchema,
   Field,
-  FieldInputType,
   FieldValueDto,
 } from '../../shared/types/field-input-type';
 import { formatLabel } from '../../helpers/input-label';
@@ -36,6 +34,7 @@ import {
 } from '../../helpers/path-part';
 import { country_list } from '../../helpers/countries';
 import { VideoTrimmerComponent } from '../../shared/components/video-trimmer/video-trimmer.component';
+import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 
 type PreviewItem = {
   url: string;
@@ -73,6 +72,10 @@ export class PostFormComponent implements OnInit, OnDestroy {
   readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
   readonly MAX_INDIVIDUAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB par fichier
   readonly MAX_VIDEO_DURATION = 55; // 55 secondes
+  readonly MAX_VIDEO_SIZE_AUTHORIZED = 1024 * 1024 * 400;
+
+  uploadProgress: number = 0;
+  uploadingToBackend: boolean = false;
 
   showVideoTrimmer = false;
   currentVideoToTrim: { file: File; url: string; index: number } | null = null;
@@ -583,260 +586,122 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
     this.fileSizeError = null;
 
-    // Vérifier les formats vidéo non supportés
-    const unsupportedVideoFormats = list.filter((file) => {
-      const ext = file.name.toLowerCase().split('.').pop();
-      return ['avi', 'wmv', 'flv', 'mov'].includes(ext || '');
-    });
-
-    if (unsupportedVideoFormats.length > 0) {
-      const formatList = unsupportedVideoFormats
-        .map((f) => {
-          const ext = f.name.split('.').pop()?.toUpperCase();
-          return `${f.name} (${ext})`;
-        })
-        .join(', ');
-
-      await SweetAlert.fire({
-        icon: 'warning',
-        title: 'Format non supporté',
-        html: `
-        <div class="text-start">
-          <p>Les formats vidéo suivants ne sont pas supportés pour le découpage :</p>
-          <ul class="list-unstyled mb-3">
-            ${unsupportedVideoFormats
-              .map(
-                (f) => `
-              <li class="mb-2">
-                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                <strong>${f.name}</strong>
-              </li>
-            `
-              )
-              .join('')}
-          </ul>
-          <div class="alert alert-info mb-0">
-            <i class="fas fa-info-circle me-2"></i>
-            <strong>Formats recommandés :</strong> MP4, WebM, OGG
-            <br>
-            <small class="text-muted">Convertissez vos vidéos avec un outil comme HandBrake ou FFmpeg</small>
-          </div>
-        </div>
-      `,
-        confirmButtonText: 'Compris',
-      });
-      input.value = '';
-      return;
-    }
-
-    // CHANGEMENT: Séparer vidéos et non-vidéos AVANT les checks de taille
+    // Séparer vidéos et non-vidéos
     const videoFiles = list.filter((file) => file.type.startsWith('video/'));
     const nonVideoFiles = list.filter(
       (file) => !file.type.startsWith('video/')
     );
 
-    // CHANGEMENT: Check taille individuelle SEULEMENT pour non-vidéos (images/audio). Pour vidéos, on permettra le trim même si >20MB
+    // Vérifier taille des non-vidéos
     const oversizedNonVideos = nonVideoFiles.filter(
       (file) => file.size > this.MAX_INDIVIDUAL_FILE_SIZE
     );
 
     if (oversizedNonVideos.length > 0) {
-      this.fileSizeError = `Certains fichiers non-vidéo dépassent la limite de ${this.formatFileSize(
-        this.MAX_INDIVIDUAL_FILE_SIZE
-      )} par fichier`;
-      input.value = '';
+      SweetAlert.fire({
+        title: 'Ce fichier est trop volumineux',
+        didClose: () => {
+          input.value = '';
+        },
+      });
       return;
     }
 
-    // CHANGEMENT: Suppression du check de taille totale ici (déplacé au submit, car trim réduira les vidéos)
-
-    if (videoFiles.length > 0) {
-      // Vérifier la durée des vidéos
-      const videoChecks = await Promise.all(
-        videoFiles.map(async (file) => {
-          try {
-            const duration = await this.getVideoDuration(file);
-            // CHANGEMENT: needsTrim si durée >60s OU taille >20MB (pour forcer trim sur lourdes vidéos)
-            const needsTrim =
-              duration > this.MAX_VIDEO_DURATION ||
-              file.size > this.MAX_INDIVIDUAL_FILE_SIZE;
-            const url = URL.createObjectURL(file);
-            return { file, url, duration, needsTrim, error: false };
-          } catch (error) {
-            console.error(`Erreur lecture vidéo ${file.name}:`, error);
-            return {
-              file,
-              url: '',
-              duration: 0,
-              needsTrim: false,
-              error: true,
-            };
-          }
-        })
-      );
-
-      // Filtrer les vidéos en erreur
-      const errorVideos = videoChecks.filter((v) => v.error);
-      if (errorVideos.length > 0) {
-        await SweetAlert.fire({
+    // ✅ NOUVEAU : Traiter chaque vidéo selon sa taille
+    for (const videoFile of videoFiles) {
+      if (videoFile.size <= this.MAX_INDIVIDUAL_FILE_SIZE) {
+        this.addFileToList(videoFile);
+      } else if (videoFile.size > this.MAX_VIDEO_SIZE_AUTHORIZED) {
+        SweetAlert.fire({
           icon: 'error',
-          title: 'Vidéos illisibles',
-          html: `
-          <div class="text-start">
-            <p>Impossible de lire les métadonnées de ces vidéos :</p>
-            <ul class="list-unstyled mb-3">
-              ${errorVideos
-                .map(
-                  (v) => `
-                <li class="mb-2">
-                  <i class="fas fa-times-circle text-danger me-2"></i>
-                  <strong>${v.file.name}</strong>
-                </li>
-              `
-                )
-                .join('')}
-            </ul>
-            <div class="alert alert-info mb-0">
-              <i class="fas fa-info-circle me-2"></i>
-              Vérifiez que le format est supporté (MP4, WebM, OGG)
-            </div>
-          </div>
-        `,
-          confirmButtonText: 'Compris',
+          title: 'Fichier trop volumineux',
+          text: `La vidéo "${
+            videoFile.name
+          }" est trop volumineuse pour être traitée (taille: ${this.formatFileSize(
+            videoFile.size
+          )}). Veuillez choisir une vidéo plus petite.`,
+          didClose: () => {
+            input.value = '';
+          },
         });
-        input.value = '';
-        return;
-      }
-
-      const validVideoChecks = videoChecks.filter((v) => !v.error);
-      const videosNeedingTrim = validVideoChecks.filter((v) => v.needsTrim);
-
-      if (videosNeedingTrim.length > 0) {
+      } else {
         const result = await SweetAlert.fire({
           icon: 'warning',
-          title: 'Vidéos à découper',
+          title: 'Vidéo à découper',
           html: `
           <div class="text-start">
-            <p><strong>${
-              videosNeedingTrim.length
-            } vidéo(s)</strong> doivent être découpées (durée ou taille excessive) :</p>
+            <p><strong>Cette vidéo </strong> doit être découpée (taille excessive) :</p>
             <ul class="list-unstyled mb-3">
-              ${videosNeedingTrim
-                .map(
-                  (v) => `
-                <li class="mb-2">
+              <li class="mb-2">
                   <i class="fas fa-video text-warning me-2"></i>
-                  <strong>${v.file.name}</strong><br>
-                  <small class="text-muted ms-4">Durée: ${Math.round(
-                    v.duration
-                  )}s / Taille: ${this.formatFileSize(
-                    v.file.size
-                  )} (Max: 60s / ${this.formatFileSize(
-                    this.MAX_INDIVIDUAL_FILE_SIZE
-                  )})</small>
+                  <strong>${videoFile.name}</strong><br>
+                  <small class="text-muted ms-1"> Taille: ${this.formatFileSize(
+                    videoFile.size
+                  )} <span class="text-danger">(Max: 60s / ${this.formatFileSize(
+            this.MAX_INDIVIDUAL_FILE_SIZE
+          )})</span></small>
                 </li>
-              `
-                )
-                .join('')}
             </ul>
-            <div class="alert alert-info mb-0">
+            <small><i class="fa-solid fa-circle-info text-info"></i> Plus de segments si l'extrait est encore lourd après découpage</small>
+            <div class="alert alert-info mb-0 mt-2">
               <i class="fas fa-cut me-2"></i>
-              Voulez-vous découper ces vidéos maintenant ?
+              Voulez-vous découper cette vidéo maintenant ?
             </div>
           </div>
         `,
           showCancelButton: true,
           confirmButtonText:
-            '<i class="fas fa-cut me-1"></i> Découper les vidéos',
+            '<i class="fas fa-cut me-1"></i> Découper la vidéo',
           cancelButtonText: 'Annuler',
           confirmButtonColor: '#2f4e32',
         });
-
         if (result.isConfirmed) {
-          // IMPORTANT: Ajouter d'abord les fichiers qui ne nécessitent PAS de découpage
-          const okVideos = validVideoChecks.filter((v) => !v.needsTrim);
-          const filesToAdd = [...nonVideoFiles, ...okVideos.map((v) => v.file)];
-
-          // Ajouter ces fichiers immédiatement
-          this.files = [...this.files, ...filesToAdd];
-
-          // Créer les previews pour les fichiers
-          filesToAdd.forEach((file) => {
-            const url = URL.createObjectURL(file);
-            this.objectUrlToFile.set(url, file);
-
-            const kind = kindFromMimeOrName(file.type, file.name);
-            this.fileUrls.push({
-              url,
-              id: url,
-              name: file.name,
-              mime: file.type || guessMime(file.name),
-              kind:
-                kind === 'image' || kind === 'audio' || kind === 'video'
-                  ? kind
-                  : undefined,
-              __revoke__: () => URL.revokeObjectURL(url),
-            });
-          });
-
-          // Préparer les vidéos à découper (sans les ajouter à this.files)
-          this.videosToTrim = videosNeedingTrim.map((v) => ({
-            file: v.file,
-            url: v.url,
-            needsTrim: true,
-          }));
-
-          // Mettre à jour la preview
-          this.recomputePreview();
-
-          // Commencer le découpage
-          this.startTrimmingNextVideo();
-          input.value = '';
-          return;
-        } else {
-          // Annulation - nettoyer les URLs
-          validVideoChecks.forEach((v) => URL.revokeObjectURL(v.url));
-          input.value = '';
-          return;
+          await this.showTrimmerForVideo(videoFile);
         }
       }
-
-      // Toutes les vidéos sont OK, nettoyer les URLs temporaires
-      validVideoChecks.forEach((v) => URL.revokeObjectURL(v.url));
     }
 
-    // Tout est OK, ajouter tous les fichiers
-    this.files = [...this.files, ...list];
-
-    // Créer les previews
-    list.forEach((file) => {
-      const url = URL.createObjectURL(file);
-      this.objectUrlToFile.set(url, file);
-
-      const kind = kindFromMimeOrName(file.type, file.name);
-      this.fileUrls.push({
-        url,
-        id: url,
-        name: file.name,
-        mime: file.type || guessMime(file.name),
-        kind:
-          kind === 'image' || kind === 'audio' || kind === 'video'
-            ? kind
-            : undefined,
-        __revoke__: () => URL.revokeObjectURL(url),
-      });
-    });
+    // Ajouter les non-vidéos directement
+    nonVideoFiles.forEach((file) => this.addFileToList(file));
 
     this.recomputePreview();
-    this.syncNativeFileInput();
+    input.value = '';
+  }
 
-    if (videoFiles.length > 0) {
-      Toast.fire({
-        icon: 'success',
-        title: `${videoFiles.length} vidéo(s) validée(s)`,
-        timer: 2000,
-      });
-    }
+  private async showTrimmerForVideo(file: File): Promise<void> {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+
+      this.currentVideoToTrim = {
+        file: file,
+        url: url,
+        index: 0,
+      };
+      this.showVideoTrimmer = true;
+
+      // Stocker le resolve pour l'appeler après validation
+      (this as any)._trimmerResolve = resolve;
+    });
+  }
+
+  private addFileToList(file: File): void {
+    this.files.push(file);
+
+    const url = URL.createObjectURL(file);
+    this.objectUrlToFile.set(url, file);
+
+    const kind = kindFromMimeOrName(file.type, file.name);
+    this.fileUrls.push({
+      url,
+      id: url,
+      name: file.name,
+      mime: file.type || guessMime(file.name),
+      kind:
+        kind === 'image' || kind === 'audio' || kind === 'video'
+          ? kind
+          : undefined,
+      __revoke__: () => URL.revokeObjectURL(url),
+    });
   }
 
   hydrateExistingFiles(urls: string[]): void {
@@ -996,159 +861,195 @@ export class PostFormComponent implements OnInit, OnDestroy {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
-  private getVideoDuration(file: File): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-
-      const timeout = setTimeout(() => {
-        URL.revokeObjectURL(video.src);
-        reject(new Error('Timeout lors de la lecture de la vidéo'));
-      }, 10000);
-
-      video.onloadedmetadata = () => {
-        clearTimeout(timeout);
-        URL.revokeObjectURL(video.src);
-
-        if (isNaN(video.duration) || video.duration === Infinity) {
-          reject(new Error('Durée invalide'));
-          return;
-        }
-
-        resolve(video.duration);
-      };
-
-      video.onerror = (e) => {
-        clearTimeout(timeout);
-        URL.revokeObjectURL(video.src);
-        reject(new Error('Impossible de lire la vidéo - format non supporté'));
-      };
-
-      try {
-        video.src = URL.createObjectURL(file);
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(error);
-      }
-    });
-  }
-  private startTrimmingNextVideo(): void {
-    if (this.isIOS()) {
-      SweetAlert.fire({
-        icon: 'info',
-        title: 'Découpage non disponible sur iPhone',
-        html: `
-      <p>Le découpage vidéo n’est pas supporté sur iOS.</p>
-      <p>Veuillez :</p>
-      <ul class="text-start">
-        <li>Découper la vidéo avant l’envoi</li>
-        <li>Ou réduire sa résolution / qualité</li>
-      </ul>
-    `,
-      });
-      return;
-    }
-
-    if (this.videosToTrim.length === 0) {
-      Toast.fire({
-        icon: 'success',
-        title: 'Toutes les vidéos ont été découpées !',
-      });
-      return;
-    }
-
-    const videoData = this.videosToTrim[0];
-    this.currentVideoToTrim = {
-      file: videoData.file,
-      url: videoData.url,
-      index: 0,
-    };
-    this.showVideoTrimmer = true;
-  }
-
-  async onVideoTrimmed(trimmedFile: File): Promise<void> {
+  async onTrimValidated(selection: {
+    start: number;
+    end: number;
+  }): Promise<void> {
     if (!this.currentVideoToTrim) return;
 
-    const duration = await this.getVideoDuration(trimmedFile);
-
-    if (duration > this.MAX_VIDEO_DURATION) {
-      await SweetAlert.fire({
-        icon: 'warning',
-        title: 'Clip trop long',
-        text: `La durée du clip (${Math.round(
-          duration
-        )}s) dépasse la limite de ${this.MAX_VIDEO_DURATION}s.`,
-        confirmButtonText: 'Réessayer',
-      });
-      return;
-    }
-
-    if (trimmedFile.size > this.MAX_INDIVIDUAL_FILE_SIZE) {
-      await SweetAlert.fire({
-        icon: 'warning',
-        title: 'Clip trop lourd',
-        text: `Cette vidéo est trop lourde (${this.formatFileSize(
-          trimmedFile.size
-        )}). Sa qualité est trop élevée (bitrate / résolution).`,
-        confirmButtonText: 'Réessayer',
-      });
-      return;
-    }
-
-    // ✅ Ajout définitif
-    this.files.push(trimmedFile);
-
-    const url = URL.createObjectURL(trimmedFile);
-    this.objectUrlToFile.set(url, trimmedFile);
-
-    this.fileUrls.push({
-      url,
-      id: url,
-      name: trimmedFile.name,
-      mime: trimmedFile.type,
-      kind: 'video',
-      __revoke__: () => URL.revokeObjectURL(url),
-    });
-
-    URL.revokeObjectURL(this.currentVideoToTrim.url);
-
-    this.videosToTrim.shift();
-    this.currentVideoToTrim = null;
     this.showVideoTrimmer = false;
+    this.uploadingToBackend = true;
+    this.uploadProgress = 0;
 
-    if (this.videosToTrim.length > 0) {
-      setTimeout(() => this.startTrimmingNextVideo(), 300);
-    } else {
+    try {
+      // Upload vers backend avec la plage sélectionnée
+      const segments = await this.uploadAndTrimVideo(
+        this.currentVideoToTrim.file,
+        selection.start,
+        selection.end
+      );
+
+      // Ajouter les segments reçus
+      segments.forEach((file) => this.addFileToList(file));
+
       this.recomputePreview();
-      this.syncNativeFileInput();
+
       Toast.fire({
         icon: 'success',
-        title: 'Découpage terminé',
+        title: 'Vidéo découpée avec succès',
+        text:
+          segments.length > 1
+            ? `${segments.length} segments ajoutés`
+            : 'Segment ajouté',
       });
+    } catch (error: any) {
+      console.error('❌ Erreur upload/découpage:', error);
+
+      Toast.fire({
+        icon: 'error',
+        title: 'Erreur de découpage',
+        text: error.message || 'Une erreur est survenue',
+      });
+    } finally {
+      this.uploadingToBackend = false;
+      this.uploadProgress = 0;
+
+      // Nettoyer
+      if (this.currentVideoToTrim) {
+        URL.revokeObjectURL(this.currentVideoToTrim.url);
+        this.currentVideoToTrim = null;
+      }
+
+      // Résoudre la promesse pour continuer
+      const resolve = (this as any)._trimmerResolve;
+      if (resolve) {
+        resolve();
+        delete (this as any)._trimmerResolve;
+      }
     }
   }
 
   onTrimmerClosed(): void {
     if (this.currentVideoToTrim) {
       URL.revokeObjectURL(this.currentVideoToTrim.url);
+      this.currentVideoToTrim = null;
     }
 
-    this.videosToTrim.forEach((v) => URL.revokeObjectURL(v.url));
-    this.videosToTrim = [];
-    this.currentVideoToTrim = null;
     this.showVideoTrimmer = false;
 
-    Toast.fire({
-      icon: 'info',
-      title: 'Découpage annulé',
-    });
+    // Résoudre pour continuer
+    const resolve = (this as any)._trimmerResolve;
+    if (resolve) {
+      resolve();
+      delete (this as any)._trimmerResolve;
+    }
   }
-
   hasVideoFiles(): boolean {
     return this.files?.some((f) => f.type.startsWith('video/')) ?? false;
   }
 
-  isIOS(): boolean {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  private uploadAndTrimVideo(
+    file: File,
+    startTime: number,
+    endTime: number
+  ): Promise<File[]> {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('startTime', startTime.toString());
+      formData.append('endTime', endTime.toString());
+      formData.append('maxSizeMB', '20');
+
+      this.apiService.sendTrimVideoRequest(formData).subscribe({
+        next: (event: HttpEvent<Blob>) => {
+          if (event.type === HttpEventType.UploadProgress) {
+            const uploadProgress = (event.loaded / (event.total ?? 1)) * 50;
+            this.uploadProgress = Math.round(uploadProgress);
+          } else if (event.type === HttpEventType.DownloadProgress) {
+            const downloadProgress =
+              50 + (event.loaded / (event.total ?? 1)) * 50;
+            this.uploadProgress = Math.round(downloadProgress);
+          } else if (event.type === HttpEventType.Response) {
+            const response = event as HttpResponse<Blob>;
+            const contentType = response.headers.get('Content-Type') || '';
+            const blob = response.body;
+            if (blob) {
+              if (
+                contentType.includes('application/zip') ||
+                contentType.includes('application/x-zip')
+              ) {
+                this.extractZipFiles(blob)
+                  .then((files) => resolve(files))
+                  .catch(reject);
+              } else if (contentType.includes('video/mp4')) {
+                const fileName = `video_trimmed_${Date.now()}.mp4`;
+                const file = new File([blob], fileName, { type: 'video/mp4' });
+                resolve([file]);
+              } else {
+                console.warn('⚠️ Content-Type inattendu:', contentType);
+                const reader = new FileReader();
+                reader.onload = () => {
+                  try {
+                    const errorResponse = JSON.parse(reader.result as string);
+                    reject(
+                      new Error(
+                        errorResponse.error ||
+                          'Erreur serveur - Content-Type inattendu'
+                      )
+                    );
+                  } catch {
+                    reject(
+                      new Error(
+                        'Erreur serveur - Impossible de parser la réponse'
+                      )
+                    );
+                  }
+                };
+                reader.onerror = () => {
+                  reject(new Error('Erreur lors de la lecture de la réponse'));
+                };
+                reader.readAsText(blob);
+              }
+            } else {
+              reject(new Error('Aucune réponse reçue'));
+            }
+          }
+        },
+        error: (error) => {
+          console.error('❌ Erreur HTTP lors de l’upload/découpage:', error);
+          if (error.error instanceof Blob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const errorResponse = JSON.parse(reader.result as string);
+                reject(new Error(errorResponse.error || 'Erreur serveur'));
+              } catch {
+                reject(new Error('Erreur serveur'));
+              }
+            };
+            reader.onerror = () => {
+              reject(new Error("Erreur lors de la lecture de l'erreur"));
+            };
+            reader.readAsText(error.error);
+          } else {
+            reject(new Error(error.message || 'Erreur inconnue'));
+          }
+        },
+        complete: () => {
+          this.uploadProgress = 100;
+        },
+      });
+    });
+  }
+
+  private async extractZipFiles(zipBlob: Blob): Promise<File[]> {
+    const JSZip = (window as any).JSZip;
+
+    if (!JSZip) {
+      throw new Error('Module de décompression non disponible');
+    }
+
+    const zip = await JSZip.loadAsync(zipBlob);
+    const files: File[] = [];
+
+    for (const [filename, zipEntry] of Object.entries(zip.files) as any) {
+      if (!zipEntry.dir) {
+        const blob = await zipEntry.async('blob');
+        const file = new File([blob], filename, { type: 'video/mp4' });
+        files.push(file);
+      }
+    }
+
+    return files;
   }
 }

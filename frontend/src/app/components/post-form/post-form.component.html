@@ -545,7 +545,6 @@
             class="form-control"
             accept="audio/*, video/*, image/*"
             (change)="onfileChange($event)"
-            multiple
           />
           <small class="text-muted d-block mt-1">
             Images, audio ou vidéo. Max 50MB au total, 20MB par fichier. 5
@@ -607,14 +606,36 @@
     </div>
   </form>
 
+  <div *ngIf="uploadingToBackend" class="upload-overlay">
+    <div class="upload-progress-container">
+      <div class="progress mb-3">
+        <div
+          class="progress-bar"
+          role="progressbar"
+          [style.width.%]="uploadProgress"
+          [attr.aria-valuenow]="uploadProgress"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          {{ uploadProgress }}%
+        </div>
+      </div>
+      <p class="text-center">Upload et découpage de la vidéo en cours...</p>
+      <small class="text-muted d-block text-center"
+        >Cela peut prendre quelques minutes pour les vidéos lourdes.</small
+      >
+    </div>
+  </div>
+
   <!-- Video Trimmer Modal -->
   <app-video-trimmer
     *ngIf="showVideoTrimmer && currentVideoToTrim"
     [isOpen]="showVideoTrimmer"
     [videoUrl]="currentVideoToTrim.url"
     [fileName]="currentVideoToTrim.file.name"
-    [maxDuration]="MAX_VIDEO_DURATION"
-    (trimmed)="onVideoTrimmed($event)"
+    [fileSize]="currentVideoToTrim.file.size"
+    [maxDuration]="50"
+    (validated)="onTrimValidated($event)"
     (closed)="onTrimmerClosed()"
   ></app-video-trimmer>
 </div>
