@@ -1,30 +1,17 @@
 import { v4 as uuidv4 } from "uuid";
-
-export function hasOwn(obj: any, k: string) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, k);
-}
-export function isEmptyValue(v: any) {
-  return (
-    v === null ||
-    v === undefined ||
-    v === "" ||
-    (Array.isArray(v) && v.length === 0)
-  );
-}
-export function toArray(v: any): string[] {
-  if (Array.isArray(v)) return v.map(String);
-  if (v === null || v === undefined || v === "") return [];
-  if (typeof v === "string")
-    return v
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  return [String(v)];
-}
-export function toBool(v: any): boolean {
-  return v === true || v === 1 || v === "1" || v === "true" || v === "on";
-}
+import { ENV } from "../../config/env";
+import { S3Service } from "../services/s3.service";
+const minioService: S3Service = S3Service.getInstance();
 
 export function generateRandomUUID() {
   return uuidv4();
 }
+
+export const generateUrl = async (files: string[]) => {
+  if (!files || files.length === 0) return [];
+  return Promise.all(
+    files.map((file) =>
+      minioService.generatePresignedUrl(ENV.AWS_S3_DEFAULT_BUCKET, file)
+    )
+  );
+};

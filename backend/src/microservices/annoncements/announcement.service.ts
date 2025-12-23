@@ -10,7 +10,6 @@ import {
   AnnouncementStatus,
   Badge,
   NotificationType,
-  PlanPeriod,
   Prisma,
   PrismaClient,
 } from "@prisma/client";
@@ -40,6 +39,7 @@ import { countUnread } from "../../sockets/handlers/notification.handler";
 import { AnnouncementViewRepository } from "../announcement-views/announcement-views.repository";
 import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
+import { generateUrl } from "../../utils/functions/utilities";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -294,6 +294,14 @@ export class AnnouncementService {
       filters,
       pagination
     );
+
+    result.data.forEach(async (announcements) => {
+      const imageUrls =
+        announcements.images.length > 0
+          ? await generateUrl(announcements.images)
+          : [];
+      announcements.images = imageUrls;
+    });
 
     // Utiliser la méthode helper pour normaliser et mapper
     return this.normalizePaginatedResponse<AnnouncementResponseDto>(
@@ -597,9 +605,9 @@ export class AnnouncementService {
       recentViews.map(async (rv) => {
         const { announcement } = rv;
         const [audios, videos, images] = await Promise.all([
-          this.generateUrl(announcement.audios),
-          this.generateUrl(announcement.videos),
-          this.generateUrl(announcement.images),
+          generateUrl(announcement.audios),
+          generateUrl(announcement.videos),
+          generateUrl(announcement.images),
         ]);
 
         return {
@@ -840,15 +848,6 @@ export class AnnouncementService {
 
     throw new Error(
       "Format de réponse paginée non reconnu. Vérifiez votre repository."
-    );
-  }
-
-  private async generateUrl(files: string[]) {
-    if (!files || files.length === 0) return [];
-    return Promise.all(
-      files.map((file) =>
-        minioService.generatePresignedUrl(ENV.AWS_S3_DEFAULT_BUCKET, file)
-      )
     );
   }
 }

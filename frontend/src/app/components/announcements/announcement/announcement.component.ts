@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -44,6 +44,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   limit = 20;
   loading = false;
   loadingSchema = false;
+  infiniteLoading = false;
   query: string | null = null;
 
   // Pays
@@ -51,6 +52,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
   // UI State
   showAdvancedSearch = false;
+  isMobile: boolean = window.innerWidth < 768;
 
   private sub?: Subscription;
 
@@ -64,6 +66,39 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.searchForm = this.fb.group({
       location: [''],
     });
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.isMobile = event.target.innerWidth < 768;
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onScroll(event: any) {
+    if (
+      !this.isMobile ||
+      this.loading ||
+      this.infiniteLoading ||
+      this.page >= this.metadata.totalPage
+    ) {
+      return;
+    }
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+
+    if (scrollTop + windowHeight >= documentHeight - 300) {
+      this.infiniteLoading = true;
+      this.page++;
+      this.loadResults(true);
+    }
   }
 
   buildQueryParams() {
@@ -80,6 +115,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       this.loadResults();
     });
   }
+
   ngOnInit(): void {
     this.countries = country_list;
     this.route.paramMap.subscribe(async (pm) => {
@@ -323,7 +359,10 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(resetPage = true) {
-    if (resetPage) this.page = 1;
+    if (resetPage) {
+      this.page = 1;
+      this.rows = [];
+    }
 
     const filters = this.buildFilters();
     const qp: Record<string, any> = {
@@ -359,6 +398,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     if (p < 1 || p > this.metadata.totalPage || p === this.metadata.page)
       return;
     this.page = p;
+    this.rows = [];
     this.applyFilters(false);
   }
 
@@ -369,6 +409,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.searchForm.reset({ location: '' }, { emitEvent: false });
     this.showAdvancedSearch = false;
     this.page = 1;
+    this.rows = [];
     this.query = null;
 
     // Reset du tri
@@ -430,8 +471,9 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     return arr;
   }
 
-  private loadResults() {
-    this.loading = true;
+  private loadResults(append: boolean = false) {
+    this.loading = !append;
+    this.infiniteLoading = append;
     const filters = this.buildFilters();
 
     // Construire les query params selon AnnouncementQueryDto
@@ -459,13 +501,16 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.api.searchAnnouncements(queryParams).subscribe({
       next: (r: any) => {
         const items = r.data?.data ?? r.data ?? [];
-        const meta = r.data?.metadata ?? {
-          total: items.length,
-          page: 1,
-          totalPage: 1,
+        const pagination = r.data?.pagination;
+        const meta = {
+          total: pagination.total || 0,
+          page: pagination.page || 1,
+          totalPage: pagination.totalPages || 1,
         };
 
-        this.rows = items;
+        if (append) this.rows = [...this.rows, ...items];
+        else this.rows = items;
+
         this.metadata = {
           total: +meta.total || items.length,
           page: +meta.page || 1,
@@ -476,10 +521,13 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
           this.metadata.totalPage
         );
         this.loading = false;
+        this.infiniteLoading = false; // Ajout ici : Réinitialise après succès
       },
       error: (err) => {
         console.error(err);
         this.loading = false;
+        this.infiniteLoading = false; // Ajout ici : Réinitialise après erreur
+        // Optionnel : this.page--;  // Pour retry la même page au prochain scroll
       },
     });
   }

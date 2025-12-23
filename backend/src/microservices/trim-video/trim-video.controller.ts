@@ -57,14 +57,6 @@ export class TrimVideoController {
       const part1 = await trimVideo(inputPath, startTime, midPoint);
       const part2 = await trimVideo(inputPath, midPoint, endTime);
 
-      const part1Stats = await fs.stat(part1);
-      const part2Stats = await fs.stat(part2);
-
-      console.log("✅ Split terminé:", {
-        part1: `${(part1Stats.size / 1024 / 1024).toFixed(2)} MB`,
-        part2: `${(part2Stats.size / 1024 / 1024).toFixed(2)} MB`,
-      });
-
       const zipPath = path.join(os.tmpdir(), `segments-${Date.now()}.zip`);
       await createZip([part1, part2], zipPath);
 
