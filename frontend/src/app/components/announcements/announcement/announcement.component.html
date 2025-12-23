@@ -381,7 +381,7 @@
           <div class="d-flex align-items-start">
             <!-- Image -->
             <img
-              [src]="item.images?.[0] || 'https://placehold.co/120x90'"
+              [src]="item.images?.[0] || 'assets/images/announcement.jpg'"
               alt="{{ item.title }}"
               class="me-3 rounded"
               width="120"
@@ -507,7 +507,7 @@
       >
         <div class="d-flex align-items-start">
           <img
-            [src]="item.images?.[0] || 'https://placehold.co/80x60'"
+            [src]="item.images?.[0] || 'assets/images/announcement.jpg'"
             class="rounded me-2"
             width="80"
             height="60"
@@ -540,8 +540,19 @@
         </div>
       </div>
 
+      <div *ngIf="infiniteLoading" class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden"
+            >Chargement des annonces suivantes...</span
+          >
+        </div>
+      </div>
+
       <!-- Aucun résultat -->
-      <div *ngIf="rows.length === 0" class="list-group-item text-center py-4">
+      <div
+        *ngIf="rows.length === 0 && !infiniteLoading"
+        class="list-group-item text-center py-4"
+      >
         <i class="fas fa-search fa-2x text-muted mb-2"></i>
         <div>Aucune annonce trouvée</div>
       </div>

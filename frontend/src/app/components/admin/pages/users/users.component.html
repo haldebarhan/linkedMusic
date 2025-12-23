@@ -44,25 +44,25 @@
             <td data-label="#" class="text-muted">
               {{ (page - 1) * limit + i + 1 }}
             </td>
-            <td data-label="label">
+            <td data-label="Email">
               {{ user.email }}
             </td>
-            <td data-label="label">
+            <td data-label="Pseudo">
               {{ user.displayName }}
             </td>
-            <td data-label="searchable">
+            <td data-label="Telephone">
               {{ user.phone }}
             </td>
-            <td data-label="searchable">
+            <td data-label="Inscrit le">
               {{ user.createdAt | date : "d MMM y 'à' HH:mm" }}
             </td>
-            <td data-label="searchable">
+            <td data-label="Statut">
               {{ formatStatus(user.status) }}
             </td>
-            <td data-label="searchable">
+            <td data-label="Badge">
               {{ user.role === "ADMIN" ? "" : formatBadge(user.badge) }}
             </td>
-            <td data-label="searchable">
+            <td data-label="Role">
               {{ user.role }}
             </td>
             <td>

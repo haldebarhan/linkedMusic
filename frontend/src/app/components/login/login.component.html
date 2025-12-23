@@ -18,9 +18,7 @@
     <!-- Formulaire (droite) -->
     <section class="auth-panel">
       <h1 class="display-6 fw-bold mb-2 text-dark">Connexion</h1>
-      <p class="text-muted mb-4">
-        Vous avez déjà un compte ? Connectez-vous pour continuer.
-      </p>
+      <p class="text-muted mb-4">Connectez-vous pour continuer.</p>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
         <!-- Email -->
@@ -141,10 +139,10 @@
 
       <!-- Lien d'inscription -->
       <div class="text-center mt-4">
-        <small class="text-muted">
+        <small class="text-muted" style="font-weight: bold; font-size: medium">
           Vous n’avez pas de compte ?
           <a class="link-muted" (click)="goToRegister()" style="cursor: pointer"
-            >Créer un compte</a
+            >Créer un compte / S'inscrire</a
           >
         </small>
       </div>
