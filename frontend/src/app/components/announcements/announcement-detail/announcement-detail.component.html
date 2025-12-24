@@ -458,7 +458,7 @@
                 ></div>
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h3>Demande de mise en relation</h3>
+                    <h3>Prise de contact</h3>
                     <button
                       class="btn-close"
                       (click)="showContactRequestForm = false"
@@ -473,17 +473,19 @@
                     >
                       <div class="form-group">
                         <label class="form-label">
-                          Présentez-vous et expliquez votre intérêt
+                          Décrivez votre besoin
                           <span class="text-danger">*</span>
                         </label>
                         <textarea
                           class="form-control"
                           rows="6"
                           formControlName="message"
-                          placeholder="Bonjour, je suis intéressé(e) par votre annonce car..."
+                          [(ngModel)]="message"
+                          [placeholder]="placeholder"
+                          (focus)="onFocus()"
                         ></textarea>
                         <div class="form-text">
-                          Minimum 20 caractères - Soyez professionnel et précis
+                          Minimum 20 caractères - Soyez précis
                         </div>
                         <div
                           class="invalid-feedback"
@@ -497,19 +499,19 @@
                       </div>
                       <div class="modal-footer">
                         <button
-                          type="button"
-                          class="btn btn-secondary"
-                          (click)="showContactRequestForm = false"
-                        >
-                          Annuler
-                        </button>
-                        <button
                           type="submit"
                           class="btn btn-primary"
                           [disabled]="contactRequestForm.invalid || sending"
                         >
                           <i class="fas fa-paper-plane"></i>
                           {{ sending ? "Envoi..." : "Envoyer la demande" }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          (click)="showContactRequestForm = false"
+                        >
+                          Annuler
                         </button>
                       </div>
                     </form>
