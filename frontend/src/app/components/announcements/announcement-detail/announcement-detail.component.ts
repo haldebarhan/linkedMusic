@@ -62,6 +62,9 @@ export class AnnouncementDetailComponent implements OnInit {
   contactRequestForm: FormGroup;
   sending: boolean = false;
 
+  message = '';
+  placeholder = 'Bonjour, je suis intéressé(e) par votre annonce car ';
+
   // Enum Badge accessible dans le template
   Badge = Badge;
 
@@ -93,6 +96,12 @@ export class AnnouncementDetailComponent implements OnInit {
     if (this.announcementId) {
       this.loadAnnouncementData();
       this.trackView();
+    }
+  }
+
+  onFocus() {
+    if (this.message === '') {
+      this.message = this.placeholder;
     }
   }
 

@@ -72,7 +72,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
   readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB en bytes
   readonly MAX_INDIVIDUAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB par fichier
   readonly MAX_VIDEO_DURATION = 55; // 55 secondes
-  readonly MAX_VIDEO_SIZE_AUTHORIZED = 1024 * 1024 * 400;
+  readonly MAX_VIDEO_SIZE_AUTHORIZED = 1024 * 1024 * 550;
 
   uploadProgress: number = 0;
   uploadingToBackend: boolean = false;
