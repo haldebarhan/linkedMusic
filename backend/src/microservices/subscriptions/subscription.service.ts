@@ -9,6 +9,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
 import { PaymentRepository } from "../payments/payment.repository";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -141,7 +142,7 @@ export class SubscriptionService {
           ? this.addParentBenefitsToPlan(parentId!, plan.id, tx)
           : Promise.resolve(),
       ]);
-
+      await invalideCache("subscription-plans*");
       return plan;
     });
   }
@@ -198,11 +199,12 @@ export class SubscriptionService {
         parentId,
       });
     });
+    await invalideCache("subscription-plans*");
     return update;
   }
 
   async removePlan(id: number) {
-    await this.findOne(id);
+    await Promise.all([this.findOne(id), invalideCache("subscription-plans*")]);
     return await this.planRepository.removePlan(id);
   }
 

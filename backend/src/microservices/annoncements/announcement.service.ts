@@ -40,6 +40,7 @@ import { AnnouncementViewRepository } from "../announcement-views/announcement-v
 import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
 import { generateUrl } from "../../utils/functions/utilities";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -104,6 +105,7 @@ export class AnnouncementService {
         fieldValues
       );
 
+    await invalideCache("announcements*");
     return this.mapToResponseDto(announcement);
   }
 
@@ -223,6 +225,7 @@ export class AnnouncementService {
         )
       );
     }
+    await invalideCache("announcements*");
     return this.mapToResponseDto(updated);
   }
 
@@ -255,6 +258,7 @@ export class AnnouncementService {
         }
       })
     );
+    await invalideCache("announcements*");
     await this.announcementRepository.delete(id);
   }
 
@@ -463,6 +467,7 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
+    await invalideCache("announcements*");
     return approved;
   }
 
@@ -485,6 +490,7 @@ export class AnnouncementService {
     }
     const isLiked = (ann.Favorites.length ?? 0) > 0;
     const totalLikes = ann?._count?.Favorites ?? 0;
+    await invalideCache("announcements/like*");
     return {
       isLiked,
       totalLikes,
@@ -512,6 +518,7 @@ export class AnnouncementService {
     }
     const isLiked = (ann.Favorites.length ?? 0) > 0;
     const totalLikes = ann?._count?.Favorites ?? 0;
+    await invalideCache("announcements/like*");
     return {
       isLiked,
       totalLikes,
@@ -561,6 +568,7 @@ export class AnnouncementService {
         logger.log("Erreur lors de l'émission Socket.IO:", error);
       }
     }
+    await invalideCache("announcements*");
     return rejected;
   }
 
@@ -632,7 +640,7 @@ export class AnnouncementService {
     if (!announcement) {
       throw createError(404, `Annonce avec l'ID ${announcementId} introuvable`);
     }
-
+    await invalideCache("announcements/recent-views*");
     return await this.announcementViewRepository.create(userId, announcementId);
   }
 
@@ -641,10 +649,12 @@ export class AnnouncementService {
     if (!view) {
       throw createError(404, `Annonce avec l'ID ${id} introuvable`);
     }
+    await invalideCache("announcements/recent-views*");
     return await this.announcementViewRepository.remove(id);
   }
 
   async removeAll(userId: number) {
+    await invalideCache("announcements/recent-views*");
     return await this.announcementViewRepository.removeAll(userId);
   }
 
@@ -694,6 +704,7 @@ export class AnnouncementService {
   ): AnnouncementResponseDto & {
     likes?: number;
     contacts?: number;
+    countryCode?: string;
   } {
     return {
       id: announcement.id,
@@ -705,6 +716,7 @@ export class AnnouncementService {
       location: announcement.location ?? undefined,
       country: announcement.country ?? undefined,
       city: announcement.city ?? undefined,
+      countryCode: announcement.countryCode ?? undefined,
       images: announcement.images,
       videos: announcement.videos,
       audios: announcement.audios,

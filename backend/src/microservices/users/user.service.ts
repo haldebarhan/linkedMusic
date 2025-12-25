@@ -23,6 +23,7 @@ import { Role } from "../../utils/enums/role.enum";
 import { Order } from "../../utils/enums/order.enum";
 import { S3Service } from "../../utils/services/s3.service";
 import { Badge } from "../../utils/enums/badge.enum";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: S3Service = S3Service.getInstance();
@@ -84,6 +85,7 @@ export class UserService {
       );
       const accessToken = await firebaseService.loginWithUid(user.uid);
       const userData = { ...user };
+      await invalideCache("users*");
       return { user: userData, accessToken };
     } catch (error) {
       if (
@@ -152,13 +154,16 @@ export class UserService {
     const [updatedUser] = await Promise.all([
       updateUserPromise,
       deleteOldImagePromise,
+      invalideCache("users*"),
     ]);
     return this.attachProfileImageUrl(updatedUser);
   }
 
   async assignBadge(userId: number, badge: Badge) {
     const user = await this.findOne(userId);
-    return await this.userRepository.update(user.id, { badge });
+    const update = await this.userRepository.update(user.id, { badge });
+    await invalideCache("users*");
+    return update;
   }
 
   async login(
@@ -331,12 +336,14 @@ export class UserService {
     const user = await this.userRepository.findOne(userId);
     if (!user) throw createError(404, "User not found");
     await this.userRepository.closeAccount(user.id, comment);
+    await invalideCache("users*");
   }
 
   async activateAccount(userId: number) {
     const user = await this.userRepository.findOne(userId);
     if (!user) throw createError(404, "User not found");
     await this.userRepository.activateAccount(user.id);
+    await invalideCache("users*");
   }
 
   private async attachProfileImageUrl(user: User): Promise<User> {

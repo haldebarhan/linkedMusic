@@ -84,11 +84,11 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    startSubscriptionDailyCron();
-    startCheckSubscriptionStatus();
-    startAnnouncementHighlightedCron();
-    startUpgradeUsersBadge();
-    startAlertAdminJob();
+    // startSubscriptionDailyCron();
+    // startCheckSubscriptionStatus();
+    // startAnnouncementHighlightedCron();
+    // startUpgradeUsersBadge();
+    // startAlertAdminJob();
   }
 
   config() {

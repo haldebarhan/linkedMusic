@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { container } from "tsyringe";
 import { ValidateDtoMiddleware } from "../../middlewares/validate-dto.middleware";
 
@@ -17,31 +17,38 @@ import authMiddleware from "../../middlewares/auth.middleware";
 import refreshTokenMiddleware from "../../middlewares/refresh-token";
 import uploads from "../../multer-config";
 import { firebaseMiddleware } from "../../middlewares/firebase.middleware";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
 
 // Announcements
-router.get("/announcements/details/:id", async (req: Request, res: Response) =>
-  authController.getAnnouncementDetails(req, res)
+router.get(
+  "/announcements/details/:id",
+  cache({ ttl: 86400, prefix: "announcements" }),
+  async (req: Request, res: Response) =>
+    authController.getAnnouncementDetails(req, res)
 );
 
 router.get(
   "/announcements/search",
-
+  cache({ ttl: 86400, prefix: "announcements" }),
   async (req: Request, res: Response) =>
     authController.searchAnnouncement(req, res)
 );
 
 // Subscription plans
 
-router.get("/subscription-plans", async (req: Request, res: Response) =>
-  authController.findSubscriptionPlans(req, res)
+router.get(
+  "/subscription-plans",
+  cache({ ttl: 86400, prefix: "subscription-plans" }),
+  async (req: Request, res: Response) =>
+    authController.findSubscriptionPlans(req, res)
 );
 
 router.get(
   "/subscription-plans/:id",
-
+  cache({ ttl: 86400, prefix: "subscription-plans" }),
   async (req: Request, res: Response) =>
     authController.getSubscriptionPlan(req, res)
 );
@@ -133,41 +140,51 @@ router.get(
     authController.getMe(req, res)
 );
 
-router.get("/banner-slides", async (req: Request, res: Response) =>
-  authController.findActiveSlides(req, res)
+router.get(
+  "/banner-slides",
+  cache({ ttl: 86400, prefix: "banner-slides" }),
+  async (req: Request, res: Response) =>
+    authController.findActiveSlides(req, res)
 );
 
 router.get(
   "/catalog/categories/:category/filters",
-
+  cache({ ttl: 86400, prefix: "catalog" }),
   async (req: Request, res: Response) =>
     authController.getFilterSchema(req, res)
 );
 
-router.get("/catalog/categories", async (req: Request, res: Response) =>
-  authController.listCategories(req, res)
+router.get(
+  "/catalog/categories",
+  cache({ ttl: 86400, prefix: "catalog" }),
+  async (req: Request, res: Response) => authController.listCategories(req, res)
 );
 
 router.get(
   "/catalog/categories/:id",
-
+  cache({ ttl: 86400, prefix: "catalog" }),
   async (req: Request, res: Response) => authController.findCategory(req, res)
 );
 
 router.get(
   "/catalog/service-types",
-
+  cache({ ttl: 86400, prefix: "catalog" }),
   async (req: Request, res: Response) =>
     authController.listServiceTypes(req, res)
 );
 
 // Categories
-router.get("/categories", async (req: Request, res: Response) =>
-  authController.getCategories(req, res)
+router.get(
+  "/categories",
+  cache({ ttl: 86400, prefix: "categories" }),
+  async (req: Request, res: Response) => authController.getCategories(req, res)
 );
 
-router.get("/categories/:slug", async (req: Request, res: Response) =>
-  authController.getCategoryBySlug(req, res)
+router.get(
+  "/categories/:slug",
+  cache({ ttl: 86400, prefix: "categories" }),
+  async (req: Request, res: Response) =>
+    authController.getCategoryBySlug(req, res)
 );
 
 export default router;

@@ -15,3 +15,15 @@ export const generateUrl = async (files: string[]) => {
     )
   );
 };
+
+export const normalize = (str: string): string => {
+  return str
+    .normalize("NFD") // Décompose les accents
+    .replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+    .toLowerCase()
+    .trim();
+};
+
+export const escapeRegex = (string: string): string => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};

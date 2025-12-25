@@ -21,6 +21,7 @@ import { Order } from "../../utils/enums/order.enum";
 import { S3Service } from "../../utils/services/s3.service";
 import { syncPaymentStatusByReference } from "../../utils/functions/sync-paiment-status";
 import { Jeko } from "../../core/payments/Jeko/jeko";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();
@@ -58,7 +59,7 @@ export class PaymentService {
       planId,
       status: plan.isFree ? PaymentStatus.SUCCEEDED : PaymentStatus.PENDING,
     });
-
+    await invalideCache("payments*");
     if (!plan.isFree) {
       const createRes = await this.jekoPayment.createPaymentLink(
         reference,

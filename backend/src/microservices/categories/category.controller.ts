@@ -37,7 +37,7 @@ export class CategoryController {
       const limit_query = Math.max(limit, 10);
       const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
         ? (orderQuery as Order)
-        : Order.ASC;
+        : Order.DESC;
 
       const categories = await this.categoryService.getAllCategories({
         limit: limit_query,

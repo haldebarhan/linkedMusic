@@ -23,6 +23,7 @@ import {
   UpdateCategoryDto,
 } from "../../microservices/categories/category.dto";
 import uploads from "../../multer-config";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -34,12 +35,16 @@ router.post("/users/assign-badge", async (req: Request, res: Response) =>
   adminController.assignBadge(req, res)
 );
 
-router.get("/users", async (req: Request, res: Response) =>
-  adminController.getAllUsers(req, res)
+router.get(
+  "/users",
+  cache({ ttl: 86400, prefix: "users" }),
+  async (req: Request, res: Response) => adminController.getAllUsers(req, res)
 );
 
-router.get("/users/:id", async (req: Request, res: Response) =>
-  adminController.findUserById(req, res)
+router.get(
+  "/users/:id",
+  cache({ ttl: 86400, prefix: "users" }),
+  async (req: Request, res: Response) => adminController.findUserById(req, res)
 );
 
 router.put("/users/close-account/:id", async (req: Request, res: Response) =>
@@ -61,11 +66,15 @@ router.post(
   ValidateDtoMiddleware(CreateConfigDTO),
   async (req: Request, res: Response) => adminController.createConfig(req, res)
 );
-router.get("/configurations", async (req: Request, res: Response) =>
-  adminController.findConfigs(req, res)
+router.get(
+  "/configurations",
+  cache({ ttl: 86400, prefix: "configurations" }),
+  async (req: Request, res: Response) => adminController.findConfigs(req, res)
 );
-router.get("/configurations/:id", async (req: Request, res: Response) =>
-  adminController.findConfig(req, res)
+router.get(
+  "/configurations/:id",
+  cache({ ttl: 86400, prefix: "configurations" }),
+  async (req: Request, res: Response) => adminController.findConfig(req, res)
 );
 
 router.delete("/configurations/:id", async (req: Request, res: Response) =>
@@ -81,8 +90,10 @@ router.post(
     adminController.createCategory(req, res)
 );
 
-router.get("/catalog/categories/:id", async (req: Request, res: Response) =>
-  adminController.findCategory(req, res)
+router.get(
+  "/catalog/categories/:id",
+  cache({ ttl: 86400, prefix: "catalog" }),
+  async (req: Request, res: Response) => adminController.findCategory(req, res)
 );
 
 router.put(
@@ -134,13 +145,18 @@ router.post(
   async (req: Request, res: Response) => adminController.createField(req, res)
 );
 
-router.get("/catalog/fields", async (req: Request, res: Response) =>
-  adminController.listFields(req, res)
+router.get(
+  "/catalog/fields",
+  cache({ ttl: 86400, prefix: "catalog" }),
+  async (req: Request, res: Response) => adminController.listFields(req, res)
 );
 
-router.get("/catalog/fields/:id", async (req: Request, res: Response) =>
-  adminController.findField(req, res)
+router.get(
+  "/catalog/fields/:id",
+  cache({ ttl: 86400, prefix: "catalog" }),
+  async (req: Request, res: Response) => adminController.findField(req, res)
 );
+
 router.put(
   "/catalog/fields/:id",
   ValidateDtoMiddleware(UpdateFieldDto),
@@ -177,8 +193,11 @@ router.post(
 );
 
 // SUBSCRIPTION PLAN
-router.get("/subscription-plans", async (req: Request, res: Response) =>
-  adminController.listSubscriptionPlans(req, res)
+router.get(
+  "/subscription-plans",
+  cache({ ttl: 86400, prefix: "subscription-plans" }),
+  async (req: Request, res: Response) =>
+    adminController.listSubscriptionPlans(req, res)
 );
 
 router.post(
@@ -189,7 +208,7 @@ router.post(
 
 router.get(
   "/subscription-plans/:id",
-
+  cache({ ttl: 86400, prefix: "subscription-plans" }),
   async (req: Request, res: Response) =>
     adminController.findSubscriptionPlan(req, res)
 );
@@ -206,8 +225,11 @@ router.delete("/subscription-plans/:id", async (req: Request, res: Response) =>
 
 // Announcements
 
-router.get("/announcements", async (req: Request, res: Response) =>
-  adminController.listPendingAnnouncement(req, res)
+router.get(
+  "/announcements",
+  cache({ ttl: 86400, prefix: "announcements" }),
+  async (req: Request, res: Response) =>
+    adminController.listPendingAnnouncement(req, res)
 );
 
 router.put("/announcements/approuve/:id", async (req: Request, res: Response) =>
@@ -225,8 +247,10 @@ router.post(
   async (req: Request, res: Response) => adminController.createSlides(req, res)
 );
 
-router.get("/banner-slides", async (req: Request, res: Response) =>
-  adminController.findSlides(req, res)
+router.get(
+  "/banner-slides",
+  cache({ ttl: 86400, prefix: "announcements" }),
+  async (req: Request, res: Response) => adminController.findSlides(req, res)
 );
 
 router.put("/banner-slides/reorder/:id", async (req: Request, res: Response) =>
