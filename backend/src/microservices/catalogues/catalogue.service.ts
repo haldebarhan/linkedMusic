@@ -15,6 +15,7 @@ import createError from "http-errors";
 import { Order } from "../../utils/enums/order.enum";
 import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -72,7 +73,9 @@ export class CatalogueService {
 
   async removeCategory(id: number) {
     const category = await this.findCategory(id);
-    return await this.catalogueRepository.removeCategory(category.id);
+    const deleted = await this.catalogueRepository.removeCategory(category.id);
+    await invalideCache("catalog*");
+    return deleted;
   }
 
   async updateCategory(id: number, data: UpdateCategoryDTO) {
@@ -259,6 +262,7 @@ export class CatalogueService {
 
       return updated;
     });
+    await invalideCache("catalog*");
     return result;
   }
 
@@ -298,12 +302,14 @@ export class CatalogueService {
 
   async removeField(id: number) {
     const field = await this.findfield(id);
+    await invalideCache("catalog*");
     return await this.catalogueRepository.removeField(field.id);
   }
 
   //field options
   async createFieldOption(data: any) {
     try {
+      await invalideCache("catalog*");
       return await this.catalogueRepository.createFieldOption(data);
     } catch (error) {
       throw createError(
@@ -346,6 +352,7 @@ export class CatalogueService {
         };
       }
 
+      await invalideCache("catalog*");
       return results.map((r) => r);
     } catch (error) {
       throw createError(

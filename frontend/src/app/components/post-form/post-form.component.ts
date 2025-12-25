@@ -311,6 +311,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
     if (!this.announcement) return;
 
     const ann = this.announcement;
+    this.countryCode = ann.countryCode || 'CI';
 
     // Fichiers existants
     this.hydrateExistingFiles(ann.fichiers || ann.images || []);

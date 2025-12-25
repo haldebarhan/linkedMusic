@@ -19,6 +19,7 @@ import {
   UpdateFieldOptionDto,
 } from "./category.dto";
 import { Order } from "../../utils/enums/order.enum";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 @injectable()
 export class CategoryService {
@@ -46,27 +47,9 @@ export class CategoryService {
       }),
       this.categoryRepository.count(where),
     ]);
-    const priorities = [
-      "Arrangeurs & Compositeurs",
-      "Chanteurs & Choristes",
-      "DJs & MC / Animateurs",
-      "Ingénieurs du son",
-      "Musiciens & groupes",
-      "Producteurs & Managers",
-      "Studios et Salles de répétition",
-    ];
 
-    const priorityCategories = data.filter((cat) =>
-      priorities.includes(cat.name)
-    );
-
-    const otherCategories = data.filter(
-      (cat) => !priorities.includes(cat.name)
-    );
-
-    const sortedData = [...priorityCategories, ...otherCategories];
     return {
-      data: sortedData,
+      data,
       metadata: {
         total,
         page,
@@ -100,6 +83,10 @@ export class CategoryService {
         409
       );
     }
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.categoryRepository.create(dto);
   }
 
@@ -133,7 +120,15 @@ export class CategoryService {
     if (!category)
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     const { fields } = dto;
-    return await this.categoryFieldRepository.reorderFields(categoryId, fields);
+    const newOrder = await this.categoryFieldRepository.reorderFields(
+      categoryId,
+      fields
+    );
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
+    return newOrder;
   }
 
   async updateCategory(id: number, dto: UpdateCategoryDto) {
@@ -142,7 +137,12 @@ export class CategoryService {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
 
-    return this.categoryRepository.update(id, dto);
+    const updated = this.categoryRepository.update(id, dto);
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
+    return updated;
   }
 
   async deleteCategory(id: number) {
@@ -159,7 +159,9 @@ export class CategoryService {
     if (!category) {
       throw new AppError(ErrorCode.NOT_FOUND, "Catégorie non trouvée", 404);
     }
-    return this.categoryRepository.update(id, { active: false });
+    const updated = await this.categoryRepository.update(id, { active: false });
+    await invalideCache("catalog*");
+    return updated;
   }
 
   async createField(dto: CreateFieldDto) {
@@ -177,6 +179,10 @@ export class CategoryService {
         });
       }
     }
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldRepository.findById(field.id);
   }
 
@@ -221,7 +227,10 @@ export class CategoryService {
         }
       }
     }
-
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldRepository.findById(id);
   }
 
@@ -229,6 +238,10 @@ export class CategoryService {
    * Supprime un champ
    */
   async deleteField(id: number) {
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldRepository.delete(id);
   }
 
@@ -236,6 +249,10 @@ export class CategoryService {
    * Crée une option de champ
    */
   async createFieldOption(dto: CreateFieldOptionDto) {
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldOptionRepository.create(dto);
   }
 
@@ -243,6 +260,10 @@ export class CategoryService {
    * Met à jour une option de champ
    */
   async updateFieldOption(id: number, dto: UpdateFieldOptionDto) {
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldOptionRepository.update(id, dto);
   }
 
@@ -250,6 +271,10 @@ export class CategoryService {
    * Supprime une option de champ
    */
   async deleteFieldOption(id: number) {
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.fieldOptionRepository.delete(id);
   }
 
@@ -293,6 +318,10 @@ export class CategoryService {
           ),
         };
       }
+      await Promise.all([
+        invalideCache("catalog*"),
+        invalideCache("categories*"),
+      ]);
       return results.map((r) => r);
     } catch (error) {
       throw new AppError(
@@ -318,6 +347,10 @@ export class CategoryService {
    * Dissocie un champ d'une catégorie
    */
   async removeFieldFromCategory(categoryId: number, fieldId: number) {
+    await Promise.all([
+      invalideCache("catalog*"),
+      invalideCache("categories*"),
+    ]);
     return this.categoryFieldRepository.delete(categoryId, fieldId);
   }
 

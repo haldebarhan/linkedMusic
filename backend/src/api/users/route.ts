@@ -20,6 +20,7 @@ import {
 } from "../../microservices/annoncements/announcement.dto";
 import { CreateContactRequestDTO } from "../../microservices/contact-requests/contact-request.dto";
 import { TrimVideoDTO } from "../../microservices/trim-video/trim-video.dto";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const userController = container.resolve(UserController);
@@ -57,21 +58,21 @@ router.post(
 
 router.get(
   "/announcements/like-status/:id",
-
+  cache({ ttl: 86400, prefix: "announcements/like" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.announcementlikeStatus(req, res)
 );
 
 router.get(
   "/announcements/recent-views",
-
+  cache({ ttl: 86400, prefix: "announcements/recent-views" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myRecentViews(req, res)
 );
 
 router.get(
   "/announcements/liked",
-
+  cache({ ttl: 86400, prefix: "announcements/like" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myLikedAnnouncements(req, res)
 );
@@ -115,14 +116,14 @@ router.post(
 
 router.get(
   "/announcements",
-
+  cache({ ttl: 86400, prefix: "announcements" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myAnnouncements(req, res)
 );
 
 router.get(
   "/announcements/:id",
-
+  cache({ ttl: 86400, prefix: "announcements" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myAnnouncement(req, res)
 );
@@ -216,7 +217,7 @@ router.post(
 
 router.get(
   "/payments",
-
+  cache({ ttl: 86400, prefix: "payments" }),
   async (req: AuthenticatedRequest, res: Response) =>
     userController.myPayments(req, res)
 );

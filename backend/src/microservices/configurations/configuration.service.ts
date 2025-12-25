@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import createError from "http-errors";
 import { Order } from "../../utils/enums/order.enum";
 import { ConfigService } from "../../utils/services/configuration.service";
+import { invalideCache } from "../../utils/functions/invalidate-cache";
 
 @injectable()
 export class ConfigurationService {
@@ -22,7 +23,7 @@ export class ConfigurationService {
         type: formatedType,
       });
       await ConfigService.refresh();
-
+      await invalideCache("configurations*");
       return created;
     } catch (error) {
       if (
@@ -94,6 +95,7 @@ export class ConfigurationService {
     const config = await this.findOne(id);
     const removed = await this.configurationRepository.delete(config.id);
     await ConfigService.refresh();
+    await invalideCache("configurations*");
     return removed;
   }
 }
