@@ -49,6 +49,7 @@ export const alertAdminJob = async () => {
             },
             update: {
               message: `Il y a ${pendingAnnouncementsCount} annonce(s) en attente de validation.`,
+              isRead: false,
             },
             create: {
               userId: admin.id,
@@ -56,6 +57,7 @@ export const alertAdminJob = async () => {
               type: NotificationType.ANNOUNCEMENT_CREATED,
               message: `Il y a ${pendingAnnouncementsCount} annonce(s) en attente de validation.`,
               actionUrl: `${ENV.FRONTEND_URL}/admin/publications`,
+              isRead: false,
             },
           });
 

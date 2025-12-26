@@ -30,7 +30,7 @@ export class CatalogueRepository {
       skip,
       take,
       where,
-      orderBy: { name: Order.ASC },
+      orderBy: { updatedAt: Order.DESC },
       include: {
         // CategoryField: {
         //   include: {

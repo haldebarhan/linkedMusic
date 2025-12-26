@@ -10,6 +10,7 @@ import swaggerUi from "swagger-ui-express";
 import { createServer, Server as HTTPServer } from "http";
 import { Server as IOServer } from "socket.io";
 import { setIo } from "./sockets/io-singleton";
+import hpp from "hpp";
 
 // ROUTES
 import authRoutes from "./api/auth/route";
@@ -31,6 +32,7 @@ import path from "path";
 import { verifyJekoSignature } from "./utils/functions/signature";
 import { WebhookEvent } from "./utils/interfaces/payment-payload";
 import { updatePayementStatus } from "./utils/functions/update-payment-status";
+import helmet from "helmet";
 
 const allowed = getAllowedOrigins();
 const wsAllowed = [...allowed, "ws:", "wss:"];
@@ -84,11 +86,11 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    // startSubscriptionDailyCron();
-    // startCheckSubscriptionStatus();
-    // startAnnouncementHighlightedCron();
-    // startUpgradeUsersBadge();
-    // startAlertAdminJob();
+    startSubscriptionDailyCron();
+    startCheckSubscriptionStatus();
+    startAnnouncementHighlightedCron();
+    startUpgradeUsersBadge();
+    startAlertAdminJob();
   }
 
   config() {
@@ -99,6 +101,41 @@ class Server {
     };
 
     this.app.use(cors(corsConfig));
+    this.app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+            ],
+            styleSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css",
+              "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css",
+            ],
+            imgSrc: [
+              "'self'",
+              "data:",
+              "https://zikdev.s3.eu-west-1.amazonaws.com/",
+              "https://images.unsplash.com/",
+            ],
+            mediaSrc: [
+              "'self'",
+              "https://zikdev.s3.eu-west-1.amazonaws.com/",
+              "blob:",
+            ],
+            connectSrc: ["'self'", ...allowed],
+            "script-src-attr": ["'unsafe-inline'"],
+          },
+        },
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+      })
+    );
     this.app.use((req, res, next) => {
       if (req.method === "OPTIONS") return res.sendStatus(204);
       return next();
@@ -112,6 +149,8 @@ class Server {
       }
       return express.json({ limit: "10mb" })(req, res, next);
     });
+
+    this.app.use(hpp());
     this.app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
     this.app.use(globalLimiter as any);
@@ -261,7 +300,22 @@ class Server {
   }
 
   private socketConfig() {
-    this.httpServer = createServer(this.app);
+    let serverOptions: any = this.app;
+    if (ENV.NODE_ENV === "production") {
+      const fs = require("fs");
+      const httpsOptions = {
+        key: fs.readFileSync("/etc/letsencrypt/live/zikmusik.com/privkey.pem"),
+        cert: fs.readFileSync(
+          "/etc/letsencrypt/live/zikmusik.com/fullchain.pem"
+        ),
+      };
+      this.httpServer = require("https").createServer(
+        httpsOptions,
+        serverOptions
+      );
+    } else {
+      this.httpServer = createServer(serverOptions);
+    }
     this.io = new IOServer(this.httpServer, {
       path: "/socket.io",
       cors: {

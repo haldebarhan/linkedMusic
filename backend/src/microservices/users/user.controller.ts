@@ -9,6 +9,7 @@ import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-reque
 import createError from "http-errors";
 import { saveFileToBucket } from "../../utils/functions/save-file";
 import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
+import { ENV } from "../../config/env";
 
 @injectable()
 export class UserController {
@@ -38,6 +39,9 @@ export class UserController {
       );
       res.cookie("access_token", accessToken, {
         httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600000,
       });
       const response = formatResponse(200, { user, accessToken });
       res.status(201).json(response);
@@ -159,6 +163,9 @@ export class UserController {
       });
       res.cookie("access_token", accessToken, {
         httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600000,
       });
       const response = formatResponse(200, { accessToken, user });
       res.status(200).json(response);
@@ -284,6 +291,9 @@ export class UserController {
 
       res.cookie("access_token", accessToken, {
         httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600000,
       });
       const response = formatResponse(200, {
         accessToken,
@@ -308,6 +318,9 @@ export class UserController {
       });
       res.cookie("access_token", accessToken, {
         httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600000,
       });
       const response = formatResponse(200, {
         accessToken,
