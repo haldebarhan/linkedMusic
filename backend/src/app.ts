@@ -300,22 +300,7 @@ class Server {
   }
 
   private socketConfig() {
-    let serverOptions: any = this.app;
-    if (ENV.NODE_ENV === "production") {
-      const fs = require("fs");
-      const httpsOptions = {
-        key: fs.readFileSync("/etc/letsencrypt/live/zikmusik.com/privkey.pem"),
-        cert: fs.readFileSync(
-          "/etc/letsencrypt/live/zikmusik.com/fullchain.pem"
-        ),
-      };
-      this.httpServer = require("https").createServer(
-        httpsOptions,
-        serverOptions
-      );
-    } else {
-      this.httpServer = createServer(serverOptions);
-    }
+    this.httpServer = createServer(this.app);
     this.io = new IOServer(this.httpServer, {
       path: "/socket.io",
       cors: {
