@@ -92,20 +92,27 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
 
     // Recherche textuelle
     if (filters.search) {
-      where.OR = [
-        {
-          title: {
-            contains: filters.search,
-            mode: "insensitive",
+      const searchTerms = filters.search
+        .trim()
+        .split(/\s+/)
+        .filter((term) => term.length > 1);
+
+      if (searchTerms.length > 0) {
+        where.OR = searchTerms.flatMap((term) => [
+          {
+            title: {
+              contains: term,
+              mode: "insensitive",
+            },
           },
-        },
-        {
-          description: {
-            contains: filters.search,
-            mode: "insensitive",
+          {
+            description: {
+              contains: term,
+              mode: "insensitive",
+            },
           },
-        },
-      ];
+        ]);
+      }
     }
 
     // Filtre par utilisateur
