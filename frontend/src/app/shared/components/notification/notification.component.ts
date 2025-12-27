@@ -35,7 +35,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
       .subscribe((notifications) => {
         if (notifications.length > 0) {
           this.allUnreadNotifications = notifications
-            .filter((n) => !n.isRead)
+            .filter((n) => !n?.isRead)
             .map((n) => this.mapToToast(n));
 
           this.updateToastQueue();
