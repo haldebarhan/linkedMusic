@@ -16,125 +16,66 @@ import { map, catchError } from 'rxjs/operators';
 type GuestPolicy = 'allow' | 'redirectIfAuth' | 'logoutThenAllow';
 
 /**
- * Guard pour les routes protégées
- * Tente un refresh du token s'il est expiré avant de rediriger vers login
+ * Guard pour les routes protégées (auth requise)
  */
-export const authCanActivate: CanActivateFn = (_route, state) => {
+export const authCanActivate: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const refreshSvc = inject(RefreshTokenService);
 
-  // Si pas de token du tout, rediriger immédiatement vers login
-  const token = auth.token;
-  if (!token) {
-    return router.createUrlTree(['/login'], {
-      queryParams: { redirect: state.url },
-    });
+  // Si l'utilisateur est déjà considéré connecté en mémoire → on autorise
+  if (auth.snapshot.isAuthenticated) {
+    return true;
   }
 
-  // Si le token est expiré, tenter un refresh AVANT de rediriger
-  if (refreshSvc.isTokenExpired(token)) {
-    return from(refreshSvc.refreshToken()).pipe(
-      map(() => {
-        return true; // Autoriser l'accès
-      }),
-      catchError((err) => {
-        console.error('[AuthGuard] Refresh failed, redirecting to login:', err);
-        // Si le refresh échoue, alors rediriger vers login
-        return of(
-          router.createUrlTree(['/login'], {
-            queryParams: { redirect: state.url },
-          })
-        );
-      })
-    );
-  }
-
-  // Token valide et non expiré, vérifier l'authentification
-  if (!auth.snapshot.isAuthenticated) {
-    return router.createUrlTree(['/login'], {
-      queryParams: { redirect: state.url },
-    });
-  }
-
-  return true;
+  // Sinon, on tente de récupérer l'utilisateur (cela va déclencher le refresh via l'interceptor si nécessaire)
+  return from(auth.getMe()).pipe(
+    map(() => true),
+    catchError((err) => {
+      console.warn('[AuthGuard] Accès refusé, redirection vers login');
+      return of(
+        router.createUrlTree(['/login'], {
+          queryParams: { redirect: state.url },
+        }),
+      );
+    }),
+  );
 };
 
 /**
- * Guard CanMatch pour le lazy loading
- * Même logique que authCanActivate
+ * Version CanMatch (pour lazy loading)
  */
-export const authCanMatch: CanMatchFn = (_route, segments) => {
+export const authCanMatch: CanMatchFn = (route, segments) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const refreshSvc = inject(RefreshTokenService);
 
-  // Construire l'URL de redirection
-  let redirectUrl = '/';
-  if (Array.isArray(segments)) {
-    redirectUrl =
-      '/' +
-      segments
-        .map((s: UrlSegment) => s.path)
-        .filter(Boolean)
-        .join('/');
-  } else if (
-    (segments as any)?.segments &&
-    Array.isArray((segments as any).segments)
-  ) {
-    const segs = (segments as any).segments as UrlSegment[];
-    redirectUrl =
-      '/' +
-      segs
-        .map((s) => s.path)
-        .filter(Boolean)
-        .join('/');
-  } else {
-    const nav = router.getCurrentNavigation();
-    redirectUrl =
-      nav?.finalUrl?.toString() ?? nav?.initialUrl?.toString() ?? '/';
+  if (auth.snapshot.isAuthenticated) {
+    return true;
   }
 
-  // Si pas de token du tout, rediriger immédiatement vers login
-  const token = auth.token;
-  if (!token) {
-    return router.createUrlTree(['/login'], {
-      queryParams: { redirect: redirectUrl },
-    });
-  }
+  // Construire l'URL actuelle pour la redirection
+  const redirectUrl = segments.length
+    ? '/' + segments.map((s) => s.path).join('/')
+    : '/';
 
-  // Si le token est expiré, tenter un refresh AVANT de rediriger
-  if (refreshSvc.isTokenExpired(token)) {
-    return from(refreshSvc.refreshToken()).pipe(
-      map(() => {
-        return true;
-      }),
-      catchError((err) => {
-        return of(
-          router.createUrlTree(['/login'], {
-            queryParams: { redirect: redirectUrl },
-          })
-        );
-      })
-    );
-  }
-
-  // Token valide et non expiré, vérifier l'authentification
-  if (!auth.snapshot.isAuthenticated) {
-    return router.createUrlTree(['/login'], {
-      queryParams: { redirect: redirectUrl },
-    });
-  }
-
-  return true;
+  return from(auth.getMe()).pipe(
+    map(() => true),
+    catchError(() => {
+      return of(
+        router.createUrlTree(['/login'], {
+          queryParams: { redirect: redirectUrl },
+        }),
+      );
+    }),
+  );
 };
 
 /**
- * Logique pour les routes guest (login, register, etc.)
+ * Guard pour les routes "guest" (login, register, etc.)
  */
 const decideForRoute = (
   data: { [k: string]: any } | undefined,
-  state?: { url: string }
+  state?: { url: string },
 ): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -149,11 +90,7 @@ const decideForRoute = (
 
     case 'redirectIfAuth':
       if (isAuth) {
-        const redirect = state?.url || redirectTo;
-        if (redirect === '/login' || redirect === '/register') {
-          return router.createUrlTree([redirectTo]);
-        }
-        return router.createUrlTree([redirect]);
+        return router.createUrlTree([redirectTo]);
       }
       return true;
 
@@ -168,15 +105,7 @@ const decideForRoute = (
   }
 };
 
-/**
- * Guard pour les routes guest (login, register)
- * Redirige les utilisateurs connectés vers l'accueil
- */
-export const guestCanMatch: CanMatchFn = (
-  route: Route,
-  _segments: UrlSegment[]
-) => decideForRoute(route.data);
+export const guestCanActivate: CanActivateFn = (route) =>
+  decideForRoute(route.data);
 
-export const guestCanActivate: CanActivateFn = (
-  route: ActivatedRouteSnapshot
-) => decideForRoute(route.data);
+export const guestCanMatch: CanMatchFn = (route) => decideForRoute(route.data);

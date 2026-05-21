@@ -3,12 +3,12 @@ import { validate } from "class-validator";
 import { Request, Response, NextFunction } from "express";
 
 export const ValidateDtoMiddleware = <T extends object>(
-  dtoClass: new (...args: any[]) => T
+  dtoClass: new (...args: any[]) => T,
 ) => {
   return async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> => {
     try {
       if (!req.body || Object.keys(req.body).length === 0) {
@@ -40,7 +40,7 @@ export const ValidateDtoMiddleware = <T extends object>(
 
       req.body = dtoInstance;
       next();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Validation middleware error:", error);
       res.status(500).json({
         message: "An unexpected error occurred during validation",

@@ -21,13 +21,13 @@ export class CreateMusicStyleDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  slug: string;
+  slug!: string;
 
   @IsOptional()
   @IsString()
@@ -79,13 +79,13 @@ export class CreateInstrumentDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  slug: string;
+  slug!: string;
 
   @IsOptional()
   @IsString()
@@ -137,13 +137,13 @@ export class CreateLanguageDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(10)
-  code: string; // "fr", "en", "es", etc.
+  code!: string; // "fr", "en", "es", etc.
 
   @IsOptional()
   @IsBoolean()
@@ -185,17 +185,17 @@ export class CreateSoftwareDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  slug: string;
+  slug!: string;
 
   @IsString()
   @IsNotEmpty()
-  type: string; // "DAW", "PLUGIN", "VST", etc.
+  type!: string; // "DAW", "PLUGIN", "VST", etc.
 
   @IsOptional()
   @IsBoolean()

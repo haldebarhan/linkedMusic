@@ -13,11 +13,11 @@ import {
 } from "class-validator";
 
 export class CreateUserDTO {
-  @IsEmail({}, { message: "pseudo is required" })
-  email: string;
+  @IsEmail({}, { message: "email is required" })
+  email!: string;
 
   @IsString({ message: "pseudo is required" })
-  pseudo: string;
+  pseudo!: string;
 
   @IsOptional()
   @IsEnum(Role, {
@@ -27,76 +27,76 @@ export class CreateUserDTO {
 
   @IsString({ message: "password is required" })
   @MinLength(6, { message: "password must be longer than 6 characters" })
-  password: string;
+  password!: string;
 }
 
 export class UpdateUserDTO {
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsString()
-  displayName: string;
+  displayName!: string;
 
   @IsString()
-  phone: string;
+  phone!: string;
 
   @IsString()
-  location: string;
+  location!: string;
 
   @IsString()
-  country: string;
+  country!: string;
 
   @IsString()
-  zipCode: string;
+  zipCode!: string;
 
   @IsString()
-  city: string;
+  city!: string;
 }
 
 export class VerifyToken {
   @IsEmail({}, { message: "email is required" })
-  email: string;
+  email!: string;
 
   @IsString({ message: "token is required" })
-  token: string;
+  token!: string;
 }
 
 export class LoginDTO {
   @IsEmail({}, { message: "email is required" })
-  email: string;
+  email!: string;
 
   @IsString({ message: "password is required" })
-  password: string;
+  password!: string;
 }
 
 export class ForgotPasswordDTO {
   @IsNotEmpty({ message: "email is required" })
   @IsEmail({}, { message: "Please enter valid email address" })
-  email: string;
+  email!: string;
 }
 
 export class ResetPasswordDTO {
   @IsNotEmpty({ message: "password is required" })
   @IsString({ message: "password must be valid string" })
-  password: string;
+  password!: string;
 
   @IsNotEmpty({ message: "token is required" })
   @IsString({ message: "token must be valid string" })
-  token: string;
+  token!: string;
 }
 
 export class ChangePasswordDTO {
   @IsNotEmpty({ message: "password is required" })
   @IsString({ message: "password must be valid string" })
-  password: string;
+  password!: string;
 }
 
 export class AssignBadge {
   @IsNumber({}, { message: "userId required" })
-  userId: number;
+  userId!: number;
   @IsEnum(Badge, { message: "Invalid input type" })
-  badge: Badge;
+  badge!: Badge;
 }

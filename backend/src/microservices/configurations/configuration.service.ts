@@ -10,7 +10,7 @@ import { invalideCache } from "../../utils/functions/invalidate-cache";
 @injectable()
 export class ConfigurationService {
   constructor(
-    private readonly configurationRepository: ConfigurationRepository
+    private readonly configurationRepository: ConfigurationRepository,
   ) {}
 
   async create(data: CreateConfigDTO) {
@@ -33,7 +33,10 @@ export class ConfigurationService {
         const target = (error.meta?.target as string[])?.join(", ");
         throw createError(409, `${target} already exists`);
       }
-      throw createError(500, `Failed to create config: ${error.message}`);
+      throw createError(
+        500,
+        `Failed to create config: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -42,7 +45,7 @@ export class ConfigurationService {
       const config = await this.findOne(configId);
       const updated = await this.configurationRepository.update(
         config.id,
-        data
+        data,
       );
       await ConfigService.refresh();
       return updated;
@@ -54,7 +57,10 @@ export class ConfigurationService {
         const target = (error.meta?.target as string[])?.join(", ");
         throw createError(409, `${target} already exists`);
       }
-      throw createError(500, `Failed to update config: ${error.message}`);
+      throw createError(
+        500,
+        `Failed to update config: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

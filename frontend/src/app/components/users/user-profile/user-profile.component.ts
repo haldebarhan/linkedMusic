@@ -34,11 +34,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   };
   completed: boolean = false;
   showButton = false;
-  constructor(private authService: ApiAuthService, private router: Router) {}
+  constructor(
+    private authService: ApiAuthService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.authService.getMe().subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.showButton = res.data.provider
           ? res.data.provider === 'password'
           : false;
@@ -46,7 +49,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.data.location = this.formatAddress(
           this.data.location,
           this.data.city,
-          this.data.country
+          this.data.country,
         );
         this.completProfile = {
           displayName: this.data.displayName,
@@ -59,7 +62,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           city: this.data.city,
         };
         this.completed = Object.values(this.completProfile).every(
-          (value) => value !== null
+          (value) => value !== null,
         );
       },
       error: (err) => {

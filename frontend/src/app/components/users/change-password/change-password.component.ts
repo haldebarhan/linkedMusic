@@ -27,20 +27,20 @@ export class ChangePasswordComponent implements OnInit {
   constructor(
     private authService: ApiAuthService,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {
     this.form = this.fb.group(
       {
         password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', [Validators.required]],
       },
-      { validators: passwordMatchValidator('password', 'confirmPassword') }
+      { validators: passwordMatchValidator('password', 'confirmPassword') },
     );
   }
 
   ngOnInit(): void {
     this.authService.getMe().subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.permitted = res.data.provider === 'password';
         if (!this.permitted) {
           this.router.navigate(['/users/profile']);

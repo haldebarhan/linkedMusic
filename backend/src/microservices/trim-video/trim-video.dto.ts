@@ -4,13 +4,13 @@ import { IsNumber } from "class-validator";
 export class TrimVideoDTO {
   @IsNumber({}, { message: "startTime is required" })
   @Type(() => Number)
-  startTime: number;
+  startTime!: number;
 
   @IsNumber({}, { message: "endTime is required" })
   @Type(() => Number)
-  endTime: number;
+  endTime!: number;
 
   @IsNumber({}, { message: "maxSizeMB is required" })
   @Type(() => Number)
-  maxSizeMB: number;
+  maxSizeMB!: number;
 }

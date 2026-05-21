@@ -34,12 +34,12 @@ export class SocketService {
         distinctUntilChanged(
           (prev, curr) =>
             prev.accessToken === curr.accessToken &&
-            prev.isAuthenticated === curr.isAuthenticated
-        )
+            prev.isAuthenticated === curr.isAuthenticated,
+        ),
       )
       .subscribe((state) => {
         const nextToken = state.isAuthenticated
-          ? state.accessToken ?? null
+          ? (state.accessToken ?? null)
           : null;
 
         if (!nextToken) {

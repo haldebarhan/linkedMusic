@@ -10,7 +10,7 @@ import {
 export class CreateContactRequestDTO {
   @IsInt()
   @IsNotEmpty({ message: "L'ID de l'annonce est requis" })
-  announcementId: number;
+  announcementId!: number;
 
   @IsString()
   @IsOptional()

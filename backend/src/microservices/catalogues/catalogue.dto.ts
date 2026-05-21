@@ -16,43 +16,43 @@ export class CreateCategoryDTO {
   @IsNotEmpty({ message: "Category name is required" })
   @IsString({ message: "Category name must be a string" })
   @MinLength(2, { message: "Category name must be at least 2 characters long" })
-  name: string;
+  name!: string;
 
   @IsNotEmpty({ message: "slug name is required" })
   @IsString({ message: "slug name must be a string" })
   @MinLength(2, { message: "slug name must be at least 2 characters long" })
-  slug: string;
+  slug!: string;
 }
 
 export class CreateServiceTypeDTO {
   @IsArray()
   @IsNumber({}, { message: "Category name must be a string", each: true })
-  categoryIds: number[];
+  categoryIds!: number[];
 
   @IsNotEmpty({ message: "name is required" })
   @IsString({ message: "name must be a string" })
   @MinLength(2, { message: "name must be at least 2 characters long" })
-  name: string;
+  name!: string;
 
   @IsNotEmpty({ message: "slug name is required" })
   @IsString({ message: "slug name must be a string" })
   @MinLength(2, { message: "slug name must be at least 2 characters long" })
-  slug: string;
+  slug!: string;
 }
 
 export class CreateFieldDto {
   @IsNotEmpty({ message: "key name is required" })
   @IsString({ message: "key name must be a string" })
   @MinLength(2, { message: "key name must be at least 2 characters long" })
-  key: string;
+  key!: string;
 
   @IsNotEmpty({ message: "label name is required" })
   @IsString({ message: "label name must be a string" })
   @MinLength(2, { message: "label name must be at least 2 characters long" })
-  label: string;
+  label!: string;
 
   @IsEnum(InputType, { message: "Invalid input type" })
-  inputType: InputType;
+  inputType!: InputType;
 
   @IsOptional()
   @IsNotEmpty({ message: "placeholder is required" })
@@ -89,12 +89,12 @@ export class CreateFieldOptionDto {
   @IsNotEmpty({ message: "label name is required" })
   @IsString({ message: "label name must be a string" })
   @MinLength(2, { message: "label name must be at least 2 characters long" })
-  label: string;
+  label!: string;
 
   @IsNotEmpty({ message: "value name is required" })
   @IsString({ message: "value name must be a string" })
   @MinLength(2, { message: "value name must be at least 2 characters long" })
-  value: string;
+  value!: string;
 
   @IsOptional()
   @IsNumber({}, { message: "order must be a number" })
@@ -105,22 +105,22 @@ export class AttachFieldsDTO {
   @IsArray({ message: "fields must be an array" })
   @ValidateNested({ each: true })
   @Type(() => AttachFieldDTO)
-  fields: AttachFieldDTO[];
+  fields!: AttachFieldDTO[];
 }
 
 export class AttachServicesDTO {
   @IsArray({ message: "services must be an array" })
   @ValidateNested({ each: true })
   @Type(() => AttachServicedDTO)
-  services: AttachServicedDTO[];
+  services!: AttachServicedDTO[];
 }
 
 export class AttachFieldDTO {
   @IsNumber({}, { message: "categoryId must be a number" })
-  categoryId: number;
+  categoryId!: number;
 
   @IsNumber({}, { message: "fieldId must be a number" })
-  fieldId: number;
+  fieldId!: number;
 
   @IsOptional()
   @IsBoolean({ message: "searchable must be a boolean" })
@@ -141,10 +141,10 @@ export class AttachFieldDTO {
 
 export class AttachServicedDTO {
   @IsNumber({}, { message: "categoryId must be a number" })
-  categoryId: number;
+  categoryId!: number;
 
   @IsNumber({}, { message: "fieldId must be a number" })
-  serviceTypeId: number;
+  serviceTypeId!: number;
 }
 
 // Update DTO

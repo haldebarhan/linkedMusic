@@ -13,10 +13,10 @@ import {
 
 export class CreatePlanDTO {
   @IsString({ message: "name is required" })
-  name: string;
+  name!: string;
 
   @IsEnum(PlanPeriod, { message: "period is required" })
-  period: PlanPeriod;
+  period!: PlanPeriod;
 
   @IsOptional()
   @IsNumber({}, { message: "priceCents must be number" })
@@ -33,7 +33,7 @@ export class CreatePlanDTO {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateBenefit)
-  benefits: CreateBenefit[];
+  benefits!: CreateBenefit[];
 }
 
 export class SubscribeOption {
@@ -89,12 +89,12 @@ export class CreateBenefit {
   code: string = generateRandomUUID();
 
   @IsString({ message: "label is required" })
-  label: string;
+  label!: string;
 }
 
 export class SubscribeDTO {
   @IsNumber({}, { message: "PlanId is required" })
-  planId: number;
+  planId!: number;
 
   @IsOptional()
   @Type(() => SubscribeOption)

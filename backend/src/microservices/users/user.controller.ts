@@ -10,6 +10,9 @@ import createError from "http-errors";
 import { saveFileToBucket } from "../../utils/functions/save-file";
 import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 import { ENV } from "../../config/env";
+import { FirebaseService } from "@/utils/services/firebase.service";
+
+const firebaseService = FirebaseService.getInstance();
 
 @injectable()
 export class UserController {
@@ -35,7 +38,7 @@ export class UserController {
   async activateAccount(req: Request, res: Response) {
     try {
       const { user, accessToken } = await this.userService.registerTempUser(
-        req.body
+        req.body,
       );
       res.cookie("access_token", accessToken, {
         httpOnly: true,
@@ -121,7 +124,7 @@ export class UserController {
       const updated = await this.userService.updateUser(
         userId,
         data,
-        result?.objectName
+        result?.objectName,
       );
       const response = formatResponse(200, updated);
       res.status(201).json(response);
@@ -167,7 +170,7 @@ export class UserController {
         sameSite: "strict",
         maxAge: 3600000,
       });
-      const response = formatResponse(200, { accessToken, user });
+      const response = formatResponse(200, { user, accessToken });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -186,9 +189,19 @@ export class UserController {
 
   async refreshToken(req: AuthenticatedRequest, res: Response) {
     try {
-      const token = req.token;
-      const user = req.user;
-      const response = formatResponse(200, { accessToken: token, user });
+      const token = req.cookies?.access_token;
+      if (!token) {
+        throw createError(401, "No token provided");
+      }
+      const decoded = await firebaseService.verifyIdToken(token);
+      const newAccessToken = await this.userService.refreshToken(decoded.uid);
+      res.cookie("access_token", newAccessToken, {
+        httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600 * 1000, // 1 heure
+      });
+      const response = formatResponse(200, { accessToken: newAccessToken });
       res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
@@ -224,7 +237,7 @@ export class UserController {
   async changePassword(req: AuthenticatedRequest, res: Response) {
     const data: ChangePasswordDTO = Object.assign(
       new ChangePasswordDTO(),
-      req.body
+      req.body,
     );
     const user = req.user;
     try {

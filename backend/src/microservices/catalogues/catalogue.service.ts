@@ -26,7 +26,7 @@ export class CatalogueService {
   async createCategory(data: CreateCategoryDTO) {
     try {
       return await this.catalogueRepository.createCategory(data);
-    } catch (error) {
+    } catch (error: any) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -82,7 +82,7 @@ export class CatalogueService {
     try {
       const category = await this.findCategory(id);
       return await this.catalogueRepository.updateCategory(category.id, data);
-    } catch (error) {
+    } catch (error: any) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -120,7 +120,7 @@ export class CatalogueService {
       //     )
       //   );
       return created;
-    } catch (error) {
+    } catch (error: any) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -180,14 +180,14 @@ export class CatalogueService {
             this.catalogueRepository.createFieldOption({
               ...opt,
               fieldId: newField.id,
-            })
-          )
+            }),
+          ),
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       throw createError(
         error.status,
-        `Failed to create field: ${error.message}`
+        `Failed to create field: ${error.message}`,
       );
     }
   }
@@ -214,7 +214,7 @@ export class CatalogueService {
                   value: o.value,
                   order: o.order,
                 },
-              })
+              }),
             );
           } else {
             // crée une nouvelle option rattachée au field
@@ -226,7 +226,7 @@ export class CatalogueService {
                   order: o.order,
                   field: { connect: { id } },
                 },
-              })
+              }),
             );
           }
         }
@@ -244,7 +244,7 @@ export class CatalogueService {
                 id: { in: idsToRemove },
                 fieldId: id,
               },
-            })
+            }),
           );
         }
       }
@@ -311,10 +311,10 @@ export class CatalogueService {
     try {
       await invalideCache("catalog*");
       return await this.catalogueRepository.createFieldOption(data);
-    } catch (error) {
+    } catch (error: any) {
       throw createError(
         error.status,
-        `Failed to create field option: ${error.message}`
+        `Failed to create field option: ${error.message}`,
       );
     }
   }
@@ -327,8 +327,8 @@ export class CatalogueService {
 
       const results = await Promise.allSettled(
         data.services.map((service) =>
-          this.catalogueRepository.attachServiceCategory(service)
-        )
+          this.catalogueRepository.attachServiceCategory(service),
+        ),
       );
 
       const successful = results.filter((r) => r.status === "fulfilled").length;
@@ -347,17 +347,17 @@ export class CatalogueService {
           successful,
           failed: failed.length,
           results: results.map((r) =>
-            r.status === "fulfilled" ? r.value : { error: r.reason.message }
+            r.status === "fulfilled" ? r.value : { error: r.reason.message },
           ),
         };
       }
 
       await invalideCache("catalog*");
       return results.map((r) => r);
-    } catch (error) {
+    } catch (error: any) {
       throw createError(
         error.status || 500,
-        `Failed to attach fields to service: ${error.message}`
+        `Failed to attach fields to service: ${error.message}`,
       );
     }
   }
@@ -369,8 +369,8 @@ export class CatalogueService {
 
       const results = await Promise.allSettled(
         data.fields.map((field) =>
-          this.catalogueRepository.attachFieldToCategory(field)
-        )
+          this.catalogueRepository.attachFieldToCategory(field),
+        ),
       );
 
       const successful = results.filter((r) => r.status === "fulfilled").length;
@@ -389,16 +389,16 @@ export class CatalogueService {
           successful,
           failed: failed.length,
           results: results.map((r) =>
-            r.status === "fulfilled" ? r.value : { error: r.reason.message }
+            r.status === "fulfilled" ? r.value : { error: r.reason.message },
           ),
         };
       }
 
       return results.map((r) => r);
-    } catch (error) {
+    } catch (error: any) {
       throw createError(
         error.status || 500,
-        `Failed to attach fields to service: ${error.message}`
+        `Failed to attach fields to service: ${error.message}`,
       );
     }
   }
@@ -408,12 +408,12 @@ export class CatalogueService {
       const { fieldId, categoryId } = data;
       return await this.catalogueRepository.detachFieldToCategory(
         categoryId,
-        fieldId
+        fieldId,
       );
-    } catch (error) {
+    } catch (error: any) {
       throw createError(
         error.status || 500,
-        `Failed to detach fields to service: ${error.message}`
+        `Failed to detach fields to service: ${error.message}`,
       );
     }
   }

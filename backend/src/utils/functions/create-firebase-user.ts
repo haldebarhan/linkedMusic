@@ -5,7 +5,7 @@ const firebaseService = FirebaseService.getInstance();
 export const createFirebaseUser = async (
   email: string,
   password: string,
-  name: string
+  name: string,
 ): Promise<string> => {
   try {
     const response = await firebaseService.createUser({
@@ -19,11 +19,11 @@ export const createFirebaseUser = async (
       throw createError(409, "User with that email already exists.");
     }
     return response.user.uid;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to create Firebase user: ${error.message}`, error);
     throw createError(
       error.code || 500,
-      `Failed to create Firebase user: ${error.message}`
+      `Failed to create Firebase user: ${error.message}`,
     );
   }
 };
@@ -31,25 +31,25 @@ export const createFirebaseUser = async (
 export const rollbackFirebaseUser = async (uid: string) => {
   try {
     await firebaseService.deleteUserAccount(uid);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to rollback Firebase user with uid: ${uid}`, error);
     throw createError(
       error.code,
-      `Failed to rollback Firebase user with uid: ${uid}`
+      `Failed to rollback Firebase user with uid: ${uid}`,
     );
   }
 };
 
 export const changeFirebaseUserPassword = async (
   uid: string,
-  password: string
+  password: string,
 ) => {
   try {
     return await firebaseService.changePassword(uid, password);
-  } catch (error) {
+  } catch (error: any) {
     throw createError(
       error.code,
-      `Error changing Firebase user password: ${error.message}`
+      `Error changing Firebase user password: ${error.message}`,
     );
   }
 };

@@ -26,13 +26,13 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   @MinLength(3)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
   @MaxLength(100)
-  slug: string;
+  slug!: string;
 
   @IsOptional()
   @IsString()
@@ -86,17 +86,17 @@ export class CreateFieldDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  key: string;
+  key!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(100)
-  label: string;
+  label!: string;
 
   @IsEnum(FieldInputType)
   @IsNotEmpty()
-  inputType: FieldInputType;
+  inputType!: FieldInputType;
 
   @IsOptional()
   @IsString()
@@ -265,19 +265,19 @@ export class UpdateFieldDto {
 export class CreateFieldOptionDto {
   @IsNumber()
   @IsNotEmpty()
-  fieldId: number;
+  fieldId!: number;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(100)
-  label: string;
+  label!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(100)
-  value: string;
+  value!: string;
 
   @IsOptional()
   @IsNumber()
@@ -322,17 +322,17 @@ export class UpdateFieldOptionDto {
 
 export class FieldOrder {
   @IsNumber({}, { message: "fieldId must be a number" })
-  fieldId: number;
+  fieldId!: number;
 
   @IsNumber({}, { message: "order must be a number" })
-  order: number;
+  order!: number;
 }
 
 export class ReorderCategoryFieldsDTO {
   @IsArray({ message: "fields must be an array" })
   @ValidateNested({ each: true })
   @Type(() => FieldOrder)
-  fields: FieldOrder[];
+  fields!: FieldOrder[];
 }
 
 // CATEGORY FIELD (RELATION) DTOS
@@ -342,17 +342,17 @@ export class LinkFieldsToCategoryDTO {
   @IsArray({ message: "fields must be an array" })
   @ValidateNested({ each: true })
   @Type(() => CreateCategoryFieldDto)
-  fields: CreateCategoryFieldDto[];
+  fields!: CreateCategoryFieldDto[];
 }
 
 export class CreateCategoryFieldDto {
   @IsNumber()
   @IsNotEmpty()
-  categoryId: number;
+  categoryId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  fieldId: number;
+  fieldId!: number;
 
   @IsOptional()
   @IsBoolean()
@@ -408,7 +408,7 @@ export class UpdateCategoryFieldDto {
 // ============================================================================
 
 export class FormSchemaResponseDto {
-  category: {
+  category!: {
     id: number;
     name: string;
     slug: string;
@@ -416,7 +416,7 @@ export class FormSchemaResponseDto {
     icon?: string;
   };
 
-  fields: Array<{
+  fields!: Array<{
     field: {
       id: number;
       key: string;

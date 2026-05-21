@@ -8,7 +8,7 @@ export class PaymentDTO {
   paymentMethod?: string;
 
   @IsNumber({}, { message: "planId is required" })
-  planId: number;
+  planId!: number;
 
   @IsOptional()
   @Type(() => SubscribeOption)
