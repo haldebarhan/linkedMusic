@@ -27,7 +27,7 @@ export class CategoryService {
     private readonly categoryRepository: CategoryRepository,
     private readonly fieldRepository: FieldRepository,
     private readonly fieldOptionRepository: FieldOptionRepository,
-    private readonly categoryFieldRepository: CategoryFieldRepository
+    private readonly categoryFieldRepository: CategoryFieldRepository,
   ) {}
 
   async getAllCategories(params: {
@@ -80,7 +80,7 @@ export class CategoryService {
       throw new AppError(
         ErrorCode.DUPLICATE,
         "Une catégorie avec ce slug existe déjà",
-        409
+        409,
       );
     }
     await Promise.all([
@@ -114,7 +114,7 @@ export class CategoryService {
 
   async reorderCategoryFields(
     categoryId: number,
-    dto: ReorderCategoryFieldsDTO
+    dto: ReorderCategoryFieldsDTO,
   ) {
     const category = await this.categoryRepository.findById(categoryId);
     if (!category)
@@ -122,7 +122,7 @@ export class CategoryService {
     const { fields } = dto;
     const newOrder = await this.categoryFieldRepository.reorderFields(
       categoryId,
-      fields
+      fields,
     );
     await Promise.all([
       invalideCache("catalog*"),
@@ -290,12 +290,12 @@ export class CategoryService {
         dto.fields.map(async (field) => {
           const check = await this.categoryFieldRepository.findCategoryField(
             field.categoryId,
-            field.fieldId
+            field.fieldId,
           );
           if (!check) {
             await this.categoryFieldRepository.create(field);
           }
-        })
+        }),
       );
       const successful = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.filter((r) => r.status === "rejected");
@@ -307,14 +307,14 @@ export class CategoryService {
           throw new AppError(
             ErrorCode.INTERNAL_ERROR,
             "All field attachments failed",
-            500
+            500,
           );
         }
         return {
           successful,
           failed: failed.length,
           results: results.map((r) =>
-            r.status === "fulfilled" ? r.value : { error: r.reason.message }
+            r.status === "fulfilled" ? r.value : { error: r.reason.message },
           ),
         };
       }
@@ -323,11 +323,11 @@ export class CategoryService {
         invalideCache("categories*"),
       ]);
       return results.map((r) => r);
-    } catch (error) {
+    } catch (error: any) {
       throw new AppError(
         ErrorCode.INTERNAL_ERROR,
         `Failed to attach fields to category: ${error.message}`,
-        error.status || 500
+        error.status || 500,
       );
     }
   }
@@ -338,7 +338,7 @@ export class CategoryService {
   async updateCategoryField(
     categoryId: number,
     fieldId: number,
-    dto: UpdateCategoryFieldDto
+    dto: UpdateCategoryFieldDto,
   ) {
     return this.categoryFieldRepository.update(categoryId, fieldId, dto);
   }

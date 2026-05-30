@@ -16,6 +16,7 @@ import hpp from "hpp";
 import authRoutes from "./api/auth/route";
 import adminRoutes from "./api/admin/route";
 import userRoutes from "./api/users/route";
+import publicRoutes from "./api/public/route";
 
 import { authSocketMiddleware } from "./middlewares/auth-socket.middleware";
 import { setupSocket } from "./sockets";
@@ -50,7 +51,11 @@ const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipForRateLImiter,
+  skip: (req: Request) =>
+    req.method === "OPTIONS" ||
+    req.path.startsWith("/socket.io") ||
+    req.path.startsWith("/api/auth") || // déjà géré par authLimiter
+    req.path.startsWith("/api/admin"), // déjà géré par adminLimiter
 });
 
 // Rate limiting spécifique pour l'authentification
@@ -76,21 +81,27 @@ const adminLimiter = rateLimit({
   skip: skipForRateLImiter,
 });
 
+const userLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 150,
+  skip: skipForRateLImiter,
+});
+
 class Server {
   public app: Application;
-  private httpServer: HTTPServer;
-  private io: IOServer;
+  private httpServer!: HTTPServer;
+  private io!: IOServer;
 
   constructor() {
     this.app = express();
     this.config();
     this.routes();
     this.setupErrorHandling();
-    startSubscriptionDailyCron();
-    startCheckSubscriptionStatus();
-    startAnnouncementHighlightedCron();
-    startUpgradeUsersBadge();
-    startAlertAdminJob();
+    // startSubscriptionDailyCron();
+    // startCheckSubscriptionStatus();
+    // startAnnouncementHighlightedCron();
+    // startUpgradeUsersBadge();
+    // startAlertAdminJob();
   }
 
   config() {
@@ -134,7 +145,7 @@ class Server {
         },
         referrerPolicy: { policy: "strict-origin-when-cross-origin" },
         hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-      })
+      }),
     );
     this.app.use((req, res, next) => {
       if (req.method === "OPTIONS") return res.sendStatus(204);
@@ -184,7 +195,7 @@ class Server {
         const webhookData = JSON.parse(rawBody.toString()) as WebhookEvent;
         await updatePayementStatus(webhookData);
         return res.status(200).send("OK");
-      }
+      },
     );
 
     this.app.get(
@@ -194,21 +205,22 @@ class Server {
         const FRONT_URL = ENV.FRONTEND_URL;
         const location = `${FRONT_URL.replace(
           /\/$/,
-          ""
+          "",
         )}/transactions/callback/return/${reference}`;
         return res.redirect(302, location);
-      }
+      },
     );
 
     this.app.use(
       "/api-docs",
       swaggerUi.serve,
-      swaggerUi.setup(swaggerOptions, { explorer: true })
+      swaggerUi.setup(swaggerOptions, { explorer: true }),
     );
 
-    this.app.use("/api", authRoutes);
-    this.app.use("/api/admin", adminRoutes);
-    this.app.use("/api/users", userRoutes);
+    this.app.use("/api", globalLimiter, publicRoutes);
+    this.app.use("/api/auth", authLimiter, authRoutes);
+    this.app.use("/api/admin", adminLimiter, adminRoutes);
+    this.app.use("/api/users", userLimiter, userRoutes);
 
     const distPath = path.join(
       __dirname,
@@ -217,10 +229,10 @@ class Server {
       "frontend",
       "dist",
       "frontend",
-      "browser"
+      "browser",
     );
 
-    this.app.use(express.static(distPath));
+    // this.app.use(express.static(distPath));
     this.app.use((req: Request, res: Response) => {
       if (
         req.path.startsWith("/api") ||
@@ -280,7 +292,7 @@ class Server {
                 timestamp: new Date().toISOString(),
               };
         res.status(500).json(payload);
-      }
+      },
     );
     const shouldExit = ENV.NODE_ENV === "production";
     process.on("unhandledRejection", (reason: any, p) => {

@@ -131,7 +131,7 @@ export class UserRepository extends BaseRepository<
 
   async update(
     id: number,
-    data: Partial<UpdateUserDTO> & { profileImage?: string; badge?: Badge }
+    data: Partial<UpdateUserDTO> & { profileImage?: string; badge?: Badge },
   ): Promise<User> {
     return prisma.user.update({
       where: { id },

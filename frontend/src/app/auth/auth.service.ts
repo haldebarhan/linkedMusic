@@ -10,6 +10,7 @@ import {
 import { fbAuth } from '../core/firebase';
 import { ApiAuthService } from './api-auth.service';
 import { UserUpdateService } from './user-update.service';
+import { JsonPipe } from '@angular/common';
 
 const STORAGE_KEY = 'app_auth_state_v1';
 
@@ -26,7 +27,7 @@ export class AuthService {
 
   constructor(
     private api: ApiAuthService,
-    private userUpdateService: UserUpdateService
+    private userUpdateService: UserUpdateService,
   ) {
     this.init();
     // Gérer le flow redirect (iOS/Safari)
@@ -44,7 +45,7 @@ export class AuthService {
   readonly isLoggedIn$ = this.auth$.pipe(map((s) => s.isAuthenticated));
 
   get token(): string | null {
-    return this._auth$.value.accessToken;
+    return null;
   }
 
   get snapshot() {
@@ -55,71 +56,47 @@ export class AuthService {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
-        this._auth$.next(JSON.parse(raw));
-      } catch {}
+        const savedState = JSON.parse(raw) as AuthState;
+        savedState.accessToken = null;
+        this._auth$.next(savedState);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
   }
 
+  // ====================== LOGIN ======================
+
   async loginWithPassword(email: string, password: string): Promise<void> {
-    const res = await firstValueFrom(
-      this.api.loginWithPassword({ email, password })
-    );
-    const state: AuthState = {
-      isAuthenticated: true,
-      user: res.data.user as AuthUser,
-      accessToken: res.data.accessToken,
-      source: 'password',
-    };
-    this.persist(state);
+    await firstValueFrom(this.api.loginWithPassword({ email, password }));
+    await this.loadCurrentUser('password');
   }
 
   async activateAccount(email: string, token: string): Promise<void> {
-    const res = await firstValueFrom(
-      this.api.activateAccount({ email, token })
-    );
-    const state: AuthState = {
-      isAuthenticated: true,
-      user: res.data.user as AuthUser,
-      accessToken: res.data.accessToken,
-      source: 'password',
-    };
-    this.persist(state);
+    await firstValueFrom(this.api.activateAccount({ email, token }));
+    await this.loadCurrentUser('password');
   }
+
+  // ====================== GOOGLE ======================
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(fbAuth, provider);
-
-    const idToken = await fbAuth.currentUser!.getIdToken();
-    const res = await firstValueFrom(this.api.socialVerify(idToken));
-
-    const state: AuthState = {
-      isAuthenticated: true,
-      user: res.data.user as AuthUser,
-      accessToken: res.data.accessToken ?? null,
-      source: 'google',
-    };
-    this.persist(state);
+    await this.handleGoogleAuthSuccess('google');
   }
 
   async registerWithGoogle() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(fbAuth, provider);
-    const idToken = await fbAuth.currentUser!.getIdToken();
-    const res = await firstValueFrom(this.api.registerWithGoogle(idToken));
-    const state: AuthState = {
-      isAuthenticated: true,
-      user: res.data.user as AuthUser,
-      accessToken: res.data.accessToken ?? null,
-      source: 'google',
-    };
-    this.persist(state);
+    await this.handleGoogleAuthSuccess('google');
   }
 
   async loginWithGoogleRedirect(): Promise<void> {
     const provider = new GoogleAuthProvider();
     await signInWithRedirect(fbAuth, provider);
   }
+
+  // ====================== USER DATA ======================
 
   async getMe() {
     return await firstValueFrom(this.api.getMe());
@@ -129,15 +106,13 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       await fbAuth.signOut();
+      await firstValueFrom(this.api.logout()); // Appel backend pour clear cookie
     } catch {}
-    this.persist({
-      isAuthenticated: false,
-      user: null,
-      accessToken: null,
-      source: null,
-    });
-    localStorage.removeItem(STORAGE_KEY);
+
+    this.clearAuthState();
   }
+
+  // ====================== UTILS ======================
 
   /** Mise à jour du profil en mémoire (ex: après édition) */
   patchUser(patch: Partial<AuthUser>): void {
@@ -165,6 +140,15 @@ export class AuthService {
     this.persist(next);
   }
 
+  setAuthenticated(user: AuthUser): void {
+    const current = this.snapshot;
+    this.persist({
+      ...current,
+      isAuthenticated: true,
+      user,
+    });
+  }
+
   async forgotPassword(email: string) {
     return await firstValueFrom(this.api.forgotPassword(email));
   }
@@ -176,5 +160,39 @@ export class AuthService {
   private persist(state: AuthState): void {
     this._auth$.next(state);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  private async loadCurrentUser(source: 'password' | 'google'): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.api.getMe());
+
+      const state: AuthState = {
+        isAuthenticated: true,
+        user: res.data as AuthUser,
+        accessToken: null,
+        source,
+      };
+
+      this.persist(state);
+    } catch (error) {
+      console.error('Failed to load user after login', error);
+      this.logout();
+    }
+  }
+
+  private async handleGoogleAuthSuccess(source: 'google') {
+    const idToken = await fbAuth.currentUser!.getIdToken();
+    await firstValueFrom(this.api.socialVerify(idToken)); // ou registerWithGoogle selon le cas
+    await this.loadCurrentUser(source);
+  }
+
+  private clearAuthState(): void {
+    this._auth$.next({
+      isAuthenticated: false,
+      user: null,
+      source: null,
+      accessToken: null,
+    });
+    localStorage.removeItem(STORAGE_KEY);
   }
 }

@@ -17,174 +17,96 @@ import authMiddleware from "../../middlewares/auth.middleware";
 import refreshTokenMiddleware from "../../middlewares/refresh-token";
 import uploads from "../../multer-config";
 import { firebaseMiddleware } from "../../middlewares/firebase.middleware";
-import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
 
-// Announcements
-router.get(
-  "/announcements/details/:id",
-  cache({ ttl: 86400, prefix: "announcements" }),
-  async (req: Request, res: Response) =>
-    authController.getAnnouncementDetails(req, res)
-);
-
-router.get(
-  "/announcements/search",
-  cache({ ttl: 86400, prefix: "announcements" }),
-  async (req: Request, res: Response) =>
-    authController.searchAnnouncement(req, res)
-);
-
-// Subscription plans
-
-router.get(
-  "/subscription-plans",
-  cache({ ttl: 86400, prefix: "subscription-plans" }),
-  async (req: Request, res: Response) =>
-    authController.findSubscriptionPlans(req, res)
-);
-
-router.get(
-  "/subscription-plans/:id",
-  cache({ ttl: 86400, prefix: "subscription-plans" }),
-  async (req: Request, res: Response) =>
-    authController.getSubscriptionPlan(req, res)
-);
-
 router.post(
-  "/auth/activate",
+  "/activate",
   ValidateDtoMiddleware(VerifyToken),
   async (req: Request, res: Response) =>
-    authController.activateAccount(req, res)
+    authController.activateAccount(req, res),
 );
 router.post(
-  "/auth/login",
+  "/login",
   ValidateDtoMiddleware(LoginDTO),
-  async (req: Request, res: Response) => authController.signIn(req, res)
+  async (req: Request, res: Response) => authController.signIn(req, res),
 );
 
-router.post("/auth/logout", async (req: AuthenticatedRequest, res: Response) =>
-  authController.logout(req, res)
+router.post("/logout", async (req: AuthenticatedRequest, res: Response) =>
+  authController.logout(req, res),
 );
 
 router.put(
-  "/auth/me/change-password",
+  "/me/change-password",
   ValidateDtoMiddleware(ChangePasswordDTO),
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.changePassword(req, res)
+    authController.changePassword(req, res),
 );
 
 router.put(
-  "/auth/me/close-account",
+  "/me/close-account",
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.closeAccount(req, res)
+    authController.closeAccount(req, res),
 );
 
 router.put(
-  "/auth/me/update-profile",
+  "/me/update-profile",
   uploads.single("profileImage"),
   ValidateDtoMiddleware(UpdateUserDTO),
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.updateProfile(req, res)
+    authController.updateProfile(req, res),
 );
 
 router.post(
-  "/auth/forgot-password",
+  "/forgot-password",
   ValidateDtoMiddleware(ForgotPasswordDTO),
-  async (req: Request, res: Response) => authController.forgotPassword(req, res)
+  async (req: Request, res: Response) =>
+    authController.forgotPassword(req, res),
 );
 
 router.post(
-  "/auth/reset-password",
+  "/reset-password",
   ValidateDtoMiddleware(ResetPasswordDTO),
-  async (req: Request, res: Response) => authController.resetPassword(req, res)
+  async (req: Request, res: Response) => authController.resetPassword(req, res),
 );
 
 router.post(
-  "/auth/refresh",
-  refreshTokenMiddleware,
+  "/refresh",
+  //   refreshTokenMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.refreshToken(req, res)
+    authController.refreshToken(req, res),
 );
 
 router.post(
-  "/auth/register",
+  "/register",
   uploads.single("profileImage"),
   ValidateDtoMiddleware(CreateUserDTO),
-  async (req: Request, res: Response) => authController.signUp(req, res)
+  async (req: Request, res: Response) => authController.signUp(req, res),
 );
 
 router.post(
-  "/auth/register/social",
+  "/register/social",
   firebaseMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.registerWithGoogle(req, res)
+    authController.registerWithGoogle(req, res),
 );
 
 router.post(
-  "/auth/social/verify",
+  "/social/verify",
   firebaseMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.socialLogin(req, res)
+    authController.socialLogin(req, res),
 );
 
 router.get(
-  "/auth/me",
+  "/me",
   authMiddleware,
   async (req: AuthenticatedRequest, res: Response) =>
-    authController.getMe(req, res)
-);
-
-router.get(
-  "/banner-slides",
-  cache({ ttl: 86400, prefix: "banner-slides" }),
-  async (req: Request, res: Response) =>
-    authController.findActiveSlides(req, res)
-);
-
-router.get(
-  "/catalog/categories/:category/filters",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) =>
-    authController.getFilterSchema(req, res)
-);
-
-router.get(
-  "/catalog/categories",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) => authController.listCategories(req, res)
-);
-
-router.get(
-  "/catalog/categories/:id",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) => authController.findCategory(req, res)
-);
-
-router.get(
-  "/catalog/service-types",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) =>
-    authController.listServiceTypes(req, res)
-);
-
-// Categories
-router.get(
-  "/categories",
-  cache({ ttl: 86400, prefix: "categories" }),
-  async (req: Request, res: Response) => authController.getCategories(req, res)
-);
-
-router.get(
-  "/categories/:slug",
-  cache({ ttl: 86400, prefix: "categories" }),
-  async (req: Request, res: Response) =>
-    authController.getCategoryBySlug(req, res)
+    authController.getMe(req, res),
 );
 
 export default router;

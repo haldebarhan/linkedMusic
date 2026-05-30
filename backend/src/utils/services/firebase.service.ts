@@ -1,5 +1,4 @@
 import * as firebase from "firebase-admin";
-import { UserRecord } from "firebase-admin/lib/auth/user-record";
 import createError from "http-errors";
 import axios from "axios";
 
@@ -12,6 +11,7 @@ import {
 } from "firebase/auth";
 import { ENV } from "../../config/env";
 import logger from "../../config/logger";
+import { UserRecord } from "firebase-admin/auth";
 
 const firebaseClientApp = initClientApp({
   apiKey: ENV.FIREBASE_API_KEY!,
@@ -25,7 +25,7 @@ export class FirebaseService {
     if (firebase.app.length > 0) {
       firebase.initializeApp({
         credential: firebase.credential.cert(
-          JSON.parse(ENV.FIREBASE_SERVICE_ACCOUNT)
+          JSON.parse(ENV.FIREBASE_SERVICE_ACCOUNT),
         ),
       });
     }
@@ -34,7 +34,7 @@ export class FirebaseService {
   async verifyIdToken(token: string): Promise<any> {
     try {
       return await firebase.auth().verifyIdToken(token);
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Error verifying token: " + error.message);
     }
   }
@@ -42,7 +42,7 @@ export class FirebaseService {
   async users(): Promise<any> {
     try {
       return await firebase.auth().listUsers();
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Error listing users: " + error.message);
     }
   }
@@ -51,14 +51,14 @@ export class FirebaseService {
     try {
       const userCredential = await signInWithCustomToken(
         firebaseAuthClient,
-        token
+        token,
       );
       const idToken = await userCredential?.user?.getIdToken();
       if (!idToken) {
         throw createError(500, "Impossible de générer l'idToken.");
       }
       return { userCredential, idToken };
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Error signing in with custom token: " + error.message);
     }
   }
@@ -67,13 +67,13 @@ export class FirebaseService {
     try {
       await firebase.auth().setCustomUserClaims(uid, { role });
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       return { error, success: false };
     }
   }
 
   async findUserByEmail(
-    email: string
+    email: string,
   ): Promise<{ success: boolean; user?: UserRecord; error?: any }> {
     try {
       const user = await firebase.auth().getUserByEmail(email);
@@ -95,7 +95,7 @@ export class FirebaseService {
   async updateUser(uid: string, user: any): Promise<any> {
     try {
       return await firebase.auth().updateUser(uid, user);
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Error updating user: " + error.message);
     }
   }
@@ -110,7 +110,7 @@ export class FirebaseService {
   }
 
   async createUser(
-    data: any
+    data: any,
   ): Promise<{ user?: UserRecord; success: boolean; error?: any }> {
     try {
       const user = await firebase.auth().createUser(data);
@@ -179,17 +179,17 @@ export class FirebaseService {
     try {
       const response = await firebase.messaging().send(message);
       logger.info(`✅ Notification envoyée avec succès :`, response);
-    } catch (error) {
+    } catch (error: any) {
       logger.error(
         `❌ Erreur lors de l'envoi de la notification :`,
-        error.message
+        error.message,
       );
     }
   }
 
   async changePassword(
     uid: string,
-    password: string
+    password: string,
   ): Promise<{ success: boolean; user?: UserRecord; error?: any }> {
     try {
       const user = await firebase.auth().updateUser(uid, { password });
@@ -200,7 +200,7 @@ export class FirebaseService {
   }
 
   async signInWithUid(
-    uid: string
+    uid: string,
   ): Promise<{ customToken?: string; success: boolean; error?: any }> {
     try {
       const customToken = await firebase.auth().createCustomToken(uid);
@@ -211,7 +211,7 @@ export class FirebaseService {
   }
 
   async exchangeCustomTokenForIdToken(
-    customToken: string
+    customToken: string,
   ): Promise<{ idToken: string }> {
     try {
       const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${ENV.FIREBASE_API_KEY}`;
@@ -222,14 +222,14 @@ export class FirebaseService {
 
       const { idToken } = response.data;
       return { idToken };
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Error exchanging custom token: " + error.message);
     }
   }
 
   async LoginUserWithEmailAndPassword(
     email: string,
-    password: string
+    password: string,
   ): Promise<{
     userCredential?: any;
     idToken?: string;
@@ -240,7 +240,7 @@ export class FirebaseService {
       const userCredential = await signInWithEmailAndPassword(
         firebaseAuthClient,
         email,
-        password
+        password,
       );
       const idToken = await userCredential?.user?.getIdToken();
       if (!idToken) {
@@ -258,7 +258,7 @@ export class FirebaseService {
       throw createError(500, "Login Error");
 
     const token = await this.exchangeCustomTokenForIdToken(
-      credentials.customToken
+      credentials.customToken,
     );
     return token.idToken;
   }
@@ -266,7 +266,7 @@ export class FirebaseService {
   async logout() {
     try {
       await signOut(firebaseAuthClient);
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Erreur lors de la déconnexion :", error);
       throw createError(500, "Erreur lors de la déconnexion :", error);
     }
@@ -274,8 +274,13 @@ export class FirebaseService {
 
   async setCustomUserClaims(
     uid: string,
-    claims: { userAgent: string; ip: string }
+    claims: { userAgent: string; ip: string },
   ) {
     await firebase.auth().setCustomUserClaims(uid, claims);
+  }
+
+  async generateIdToken(uid: string): Promise<string> {
+    const customToken = await firebase.auth().createCustomToken(uid);
+    return customToken;
   }
 }

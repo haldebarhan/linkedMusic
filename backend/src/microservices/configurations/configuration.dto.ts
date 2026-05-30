@@ -2,15 +2,15 @@ import { IsIn, IsOptional, IsString } from "class-validator";
 
 export class CreateConfigDTO {
   @IsString({ message: "key is required" })
-  key: string;
+  key!: string;
 
   @IsString({ message: "value is required" })
-  value: string;
+  value!: string;
 
   @IsIn(["string", "number", "boolean", "object"], {
     message: "type must be one of: string, number, boolean, object",
   })
-  type: "string" | "number" | "boolean" | "object";
+  type!: "string" | "number" | "boolean" | "object";
 }
 
 export class UpdateConfigDTO {

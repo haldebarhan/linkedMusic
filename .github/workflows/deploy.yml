@@ -1,0 +1,48 @@
+name: Deploy Zikmuzik
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (pour avoir le contexte)
+        uses: actions/checkout@v4
+
+      - name: Déploiement SSH sur VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            echo "→ Pull du code"
+            cd ~/projects/linkedMusic
+            git pull origin main
+
+            echo "→ Build frontend"
+            cd frontend
+            npm ci
+            npx ng build --configuration production
+
+            echo "→ Build backend"
+            cd ../backend
+            pnpm install --frozen-lockfile
+            pnpm build
+
+            echo "→ Déploiement fichiers statiques"
+            rm -rf /var/www/zikmuzik/browser/*
+            cp -r ~/projects/linkedMusic/frontend/dist/frontend/browser/* /var/www/zikmuzik/browser/
+            chown -R www-data:www-data /var/www/zikmuzik/browser
+            chmod -R 755 /var/www/zikmuzik/browser
+
+            echo "→ Reload services"
+            sudo nginx -s reload
+            pm2 restart zikmuzik-backend

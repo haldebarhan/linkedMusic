@@ -11,7 +11,6 @@ import {
 } from "./user.dto";
 import { FirebaseService } from "../../utils/services/firebase.service";
 import { Prisma, Status, User } from "@prisma/client";
-import { UserRecord } from "firebase-admin/lib/auth/user-record";
 import createError from "http-errors";
 import { ENV } from "../../config/env";
 import {
@@ -24,6 +23,7 @@ import { Order } from "../../utils/enums/order.enum";
 import { S3Service } from "../../utils/services/s3.service";
 import { Badge } from "../../utils/enums/badge.enum";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { UserRecord } from "firebase-admin/auth";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: S3Service = S3Service.getInstance();
@@ -33,7 +33,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly tokenService: TokenService,
-    private readonly mailService: BrevoMailService
+    private readonly mailService: BrevoMailService,
   ) {}
 
   async createUser(data: CreateUserDTO, profileImage: string) {
@@ -81,13 +81,13 @@ export class UserService {
       const user = await this.userRepository.create({ ...createData });
       user.profileImage = await minioService.generatePresignedUrl(
         ENV.AWS_S3_DEFAULT_BUCKET,
-        user.profileImage
+        user.profileImage,
       );
       const accessToken = await firebaseService.loginWithUid(user.uid);
       const userData = { ...user };
       await invalideCache("users*");
       return { user: userData, accessToken };
-    } catch (error) {
+    } catch (error: any) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -135,7 +135,7 @@ export class UserService {
     if (!user) throw createError(404, "user not found");
     user.profileImage = await minioService.generatePresignedUrl(
       ENV.AWS_S3_DEFAULT_BUCKET,
-      user.profileImage
+      user.profileImage,
     );
     return user;
   }
@@ -168,7 +168,7 @@ export class UserService {
 
   async login(
     credentials: LoginDTO,
-    claims: { userAgent: string; ip: string }
+    claims: { userAgent: string; ip: string },
   ) {
     const { email, password } = credentials;
 
@@ -206,7 +206,7 @@ export class UserService {
       user.profileImage = user.profileImage
         ? await minioService.generatePresignedUrl(
             ENV.AWS_S3_DEFAULT_BUCKET,
-            user.profileImage
+            user.profileImage,
           )
         : "";
 
@@ -251,14 +251,14 @@ export class UserService {
       ? user.picture
       : await minioService.generatePresignedUrl(
           ENV.AWS_S3_DEFAULT_BUCKET,
-          authUser.profileImage
+          authUser.profileImage,
         );
     return authUser;
   }
 
   async registerWithGoogle(
     user: any,
-    claims: { userAgent: string; ip: string }
+    claims: { userAgent: string; ip: string },
   ) {
     try {
       const exists = await this.userRepository.findByParams({
@@ -281,7 +281,7 @@ export class UserService {
       if (exists) throw createError(409, "User with email already exist");
       const createdUser = await this.userRepository.create({ ...createData });
       return createdUser;
-    } catch (error) {
+    } catch (error: any) {
       throw createError(500, `Failed to create user: ${error.message}`);
     }
   }
@@ -292,7 +292,7 @@ export class UserService {
 
     const token = this.tokenService.generateResetPasswordToken(
       user.id,
-      user.email
+      user.email,
     );
     const link = `${ENV.FRONTEND_URL}/auth/reset-password?token=${token}`;
 
@@ -351,7 +351,7 @@ export class UserService {
 
     const profileImageUrl = await minioService.generatePresignedUrl(
       ENV.AWS_S3_DEFAULT_BUCKET,
-      user.profileImage
+      user.profileImage,
     );
 
     return { ...user, profileImage: profileImageUrl };
@@ -359,7 +359,7 @@ export class UserService {
 
   private validateUserNotExists(
     fbUser: UserRecord | undefined,
-    dbUserWithEmail: User | null
+    dbUserWithEmail: User | null,
   ): void {
     if (!fbUser && !dbUserWithEmail) return;
 
@@ -368,7 +368,7 @@ export class UserService {
 
     throw createError(
       409,
-      `Ces données sont deja utilisées: ${conflicts.join(" et ")}`
+      `Ces données sont deja utilisées: ${conflicts.join(" et ")}`,
     );
   }
 
@@ -417,7 +417,7 @@ export class UserService {
   private async checkPhoneOrUsernameConflicts(
     phone: string,
     displayName: string,
-    userId: number
+    userId: number,
   ): Promise<void> {
     if (!phone && !displayName) return;
 
@@ -435,5 +435,13 @@ export class UserService {
     if (userWithUsername) conflicts.push("Username");
 
     throw createError(409, `Already in use: ${conflicts.join(" and ")}`);
+  }
+
+  async refreshToken(uid: string): Promise<string> {
+    try {
+      return await firebaseService.generateIdToken(uid); // tu peux créer cette méthode
+    } catch (error: any) {
+      throw createError(401, "Session expirée");
+    }
   }
 }

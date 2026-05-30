@@ -88,46 +88,51 @@ export class Jeko {
     } catch (error) {
       console.error("❌ ERREUR createPaymentLink:", error);
 
-      if (error.response) {
-        return {
-          success: false,
-          paymentUrl: null,
-          transactionId: null,
-          error: {
-            status: error.response.status,
-            message: error.response.data?.message || "Erreur API",
-            details: error.response.data,
-          },
-          raw: error.response.data,
-        };
-      } else if (error.request) {
-        console.error("🌐 Pas de réponse:", error.request);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          return {
+            success: false,
+            paymentUrl: null,
+            transactionId: null,
+            error: {
+              status: error.response.status,
+              message: error.response.data?.message || "Erreur API",
+              details: error.response.data,
+            },
+            raw: error.response.data,
+          };
+        }
 
-        return {
-          success: false,
-          paymentUrl: null,
-          transactionId: null,
-          error: {
-            status: 0,
-            message: "Pas de réponse du serveur",
-            details: "Timeout ou problème réseau",
-          },
-          raw: null,
-        };
-      } else {
-        console.error("🐛 Erreur inattendue:", error.message);
-        return {
-          success: false,
-          paymentUrl: null,
-          transactionId: null,
-          error: {
-            status: -1,
-            message: error.message || "Erreur inconnue",
-            details: error,
-          },
-          raw: null,
-        };
+        if (error.request) {
+          console.error("🌐 Pas de réponse:", error.request);
+
+          return {
+            success: false,
+            paymentUrl: null,
+            transactionId: null,
+            error: {
+              status: 0,
+              message: "Pas de réponse du serveur",
+              details: "Timeout ou problème réseau",
+            },
+            raw: null,
+          };
+        }
       }
+
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
+      console.error("🐛 Erreur inattendue:", message);
+      return {
+        success: false,
+        paymentUrl: null,
+        transactionId: null,
+        error: {
+          status: -1,
+          message,
+          details: error,
+        },
+        raw: null,
+      };
     }
   }
 

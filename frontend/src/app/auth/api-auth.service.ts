@@ -10,12 +10,14 @@ export class ApiAuthService {
 
   constructor(private http: HttpClient) {}
 
+  // ==================== AUTH ====================
+
   loginWithPassword(payload: { email: string; password: string }) {
     return this.http.post<{
       statusCode: number;
       timestamp: string;
       data: { accessToken: string; user: AuthUser };
-    }>(`${this.API_URL}/auth/login`, payload);
+    }>(`${this.API_URL}/auth/login`, payload, { withCredentials: true });
   }
 
   register(formData: FormData) {
@@ -31,26 +33,28 @@ export class ApiAuthService {
       statusCode: number;
       timestamp: string;
       data: { accessToken: string; user: AuthUser };
-    }>(`${this.API_URL}/auth/activate`, payload);
+    }>(`${this.API_URL}/auth/activate`, payload, { withCredentials: true });
   }
 
-  refreshToken(): Observable<{ token: string }> {
-    // Le header Authorization est ajouté par l’interceptor avec l'ancien token
-    return this.http.post<{ token: string }>(
-      `${this.API_URL}/auth/refresh`,
-      {}
-    );
+  refreshToken() {
+    return this.http.post<{
+      statusCode: number;
+      timestamp: string;
+      data: any;
+    }>(`${this.API_URL}/auth/refresh`, {}, { withCredentials: true });
   }
+
+  // ==================== GOOGLE ====================
 
   socialVerify(idToken: string) {
     return this.http.post<{
       statusCode: number;
       timestamp: string;
-      data: { accessToken: string; user: AuthUser };
+      data: { user: AuthUser };
     }>(
-      `${environment.apiUrl}/auth/social/verify`,
-      {},
-      { headers: { Authorization: `Bearer ${idToken}` } }
+      `${this.API_URL}/auth/social/verify`,
+      { idToken },
+      { withCredentials: true },
     );
   }
 
@@ -58,11 +62,11 @@ export class ApiAuthService {
     return this.http.post<{
       statusCode: number;
       timestamp: string;
-      data: { accessToken: string; user: AuthUser };
+      data: { user: AuthUser };
     }>(
-      `${environment.apiUrl}/auth/register/social`,
-      {},
-      { headers: { Authorization: `Bearer ${idToken}` } }
+      `${this.API_URL}/auth/register/social`,
+      { idToken },
+      { withCredentials: true },
     );
   }
 
@@ -70,31 +74,39 @@ export class ApiAuthService {
     return this.http.get<{
       statusCode: number;
       timestamp: string;
-      data: any;
-    }>(`${environment.apiUrl}/auth/me`);
-  }
-
-  changePassword(password: string) {
-    return this.http.put<{
-      statusCode: number;
-      timestamp: string;
-      data: any;
-    }>(`${environment.apiUrl}/auth/me/change-password`, { password });
+      data: AuthUser;
+    }>(`${this.API_URL}/auth/me`, { withCredentials: true });
   }
 
   forgotPassword(email: string) {
-    return this.http.post<{
-      statusCode: number;
-      timestamp: string;
-      data: any;
-    }>(`${environment.apiUrl}/auth/forgot-password`, { email });
+    return this.http.post(
+      `${this.API_URL}/auth/forgot-password`,
+      { email },
+      { withCredentials: true },
+    );
   }
 
   resetPassword(password: string, token: string) {
-    return this.http.post<{
-      statusCode: number;
-      timestamp: string;
-      data: any;
-    }>(`${environment.apiUrl}/auth/reset-password`, { password, token });
+    return this.http.post(
+      `${this.API_URL}/auth/reset-password`,
+      { password, token },
+      { withCredentials: true },
+    );
+  }
+
+  changePassword(password: string) {
+    return this.http.put(
+      `${this.API_URL}/auth/me/change-password`,
+      { password },
+      { withCredentials: true },
+    );
+  }
+
+  logout() {
+    return this.http.post(
+      `${this.API_URL}/auth/logout`,
+      {},
+      { withCredentials: true },
+    );
   }
 }

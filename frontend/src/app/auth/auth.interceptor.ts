@@ -15,61 +15,47 @@ import { AuthService } from './auth.service';
 export class AuthInterceptor implements HttpInterceptor {
   constructor(
     private refreshSvc: RefreshTokenService,
-    private authSvc: AuthService
+    private authSvc: AuthService,
   ) {}
 
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
-    // Endpoints où on N'ENVOIE PAS le token (car l'utilisateur n'en a pas encore)
-    const noTokenEndpoints = [
-      '/auth/login',
-      '/auth/register',
-      '/auth/activate',
-      '/auth/social',
-    ];
+    const isAuthEndpoint = req.url.includes('/auth/');
+    const isRefreshRequest = req.url.includes('/auth/refresh');
+    let authReq = req;
 
-    // Vérifier si c'est un endpoint sans token
-    const isNoTokenEndpoint = noTokenEndpoints.some((endpoint) =>
-      req.url.includes(endpoint)
-    );
+    if (!req.withCredentials) {
+      authReq = req.clone({ withCredentials: true });
+    }
 
-    // Vérifier si c'est une requête de refresh
-    const isRefreshEndpoint = req.url.includes('/auth/refresh');
-
-    // Récupérer le token actuel
-    const accessToken = this.authSvc.token;
-
-    // Ajouter le token à TOUTES les requêtes sauf celles dans noTokenEndpoints
-    // ⚠️ IMPORTANT : On ENVOIE le token pour /auth/refresh (le backend en a besoin)
-    const authReq =
-      accessToken && !isNoTokenEndpoint
-        ? req.clone({
-            setHeaders: { Authorization: `Bearer ${accessToken}` },
-          })
-        : req;
-
-    // Envoyer la requête et gérer les erreurs 401
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Si erreur 401 et que ce n'est PAS déjà une requête de refresh
-        // (pour éviter la boucle infinie)
-        if (error.status === 401 && !req.url.includes('/auth/refresh')) {
-          return this.refreshSvc.refreshToken().pipe(
-            switchMap((newToken) => {
-              // Retry avec le nouveau token
-              const retryReq = req.clone({
-                setHeaders: { Authorization: `Bearer ${newToken}` },
-              });
-              return next.handle(retryReq);
-            })
-          );
+        // Si on reçoit 401 et que ce n'est pas déjà une tentative de refresh
+        if (error.status === 401 && !isRefreshRequest) {
+          return this.handle401Error(authReq, next);
         }
 
-        // Pour toutes les autres erreurs, les propager
         return throwError(() => error);
-      })
+      }),
+    );
+  }
+
+  private handle401Error(
+    req: HttpRequest<any>,
+    next: HttpHandler,
+  ): Observable<HttpEvent<any>> {
+    return this.refreshSvc.refreshToken().pipe(
+      switchMap(() => {
+        // On réessaie la requête originale après refresh
+        return next.handle(req.clone({ withCredentials: true }));
+      }),
+      catchError((refreshError) => {
+        // Si le refresh échoue → déconnexion
+        this.authSvc.logout();
+        return throwError(() => refreshError);
+      }),
     );
   }
 }

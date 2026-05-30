@@ -22,8 +22,8 @@ const toBool = (v: any) =>
   v === true || v === "true"
     ? true
     : v === false || v === "false"
-    ? false
-    : undefined;
+      ? false
+      : undefined;
 const toNum = (v: any) =>
   v === "" || v === null || v === undefined ? undefined : Number(v);
 const parseJSON = (v: any) => {
@@ -46,7 +46,7 @@ export class FieldValueDto {
   @IsNumber()
   @IsNotEmpty()
   @Transform(({ value }) => toNum(value))
-  fieldId: number;
+  fieldId!: number;
 
   @IsOptional()
   @IsString()
@@ -86,7 +86,7 @@ export class CreateAnnouncementDto {
   @IsNotEmpty()
   @MinLength(5, { message: "Le titre doit contenir au moins 5 caractères" })
   @MaxLength(100, { message: "Le titre ne peut pas dépasser 100 caractères" })
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -96,12 +96,12 @@ export class CreateAnnouncementDto {
   @MaxLength(2000, {
     message: "La description ne peut pas dépasser 2000 caractères",
   })
-  description: string;
+  description!: string;
 
   @IsNotEmpty({ message: "La catégorie est obligatoire" })
   @IsNumber({})
   @Transform(({ value }) => toNum(value))
-  categoryId: number;
+  categoryId!: number;
 
   @IsOptional()
   @IsNumber()
@@ -162,12 +162,12 @@ export class CreateAnnouncementDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => FieldValueDto)
-  fieldValues: FieldValueDto[];
+  fieldValues!: FieldValueDto[];
 }
 
 export class likeAnnouncementDTO {
   @IsNumber({}, { message: "announcementId must be number" })
-  announcementId: number;
+  announcementId!: number;
 }
 
 // ============================================================================
@@ -326,36 +326,36 @@ export class AnnouncementQueryDto {
 // ============================================================================
 
 export class AnnouncementResponseDto {
-  id: number;
-  title: string;
-  description: string;
+  id!: number;
+  title!: string;
+  description!: string;
   price?: number;
   priceUnit?: string;
-  negotiable: boolean;
+  negotiable!: boolean;
   location?: string;
   country?: string;
   city?: string;
-  images: string[];
-  videos: string[];
-  audios: string[];
-  status: AnnouncementStatus;
-  isPublished: boolean;
-  isHighlighted: boolean;
-  views: number;
-  createdAt: Date;
-  updatedAt: Date;
+  images!: string[];
+  videos!: string[];
+  audios!: string[];
+  status!: AnnouncementStatus;
+  isPublished!: boolean;
+  isHighlighted!: boolean;
+  views!: number;
+  createdAt!: Date;
+  updatedAt!: Date;
   publishedAt?: Date;
   expiresAt?: Date;
 
   // Relations
-  category: {
+  category!: {
     id: number;
     name: string;
     slug: string;
     icon?: string;
   };
 
-  owner: {
+  owner!: {
     id: number;
     displayName?: string;
     profileImage?: string;
@@ -363,7 +363,7 @@ export class AnnouncementResponseDto {
     badge: string;
   };
 
-  fieldValues: Array<{
+  fieldValues!: Array<{
     field: {
       key: string;
       label: string;

@@ -33,7 +33,7 @@ const fetchCerts = async () => {
 const refreshTokenMiddleware = async (
   req: AuthenticatedRequest,
   res: any,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userAgent = req.get("user-agent");
@@ -55,7 +55,7 @@ const refreshTokenMiddleware = async (
 
     // Parse header pour kid
     const header = JSON.parse(
-      Buffer.from(token.split(".")[0], "base64").toString()
+      Buffer.from(token.split(".")[0], "base64").toString(),
     );
     const kid = header.kid;
     if (!kid || !certsMap[kid]) {
@@ -90,7 +90,7 @@ const refreshTokenMiddleware = async (
     req.token = await firebaseService.loginWithUid(user.uid);
     req.user = user;
     next();
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Authentication Error:", error);
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Invalid token signature" });
