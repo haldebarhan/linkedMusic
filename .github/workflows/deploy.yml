@@ -23,7 +23,14 @@ jobs:
           script_stop: true
           script: |
             set -e
+            # charge nvm et pnpm pour une session non interactive
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+            export PNPM_HOME="$HOME/.local/share/pnpm"
+            export PATH="$PNPM_HOME:$PATH"
+            echo "Node: $(node -v) - NPM: $(npm -v) - PNPM: $(pnpm -v)"
             echo "→ Pull du code"
+
             cd ~/projects/linkedMusic
             git pull origin main
 
