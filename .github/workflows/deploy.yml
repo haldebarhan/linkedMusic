@@ -45,10 +45,10 @@ jobs:
             pnpm build
 
             echo "→ Déploiement fichiers statiques"
-            rm -rf /var/www/zikmuzik/browser/*
-            cp -r ~/projects/linkedMusic/frontend/dist/frontend/browser/* /var/www/zikmuzik/browser/
-            chown -R www-data:www-data /var/www/zikmuzik/browser
-            chmod -R 755 /var/www/zikmuzik/browser
+            sudo rm -rf /var/www/zikmuzik/browser/*
+            sudo cp -r ~/projects/linkedMusic/frontend/dist/frontend/browser/* /var/www/zikmuzik/browser/
+            sudo chown -R www-data:www-data /var/www/zikmuzik/browser
+            sudo chmod -R 755 /var/www/zikmuzik/browser
 
             echo "→ Reload services"
             sudo nginx -s reload
