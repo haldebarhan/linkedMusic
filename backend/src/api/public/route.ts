@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { container } from "tsyringe";
 import { AuthController } from "../auth/controller";
-import { cache } from "@/middlewares/cache.middleware";
+import { cache } from "../../middlewares/cache.middleware";
 
 const router: Router = Router();
 const authController = container.resolve(AuthController);
