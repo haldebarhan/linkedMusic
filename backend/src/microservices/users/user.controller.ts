@@ -10,7 +10,7 @@ import createError from "http-errors";
 import { saveFileToBucket } from "../../utils/functions/save-file";
 import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 import { ENV } from "../../config/env";
-import { FirebaseService } from "@/utils/services/firebase.service";
+import { FirebaseService } from "../../utils/services/firebase.service";
 
 const firebaseService = FirebaseService.getInstance();
 
