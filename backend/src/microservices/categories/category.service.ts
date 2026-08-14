@@ -20,6 +20,7 @@ import {
 } from "./category.dto";
 import { Order } from "../../utils/enums/order.enum";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class CategoryService {
@@ -32,30 +33,18 @@ export class CategoryService {
 
   async getAllCategories(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.categoryRepository.findAll({
+    const { limit, cursor, order, where } = params;
+    const rows = await this.categoryRepository.findAll({
         where,
-        orderBy: { updatedAt: order },
-        take: limit,
-        skip,
-      }),
-      this.categoryRepository.count(where),
-    ]);
-
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.ceil(total / limit),
-      },
-    };
+        orderBy: { id: order },
+        take: limit + 1,
+        cursor,
+      });
+    return cursorPage(rows, limit);
   }
 
   async getCategoryBySlug(slug: string) {

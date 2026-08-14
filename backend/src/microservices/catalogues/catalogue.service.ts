@@ -16,6 +16,7 @@ import { Order } from "../../utils/enums/order.enum";
 import { Prisma, PrismaClient } from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -38,137 +39,12 @@ export class CatalogueService {
     }
   }
 
-  async listCategories(params: {
-    limit: number;
-    page: number;
-    order: Order;
-    where?: any;
-  }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.catalogueRepository.listCategories({
-        skip,
-        take: limit,
-        order: order,
-        where,
-      }),
-      this.catalogueRepository.countCategories(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
-  }
-
-  async findCategory(id: number) {
-    const category = await this.catalogueRepository.findCategory(id);
-    if (!category) throw createError(404, "category not found");
-    return category;
-  }
-
-  async removeCategory(id: number) {
-    const category = await this.findCategory(id);
-    const deleted = await this.catalogueRepository.removeCategory(category.id);
-    await invalideCache("catalog*");
-    return deleted;
-  }
-
-  async updateCategory(id: number, data: UpdateCategoryDTO) {
-    try {
-      const category = await this.findCategory(id);
-      return await this.catalogueRepository.updateCategory(category.id, data);
-    } catch (error: any) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        const target = (error.meta?.target as string[])?.join(", ");
-        throw createError(409, `${target} already exists`);
-      }
-      throw createError(500, `Failed to update user: ${error.message}`);
-    }
-  }
-
   async findOneCategoryBySlug(slug: string) {
     const category = await this.catalogueRepository.findCategoryBySlug(slug);
     if (!category) throw createError(404, "category not found");
     return category;
   }
 
-  // Services Types
-  async createServiceType(data: CreateServiceTypeDTO) {
-    try {
-      const { name, slug, categoryIds } = data;
-      const where: any = { name, slug };
-      await this.checkServiceType(where);
-      const created = await this.catalogueRepository.createServiceType({
-        name,
-        slug,
-      });
-      //   await Promise.all(
-      //     categoryIds.map(
-      //       async (id) =>
-      //         await this.catalogueRepository.addCategoryToServiceType({
-      //           categoryId: id,
-      //           serviceTypeId: created.id,
-      //         })
-      //     )
-      //   );
-      return created;
-    } catch (error: any) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        const target = (error.meta?.target as string[])?.join(", ");
-        throw createError(409, `${target} already exists`);
-      }
-      throw createError(500, `Failed to create service type: ${error.message}`);
-    }
-  }
-
-  async listServiceTypes(params: {
-    limit: number;
-    page: number;
-    order: Order;
-    where?: any;
-  }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.catalogueRepository.listServiceType({
-        skip,
-        take: limit,
-        order: order,
-        where,
-      }),
-      this.catalogueRepository.countServiceType(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(10 / limit), 1),
-      },
-    };
-  }
-
-  async findOneServiceType(id: number) {
-    const serviceType = await this.catalogueRepository.findOneServiceType(id);
-    // if (!serviceType) throw createError(404, "service type not found");
-    return serviceType;
-  }
-
-  async removeServiceType(id: number) {
-    const service = await this.findOneServiceType(id);
-    // return await this.catalogueRepository.removeServiceType(service.id);
-  }
 
   async createField(data: CreateFieldDto) {
     try {
@@ -269,29 +145,18 @@ export class CatalogueService {
   // fields
   async listFields(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.catalogueRepository.listFields({
-        skip,
-        take: limit,
+    const { limit, cursor, order, where } = params;
+    const rows = await this.catalogueRepository.listFields({
+        cursor,
+        take: limit + 1,
         order: order,
         where,
-      }),
-      this.catalogueRepository.countFields(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+      });
+    return cursorPage(rows, limit);
   }
 
   async findfield(id: number) {

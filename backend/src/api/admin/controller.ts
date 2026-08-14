@@ -1,3 +1,4 @@
+import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 import { AnnouncementController } from "../../microservices/annoncements/announcement.controller";
 import { BannerSlideController } from "../../microservices/banner-slides/banner-slide.controller";
 import { CatalogueController } from "../../microservices/catalogues/catalogue.controller";
@@ -18,7 +19,7 @@ export class AdminController {
     private readonly announcementController: AnnouncementController,
     private readonly categoryController: CategoryController,
     private readonly bannerSlideController: BannerSlideController
-  ) {}
+  ) { }
 
   // Users
   async getAllUsers(req: Request, res: Response) {
@@ -65,22 +66,6 @@ export class AdminController {
   }
 
   // CATALOGUES
-
-  async removeCategory(req: Request, res: Response) {
-    return await this.catalogueController.removeCategory(req, res);
-  }
-
-  async removeServiceType(req: Request, res: Response) {
-    return await this.catalogueController.removeServiceTypes(req, res);
-  }
-
-  async createServiceType(req: Request, res: Response) {
-    return await this.catalogueController.createServiceType(req, res);
-  }
-
-  async findServiceType(req: Request, res: Response) {
-    return await this.catalogueController.findServiceTypes(req, res);
-  }
 
   async updateField(req: Request, res: Response) {
     return await this.catalogueController.updateField(req, res);
@@ -158,6 +143,10 @@ export class AdminController {
     return await this.categoryController.createCategory(req, res);
   }
 
+  async listCategories(req: AuthenticatedRequest, res: Response) {
+    return await this.categoryController.getAllCategories(req, res)
+  }
+
   async findCategory(req: Request, res: Response) {
     return await this.categoryController.findCategoryById(req, res);
   }
@@ -170,6 +159,10 @@ export class AdminController {
     return await this.categoryController.updateCategory(req, res);
   }
 
+  async removeCategory(req: Request, res: Response) {
+    return await this.categoryController.removeCategory(req, res);
+  }
+
   async desableCategory(req: Request, res: Response) {
     return await this.categoryController.desableCategory(req, res);
   }
@@ -179,7 +172,7 @@ export class AdminController {
   async createSlides(req: Request, res: Response) {
     return await this.bannerSlideController.create(req, res);
   }
-  async findSlides(req: Request, res: Response) {
+  async findSlides(req: AuthenticatedRequest, res: Response) {
     return await this.bannerSlideController.findAll(req, res);
   }
   async removeSlide(req: Request, res: Response) {

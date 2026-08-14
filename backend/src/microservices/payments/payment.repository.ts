@@ -77,25 +77,16 @@ export class PaymentRepository {
       where.status = filters.status as PaymentStatus;
     }
 
-    const page = pagination.page || 1;
     const limit = pagination.limit || 20;
-    const skip = (page - 1) * limit;
+    const cursor = pagination.cursor;
 
-    const finalOrderBy: Prisma.PaymentOrderByWithRelationInput | undefined =
-      pagination.sortBy
-        ? ({
-            [pagination.sortBy]: pagination.sortOrder || Order.DESC,
-          } as Prisma.PaymentOrderByWithRelationInput)
-        : undefined;
-    const [data, total] = await Promise.all([
-      prisma.payment.findMany({
+    const data = await prisma.payment.findMany({
         where,
-        take: limit,
-        skip,
-        orderBy: finalOrderBy,
-      }),
-      prisma.payment.count({ where }),
-    ]);
-    return { data, total };
+        cursor: cursor ? { id: cursor } : undefined,
+        skip: cursor ? 1 : undefined,
+        take: limit + 1,
+        orderBy: { id: pagination.sortOrder || Order.DESC },
+      });
+    return data;
   }
 }

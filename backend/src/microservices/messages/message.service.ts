@@ -7,6 +7,7 @@ import { Order } from "../../utils/enums/order.enum";
 import { MessageRepository } from "./message.repository";
 import { ENV } from "../../config/env";
 import { S3Service } from "../../utils/services/s3.service";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();
@@ -59,31 +60,19 @@ export class MessageService {
 
   async getMessages(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-
-    const [data, total] = await Promise.all([
-      this.messageRepository.getUserMessages({
+    const { limit, cursor, order, where } = params;
+    const data = await this.messageRepository.getUserMessages({
         where,
-        take: limit,
-        skip,
+        take: limit + 1,
+        cursor,
         order,
-      }),
-      this.messageRepository.count(where),
-    ]);
-    const threadRow = await this.buildThreadRow(data);
-    return {
-      data: threadRow,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+      });
+    const page = cursorPage(data, limit);
+    return { ...page, data: await this.buildThreadRow(page.data) };
   }
 
   async replyToConversation(
@@ -122,29 +111,19 @@ export class MessageService {
     return marked;
   }
 
-  async listThreadsForUser(userId: number, page: number, limit: number) {
-    const skip = (page - 1) * limit;
-    const [rows, total] = await Promise.all([
-      this.messageRepository.listThreadsForUser(userId, limit, skip),
-      this.messageRepository.countListThread(userId),
-    ]);
+  async listThreadsForUser(userId: number, cursor: number | undefined, limit: number) {
+    const rows = await this.messageRepository.listThreadsForUser(userId, limit + 1, cursor);
 
     const hasActiveSubscription = await this.matching.hasActiveSubscription(
       userId
     );
+    const page = cursorPage(rows, limit);
     const threadRow = await this.buildThreadRows(
-      rows,
+      page.data,
       userId,
       hasActiveSubscription
     );
-    return {
-      data: threadRow,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+    return { ...page, data: threadRow };
   }
 
   //   private async emitToUser(conversation: any, message: any, userId: number) {

@@ -52,24 +52,22 @@ components:
     Metadata:
       type: object
       properties:
-        total:
+        limit:
           type: integer
-          example: 10
-        page:
+          example: 20
+        hasNext:
+          type: boolean
+        nextCursor:
           type: integer
-          example: 1
-        totalPage:
-          type: integer
-          example: 10
+          nullable: true
 
   parameters:
-    pageParam:
-      name: page
+    cursorParam:
+      name: cursor
       in: query
-      description: Page number for pagination (optional, default is `1`)
+      description: Identifier of the last item from the preceding page (optional)
       schema:
         type: integer
-        default: 1
 
     limitParam:
       in: query

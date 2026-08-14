@@ -68,6 +68,9 @@ export const ENV = {
   AWS_SECRET_ACCESS_KEY: getEnv("AWS_SECRET_ACCESS_KEY", true),
   AWS_S3_DEFAULT_BUCKET: getEnv("AWS_S3_DEFAULT_BUCKET", true),
 
+  AWS_ENDPOINT: getEnv("AWS_ENDPOINT", false),
+  AWS_S3_FORCE_PATH_STYLE: getEnv("AWS_S3_FORCE_PATH_STYLE", false),
+
   // JEKO
   JEKO_KEY_ID: getEnv("JEKO_KEY_ID", true),
   JEKO_API_KEY: getEnv("JEKO_API_KEY", true),

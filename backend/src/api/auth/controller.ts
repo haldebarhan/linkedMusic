@@ -17,7 +17,7 @@ export class AuthController {
     private readonly categoryController: CategoryController,
     private readonly annController: AnnController,
     private readonly bannerSlideController: BannerSlideController
-  ) {}
+  ) { }
 
   async getMe(req: AuthenticatedRequest, res: Response) {
     return this.userController.getMe(req, res);
@@ -77,16 +77,9 @@ export class AuthController {
   }
 
   async listCategories(req: Request, res: Response) {
-    return await this.catalogController.listCategories(req, res);
+    return await this.categoryController.getAllCategories(req, res);
   }
 
-  async findCategory(req: Request, res: Response) {
-    return await this.catalogController.findCategory(req, res);
-  }
-
-  async listServiceTypes(req: Request, res: Response) {
-    return await this.catalogController.listServiceTypes(req, res);
-  }
 
   // SUBSCRIPTION PLANS
   async findSubscriptionPlans(req: Request, res: Response) {
@@ -98,7 +91,7 @@ export class AuthController {
 
   // Categories
 
-  async getCategories(req: Request, res: Response) {
+  async getCategories(req: AuthenticatedRequest, res: Response) {
     return await this.categoryController.getAllCategories(req, res);
   }
   async getCategoryBySlug(req: Request, res: Response) {
@@ -116,6 +109,6 @@ export class AuthController {
   // Banner Slides
 
   async findActiveSlides(req: Request, res: Response) {
-    return await this.bannerSlideController.findActive(req, res);
+    return await this.bannerSlideController.findAll(req, res);
   }
 }

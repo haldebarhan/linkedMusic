@@ -19,40 +19,6 @@ export class CatalogueRepository {
     return await prisma.category.create({ data });
   }
 
-  async listCategories(params: {
-    skip?: number;
-    take?: number;
-    where?: any;
-    order?: Order;
-  }) {
-    const { skip, take, where, order } = params;
-    return await prisma.category.findMany({
-      skip,
-      take,
-      where,
-      orderBy: { updatedAt: Order.DESC },
-      include: {
-        // CategoryField: {
-        //   include: {
-        //     category: { select: { id: true, name: true, slug: true } },
-        //   },
-        // },
-      },
-    });
-  }
-
-  async findCategory(id: number) {
-    return await prisma.category.findUnique({
-      where: { id },
-      include: {
-        // CategoryField: {
-        //   include: {
-        //     field: { include: { options: true } },
-        //   },
-        // },
-      },
-    });
-  }
 
   async countCategories(where?: any) {
     return await prisma.category.count({ where });
@@ -162,12 +128,12 @@ export class CatalogueRepository {
   }
 
   async listServiceType(params: {
-    skip?: number;
+    cursor?: number;
     take?: number;
     where?: any;
     order?: Order;
   }) {
-    const { skip, take, where, order } = params;
+    const { cursor, take, where, order } = params;
     // return await prisma.serviceType.findMany({
     //   skip,
     //   take,
@@ -179,6 +145,9 @@ export class CatalogueRepository {
     //     },
     //   },
     // });
+    // The service-type model is not currently persisted in the Prisma schema.
+    // Keep this repository contract iterable until that model is restored.
+    return [] as Array<{ id: number }>;
   }
 
   async countServiceType(where?: any) {
@@ -264,17 +233,18 @@ export class CatalogueRepository {
   }
 
   async listFields(params: {
-    skip?: number;
+    cursor?: number;
     take?: number;
     where?: any;
     order?: Order;
   }) {
-    const { skip, take, where, order } = params;
+    const { cursor, take, where, order } = params;
     return await prisma.field.findMany({
-      skip,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
       take,
       where,
-      orderBy: { createdAt: order },
+      orderBy: { id: order ?? Order.DESC },
     });
   }
 

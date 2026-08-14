@@ -4,9 +4,9 @@ export interface ApiResponse<T> {
   items: {
     data: T;
     metadata: {
-      total: number;
-      page: number;
-      totalPage: number;
+      limit: number;
+      hasNext: boolean;
+      nextCursor: number | null;
     };
   };
 }
@@ -16,9 +16,9 @@ export function paginatedResponse<T>(
   items: {
     data: T;
     metadata: {
-      total: number;
-      page: number;
-      totalPage: number;
+      limit: number;
+      hasNext: boolean;
+      nextCursor: number | null;
     };
   }
 ): ApiResponse<T> {

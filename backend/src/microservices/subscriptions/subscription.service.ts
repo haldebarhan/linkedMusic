@@ -10,6 +10,7 @@ import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
 import { PaymentRepository } from "../payments/payment.repository";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -91,26 +92,14 @@ export class SubscriptionService {
 
   async findSubscriptionPlans(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-
-    const [data, total] = await Promise.all([
-      this.planRepository.findAll({ skip, take: limit, order, where }),
-      this.planRepository.count(where),
-    ]);
-
-    return {
-      data: this.formatSubscriptionData(data),
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+    const { limit, cursor, order, where } = params;
+    const rows = await this.planRepository.findAll({ cursor, take: limit + 1, order, where });
+    const page = cursorPage(rows, limit);
+    return { ...page, data: this.formatSubscriptionData(page.data) };
   }
 
   async createPlan(input: CreatePlanDTO) {

@@ -7,6 +7,7 @@ import { formatResponse } from "../../utils/helpers/response-formatter";
 import { AuthenticatedRequest } from "../../utils/interfaces/authenticated-request";
 import { Order } from "../../utils/enums/order.enum";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class SubscriptionController {
@@ -37,14 +38,13 @@ export class SubscriptionController {
 
   async findSubscriptionPlans(req: Request, res: Response) {
     const {
-      page: pageQuery,
+      cursor: cursorQuery,
       limit: limitQuery,
       order: orderQuery,
       opt: OptionQuery,
     } = req.query;
-    const page = parseInt(pageQuery as string) || 1;
     const limit = parseInt(limitQuery as string) || 10;
-    const page_number = Math.max(page, 1);
+    const cursor = parseCursor(cursorQuery);
     const limit_query = Math.max(limit, 10);
     const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
       ? (orderQuery as Order)
@@ -57,7 +57,7 @@ export class SubscriptionController {
     try {
       const plans = await this.subscriptionService.findSubscriptionPlans({
         limit: limit_query,
-        page: page_number,
+        cursor,
         order,
         where,
       });

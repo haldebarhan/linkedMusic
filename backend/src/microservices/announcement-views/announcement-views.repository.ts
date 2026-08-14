@@ -27,16 +27,9 @@ export class AnnouncementViewRepository {
   }
 
   async recentViews(userId: number, pagination: PaginationParams) {
-    const page = pagination.page || 1;
     const limit = pagination.limit || 20;
-    const skip = (page - 1) * limit;
+    const cursor = pagination.cursor;
 
-    // Construire l'orderBy si fourni dans pagination
-    const finalOrderBy = pagination.sortBy
-      ? {
-          [pagination.sortBy]: pagination.sortOrder || Order.DESC,
-        }
-      : undefined;
     return await prisma.announcementView.findMany({
       where: { userId },
       select: {
@@ -44,8 +37,10 @@ export class AnnouncementViewRepository {
         viewedAt: true,
         announcement: true,
       },
-      orderBy: { viewedAt: Order.DESC },
-      take: 12,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
+      orderBy: { id: pagination.sortOrder || Order.DESC },
+      take: limit + 1,
     });
   }
 

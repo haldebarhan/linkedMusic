@@ -5,10 +5,13 @@ import { handleError } from "../../utils/helpers/handle-error";
 import { saveSlideFiles } from "../../utils/functions/save-file";
 import { formatResponse } from "../../utils/helpers/response-formatter";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { parsePaginationParams } from "@/utils/functions/utilities";
+import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { Role } from "../../utils/enums/role.enum"
 
 @injectable()
 export class BannerSlideController {
-  constructor(private readonly bannerSlideService: BannerSlideService) {}
+  constructor(private readonly bannerSlideService: BannerSlideService) { }
 
   async create(req: Request, res: Response) {
     try {
@@ -17,16 +20,6 @@ export class BannerSlideController {
       const slides = await this.bannerSlideService.create(upload);
       const response = formatResponse(201, slides);
       res.status(201).json(response);
-    } catch (error) {
-      handleError(res, error);
-    }
-  }
-
-  async findActive(req: Request, res: Response) {
-    try {
-      const slides = await this.bannerSlideService.findActive();
-      const response = formatResponse(200, slides);
-      res.status(200).json(response);
     } catch (error) {
       handleError(res, error);
     }
@@ -47,17 +40,14 @@ export class BannerSlideController {
     }
   }
 
-  async findAll(req: Request, res: Response) {
+  async findAll(req: AuthenticatedRequest, res: Response) {
     try {
-      const { page: pageQuery, limit: limitQuery } = req.query;
-      const page = parseInt(pageQuery as string) || 1;
-      const limit = parseInt(limitQuery as string) || 10;
-      const page_number = Math.max(page, 1);
-      const limit_query = Math.max(limit, 10);
-      const where: any = {};
+      const { cursor, limit, sortOrder, where } = parsePaginationParams(req.query);
+      if (!req.user || req.user.role !== Role.ADMIN) where.isActive = true
       const slides = await this.bannerSlideService.findAll({
-        limit: limit_query,
-        page: page_number,
+        limit,
+        cursor,
+        order: sortOrder,
         where,
       });
       const response = paginatedResponse(200, slides);

@@ -38,17 +38,18 @@ export class PlanRepository {
   }
 
   async findAll(params: {
-    skip?: number;
+    cursor?: number;
     take?: number;
     where?: any;
     order?: Order;
   }) {
-    const { skip, take, where, order } = params;
+    const { cursor, take, where, order } = params;
     return await prisma.subscriptionPlan.findMany({
       take,
-      skip,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
       where: { status: PlanStatus.ACTIVE, ...where },
-      orderBy: { createdAt: order ?? Order.DESC },
+      orderBy: { id: order ?? Order.DESC },
       include: {
         benefits: { select: { benefit: true, inherited: true } },
         parent: { select: { name: true } },

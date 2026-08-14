@@ -8,15 +8,16 @@ const prisma: PrismaClient = DatabaseService.getPrismaClient();
 @injectable()
 export class MessageRepository {
   async getUserMessages(params: {
-    skip?: number;
+    cursor?: number;
     take?: number;
     where?: any;
     order?: Order;
   }) {
-    const { where, skip, take, order } = params;
+    const { where, cursor, take, order } = params;
     return await prisma.conversation.findMany({
       where,
-      skip,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
       take,
       include: {
         messages: {
@@ -31,7 +32,7 @@ export class MessageRepository {
           },
         },
       },
-      orderBy: { createdAt: order ?? Order.DESC },
+      orderBy: { id: order ?? Order.DESC },
     });
   }
 
@@ -90,11 +91,12 @@ export class MessageRepository {
     return await prisma.conversation.count({ where });
   }
 
-  async listThreadsForUser(userId: number, take?: number, skip?: number) {
+  async listThreadsForUser(userId: number, take?: number, cursor?: number) {
     return await prisma.conversation.findMany({
       where: { OR: [{ senderId: userId }, { receiver: { id: userId } }] },
       take,
-      skip,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
       select: {
         id: true,
         senderId: true,

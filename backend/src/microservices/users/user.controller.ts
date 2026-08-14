@@ -11,6 +11,7 @@ import { saveFileToBucket } from "../../utils/functions/save-file";
 import { AssignBadge, ChangePasswordDTO, UpdateUserDTO } from "./user.dto";
 import { ENV } from "../../config/env";
 import { FirebaseService } from "../../utils/services/firebase.service";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 
 const firebaseService = FirebaseService.getInstance();
 
@@ -55,16 +56,14 @@ export class UserController {
 
   async findAll(req: Request, res: Response) {
     const {
-      page: pageQuery,
+      cursor: cursorQuery,
       limit: limitQuery,
       order: orderQuery,
       q: searchQuery,
     } = req.query;
 
-    const page = parseInt(pageQuery as string) || 1;
     const limit = parseInt(limitQuery as string) || 10;
-
-    const page_number = Math.max(page, 1);
+    const cursor = parseCursor(cursorQuery);
     const limit_query = Math.max(limit, 10);
     const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
       ? (orderQuery as Order)
@@ -97,7 +96,7 @@ export class UserController {
     try {
       const users = await this.userService.findAll({
         limit: limit_query,
-        page: page_number,
+        cursor,
         order,
         where,
       });

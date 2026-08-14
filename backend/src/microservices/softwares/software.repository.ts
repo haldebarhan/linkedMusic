@@ -1,12 +1,12 @@
 import { injectable } from "tsyringe";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { PrismaClient, Software } from "@prisma/client";
 import { Order } from "../../utils/enums/order.enum";
 import DatabaseService from "../../utils/services/database.service";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class SoftwareRepository extends ReferenceBaseRepository<Software> {
+export class SoftwareRepository extends BaseRepository<Software> {
   constructor(prisma: PrismaClient) {
     super(prisma, "software");
   }

@@ -298,7 +298,7 @@ export class AnnouncementQueryDto {
   @IsNumber()
   @Type(() => Number)
   @Min(1)
-  page?: number = 1;
+  cursor?: number;
 
   @IsOptional()
   @IsNumber()

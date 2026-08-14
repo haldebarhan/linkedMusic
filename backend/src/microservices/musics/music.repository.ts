@@ -1,5 +1,5 @@
 import { injectable } from "tsyringe";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { MusicStyle, PrismaClient } from "@prisma/client";
 import { Order } from "../../utils/enums/order.enum";
 import DatabaseService from "../../utils/services/database.service";
@@ -7,7 +7,7 @@ import DatabaseService from "../../utils/services/database.service";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class MusicStyleRepository extends ReferenceBaseRepository<MusicStyle> {
+export class MusicStyleRepository extends BaseRepository<MusicStyle> {
   constructor() {
     super(prisma, "musicStyle");
   }

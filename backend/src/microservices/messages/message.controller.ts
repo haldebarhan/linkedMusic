@@ -7,6 +7,7 @@ import { CreateMessageDTO, ReplyMessageDTO } from "./message.dto";
 import { formatResponse } from "../../utils/helpers/response-formatter";
 import { Order } from "../../utils/enums/order.enum";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class MessageController {
@@ -35,16 +36,14 @@ export class MessageController {
     try {
       const { user } = req;
       const {
-        page: pageQuery,
+        cursor: cursorQuery,
         limit: limitQuery,
         order: orderQuery,
       } = req.query;
       //   const where: any = {};
       //   where.receiverId = user.id;
-      const page = parseInt(pageQuery as string) || 1;
       const limit = parseInt(limitQuery as string) || 10;
-
-      const page_number = Math.max(page, 1);
+      const cursor = parseCursor(cursorQuery);
       const limit_query = Math.max(limit, 10);
       //   const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
       //     ? (orderQuery as Order)
@@ -58,7 +57,7 @@ export class MessageController {
       //   });
       const threads = await this.messageService.listThreadsForUser(
         user.id,
-        page_number,
+        cursor,
         limit_query
       );
       const response = paginatedResponse(200, threads);
