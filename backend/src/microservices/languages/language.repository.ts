@@ -1,11 +1,11 @@
 import { Language, PrismaClient } from "@prisma/client";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { Order } from "../../utils/enums/order.enum";
 import DatabaseService from "../../utils/services/database.service";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
-export class LanguageRepository extends ReferenceBaseRepository<Language> {
+export class LanguageRepository extends BaseRepository<Language> {
   constructor() {
     super(prisma, "language");
   }

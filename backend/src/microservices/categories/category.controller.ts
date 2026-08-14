@@ -15,34 +15,23 @@ import {
   UpdateFieldDto,
   UpdateFieldOptionDto,
 } from "./category.dto";
-import { Order } from "../../utils/enums/order.enum";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
+import { parsePaginationParams } from "@/utils/functions/utilities";
 
 @injectable()
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(private readonly categoryService: CategoryService) { }
 
-  async getAllCategories(req: Request, res: Response) {
+  async getAllCategories(req: AuthenticatedRequest, res: Response) {
     try {
-      const {
-        page: pageQuery,
-        limit: limitQuery,
-        order: orderQuery,
-      } = req.query;
-      const where: any = { active: true };
-      const page = parseInt(pageQuery as string) || 1;
-      const limit = parseInt(limitQuery as string) || 10;
-
-      const page_number = Math.max(page, 1);
-      const limit_query = Math.max(limit, 10);
-      const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
-        ? (orderQuery as Order)
-        : Order.DESC;
+      const { limit, cursor, where, sortOrder } = parsePaginationParams(req.query)
+      if (!req.user || req.user.role !== "ADMIN") where.active = true
 
       const categories = await this.categoryService.getAllCategories({
-        limit: limit_query,
-        page: page_number,
-        order,
+        limit,
+        cursor,
+        order: sortOrder,
         where,
       });
       const response = paginatedResponse(200, categories);

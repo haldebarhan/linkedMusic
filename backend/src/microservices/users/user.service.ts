@@ -24,6 +24,7 @@ import { S3Service } from "../../utils/services/s3.service";
 import { Badge } from "../../utils/enums/badge.enum";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
 import { UserRecord } from "firebase-admin/auth";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const firebaseService = FirebaseService.getInstance();
 const minioService: S3Service = S3Service.getInstance();
@@ -105,29 +106,18 @@ export class UserService {
 
   async findAll(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.userRepository.findAll({
-        skip,
-        take: limit,
+    const { limit, cursor, order, where } = params;
+    const rows = await this.userRepository.findAll({
+        cursor,
+        take: limit + 1,
         order: order,
         where,
-      }),
-      this.userRepository.count(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+      });
+    return cursorPage(rows, limit);
   }
 
   async findOne(id: number) {

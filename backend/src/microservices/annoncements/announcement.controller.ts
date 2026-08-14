@@ -16,6 +16,7 @@ import { ENV } from "../../config/env";
 import { AnnouncementStatus } from "@prisma/client";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
 import { S3Service } from "../../utils/services/s3.service";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
@@ -211,13 +212,13 @@ export class AnnouncementController {
   async getMyAnnouncements(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user.id as number;
-      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const cursor = parseCursor(req.query.cursor);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const sortBy = (req.query.sortBy as string) || "createdAt";
       const sortOrder =
         (req.query.sortOrder as Order.ASC | Order.DESC) || Order.DESC;
       const pagination = {
-        page,
+        cursor,
         limit,
         sortBy,
         sortOrder,
@@ -270,13 +271,13 @@ export class AnnouncementController {
   async userRecentViews(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user.id as number;
-      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const cursor = parseCursor(req.query.cursor);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const sortBy = (req.query.sortBy as string) || "createdAt";
       const sortOrder =
         (req.query.sortOrder as Order.ASC | Order.DESC) || Order.DESC;
       const pagination = {
-        page,
+        cursor,
         limit,
         sortBy,
         sortOrder,
@@ -370,13 +371,13 @@ export class AnnouncementController {
   async mylikedAnnouncements(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user.id as number;
-      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const cursor = parseCursor(req.query.cursor);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const sortBy = (req.query.sortBy as string) || "createdAt";
       const sortOrder =
         (req.query.sortOrder as Order.ASC | Order.DESC) || Order.DESC;
       const pagination = {
-        page,
+        cursor,
         limit,
         sortBy,
         sortOrder,
@@ -393,12 +394,9 @@ export class AnnouncementController {
   }
 
   async listPendingAnnouncements(req: Request, res: Response) {
-    const { page: pageQuery, limit: limitQuery, order: orderQuery } = req.query;
-
-    const page = parseInt(pageQuery as string) || 1;
+    const { cursor: cursorQuery, limit: limitQuery, order: orderQuery } = req.query;
     const limit = parseInt(limitQuery as string) || 10;
-
-    const page_number = Math.max(page, 1);
+    const cursor = parseCursor(cursorQuery);
     const limit_query = Math.max(limit, 10);
     const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
       ? (orderQuery as Order)
@@ -412,7 +410,7 @@ export class AnnouncementController {
       const announcements =
         await this.announcementService.listPendingAnnouncements({
           limit: limit_query,
-          page: page_number,
+          cursor,
           order,
           where,
         });

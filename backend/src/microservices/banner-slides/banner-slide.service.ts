@@ -4,45 +4,33 @@ import createError from "http-errors";
 import { ENV } from "../../config/env";
 import { S3Service } from "../../utils/services/s3.service";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
-
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
+import { Order } from "../../utils/enums/order.enum";
+import { normalizeMediaType } from "@/utils/functions/utilities";
 const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
 export class BannerSlideService {
-  constructor(private readonly bannerSlideRepository: BannerSlideRepository) {}
+  constructor(private readonly bannerSlideRepository: BannerSlideRepository) { }
 
-  async findAll(params: { limit: number; page: number; where?: any }) {
-    const { page, limit, where } = params;
-    const skip = (page - 1) * limit;
-    const [slides, total] = await Promise.all([
-      this.bannerSlideRepository.findAll({
-        take: limit,
-        skip,
-        where,
-      }),
-      this.bannerSlideRepository.count(where),
-    ]);
-    await Promise.all(
-      slides.map(async (slide) => {
-        slide.mediaUrl = await minioService.generatePresignedUrl(
+  async findAll(params: { limit: number; cursor?: number; where?: any; order?: Order }) {
+    const { cursor, limit, where, order } = params;
+    const rows = await this.bannerSlideRepository.findAll({
+      cursor,
+      take: limit + 1,
+      order: order,
+      where,
+    });
+    rows.length > 0 && await Promise.all(
+      rows.map(async (row) => {
+        row.mediaUrl = await minioService.generatePresignedUrl(
           ENV.AWS_S3_DEFAULT_BUCKET,
-          slide.mediaUrl
+          row.mediaUrl
         );
-        if (slide.mediaType.startsWith("image")) {
-          slide.mediaType = "image";
-        } else if (slide.mediaType.startsWith("video")) {
-          slide.mediaType = "video";
-        }
+        row.mediaType = normalizeMediaType(row.mediaType);
       })
     );
-    return {
-      data: slides,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(10 / limit), 1),
-      },
-    };
+    return cursorPage(rows, limit);
   }
 
   async create(data: { mediaType: string; mediaUrl: string }) {
@@ -54,24 +42,6 @@ export class BannerSlideService {
     await this.findOne(id);
     await invalideCache("banner-slides*");
     return await this.bannerSlideRepository.reorder(id, newOrder);
-  }
-
-  async findActive() {
-    const slides = await this.bannerSlideRepository.findActive();
-    await Promise.all(
-      slides.map(async (slide) => {
-        slide.mediaUrl = await minioService.generatePresignedUrl(
-          ENV.AWS_S3_DEFAULT_BUCKET,
-          slide.mediaUrl
-        );
-        if (slide.mediaType.startsWith("image")) {
-          slide.mediaType = "image";
-        } else if (slide.mediaType.startsWith("video")) {
-          slide.mediaType = "video";
-        }
-      })
-    );
-    return slides;
   }
 
   async toggleStatus(id: number, isActive: boolean) {

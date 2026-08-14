@@ -1,21 +1,20 @@
 import { Order } from "../enums/order.enum";
 
 export interface PaginationParams {
-  page?: number;
+  /** Opaque position in the ordered result set. `page`/OFFSET is deliberately unsupported. */
+  cursor?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: Order.ASC | Order.DESC;
+  where?: Record<string, unknown>;
 }
 
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
     hasNext: boolean;
-    hasPrev: boolean;
+    nextCursor: number | null;
   };
 }
 

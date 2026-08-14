@@ -180,6 +180,7 @@ model User {
     notificationPreference NotificationPreference?
     announcementViews      AnnouncementView[]
 
+    @@index([status])
     @@map("users")
 }
 
@@ -333,6 +334,17 @@ model Announcement {
     @@index([ownerId])
     @@index([createdAt])
     @@index([status, isPublished])
+    @@index([isHighlighted(sort: Desc), createdAt(sort: Desc)])
+    @@index([isHighlighted(sort: Desc), publishedAt(sort: Desc)])
+    @@index([countryCode])
+    @@index([city])
+    @@index([countryCode, city])
+    @@index([price])
+    @@index([status, isPublished, isHighlighted(sort: Desc), createdAt(sort: Desc)])
+    @@index([status, isPublished, publishedAt(sort: Desc)])
+    @@index([ownerId, status, isPublished])
+    @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+    @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
     @@map("announcements")
 }
 
@@ -443,6 +455,7 @@ model AnnFieldValue {
     @@index([fieldId])
     @@index([fieldId, valueBoolean])
     @@index([fieldId, valueNumber])
+    @@index([fieldId, valueText])
     @@map("ann_field_values")
 }
 

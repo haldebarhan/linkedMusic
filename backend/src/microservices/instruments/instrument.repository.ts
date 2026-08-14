@@ -1,5 +1,5 @@
 import { injectable } from "tsyringe";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { Instrument, PrismaClient } from "@prisma/client";
 import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
@@ -7,7 +7,7 @@ import { Order } from "../../utils/enums/order.enum";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class InstrumentRepository extends ReferenceBaseRepository<Instrument> {
+export class InstrumentRepository extends BaseRepository<Instrument> {
   constructor() {
     super(prisma, "instrument");
   }

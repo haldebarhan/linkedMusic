@@ -41,6 +41,7 @@ import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
 import { generateUrl } from "../../utils/functions/utilities";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -269,7 +270,7 @@ export class AnnouncementService {
     query: AnnouncementQueryDto
   ): Promise<PaginatedResponse<AnnouncementResponseDto>> {
     const pagination: PaginationParams = {
-      page: query.page ? +query.page : 1,
+      cursor: query.cursor,
       limit: query.limit ? +query.limit : 20,
       sortBy: query.sortBy ?? "createdAt",
       sortOrder: (query.sortOrder as Order) ?? Order.DESC,
@@ -574,30 +575,18 @@ export class AnnouncementService {
 
   async listPendingAnnouncements(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.announcementRepository.ListPendingAnnouncements({
-        skip,
-        take: limit,
+    const { limit, cursor, order, where } = params;
+    const rows = await this.announcementRepository.ListPendingAnnouncements({
+        cursor,
+        take: limit + 1,
         order: order,
         where,
-      }),
-      this.announcementRepository.count(where),
-    ]);
-
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+      });
+    return cursorPage(rows, limit);
   }
 
   async countUserTotalAnnoucements(userId: number) {
@@ -609,8 +598,9 @@ export class AnnouncementService {
       userId,
       pagination
     );
+    const viewPage = cursorPage(recentViews, pagination.limit || 20);
     const announcements = await Promise.all(
-      recentViews.map(async (rv) => {
+      viewPage.data.map(async (rv) => {
         const { announcement } = rv;
         const [audios, videos, images] = await Promise.all([
           generateUrl(announcement.audios),
@@ -630,7 +620,7 @@ export class AnnouncementService {
         };
       })
     );
-    return announcements;
+    return { ...viewPage, data: announcements };
   }
 
   async addToRecentViews(userId: number, announcementId: number) {
@@ -675,25 +665,8 @@ export class AnnouncementService {
   }
 
   async myLikedAnnouncement(userId: number, pagination: PaginationParams) {
-    const where = {
-      Favorites: {
-        some: { userId },
-      },
-      isPublished: true,
-      status: AnnouncementStatus.PUBLISHED,
-    };
-    const [data, total] = await Promise.all([
-      this.announcementRepository.myLikedAnnouncement(userId, pagination),
-      this.announcementRepository.count(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page: pagination.page!,
-        totalPage: Math.ceil(total / pagination.limit!),
-      },
-    };
+    const rows = await this.announcementRepository.myLikedAnnouncement(userId, pagination);
+    return cursorPage(rows, pagination.limit || 20);
   }
 
   /**
@@ -797,64 +770,6 @@ export class AnnouncementService {
       return {
         data: mapper ? result.data.map(mapper) : result.data,
         pagination: result.pagination,
-      };
-    }
-
-    if (result && result.data && result.meta) {
-      const page = result.meta.page;
-      const limit = result.meta.limit;
-      const total = result.meta.total;
-      const totalPages = result.meta.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.data.map(mapper) : result.data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      };
-    }
-
-    if (result && result.data && result.total !== undefined) {
-      const page = result.page;
-      const limit = result.limit;
-      const total = result.total;
-      const totalPages = result.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.data.map(mapper) : result.data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      };
-    }
-
-    // Format avec items au lieu de data
-    if (result && result.items) {
-      const page = result.page || result.pagination?.page;
-      const limit = result.limit || result.pagination?.limit;
-      const total = result.total || result.pagination?.total;
-      const totalPages = result.totalPages || Math.ceil(total / limit);
-
-      return {
-        data: mapper ? result.items.map(mapper) : result.items,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
       };
     }
 

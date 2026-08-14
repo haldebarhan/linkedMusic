@@ -6,6 +6,7 @@ import createError from "http-errors";
 import { Order } from "../../utils/enums/order.enum";
 import { ConfigService } from "../../utils/services/configuration.service";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class ConfigurationService {
@@ -72,29 +73,18 @@ export class ConfigurationService {
 
   async findAll(params: {
     limit: number;
-    page: number;
+    cursor?: number;
     order: Order;
     where?: any;
   }) {
-    const { limit, page, order, where } = params;
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.configurationRepository.findAll({
-        skip,
-        take: limit,
+    const { limit, cursor, order, where } = params;
+    const rows = await this.configurationRepository.findAll({
+        cursor,
+        take: limit + 1,
         order: order,
         where,
-      }),
-      this.configurationRepository.count(where),
-    ]);
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+      });
+    return cursorPage(rows, limit);
   }
 
   async remove(id: number) {

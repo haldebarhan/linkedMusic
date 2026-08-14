@@ -8,6 +8,7 @@ import { MessageRepository } from "../../microservices/messages/message.reposito
 import { buildThreadRows } from "../../utils/helpers/build-thread-rows";
 import createError from "http-errors";
 import logger from "../../config/logger";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const messageRepository = new MessageRepository();
@@ -16,21 +17,10 @@ async function unreadCount(userId: number) {
   return messageRepository.computeUnread(userId);
 }
 
-async function listThreads(userId: number, page: number, limit: number) {
-  const skip = (page - 1) * limit;
-  const [rows, total] = await Promise.all([
-    messageRepository.listThreadsForUser(userId, limit, skip),
-    messageRepository.countListThread(userId),
-  ]);
-  const threadRow = await buildThreadRows(rows, userId);
-  return {
-    data: threadRow,
-    metadata: {
-      total,
-      page,
-      totalPage: Math.max(Math.ceil(total / limit), 1),
-    },
-  };
+async function listThreads(userId: number, cursor: number | undefined, limit: number) {
+  const rows = await messageRepository.listThreadsForUser(userId, limit + 1, cursor);
+  const page = cursorPage(rows, limit);
+  return { ...page, data: await buildThreadRows(page.data, userId) };
 }
 
 async function loadConversation(userId: number, convoId: number) {
@@ -67,7 +57,7 @@ async function markThreadRead(userId: number, convoId: number) {
 export function registerChatHandlers(
   io: Server,
   rawSocket: Socket,
-  page: number = 1,
+  cursor: number | undefined = undefined,
   limit: number = 200
 ) {
   const socket = rawSocket as AuthenticatedSocket;
@@ -90,7 +80,7 @@ export function registerChatHandlers(
   // LISTE DES THREADS
   socket.on(EVENTS.THREADS_LIST, async () => {
     try {
-      const rows = await listThreads(userId, page, limit);
+      const rows = await listThreads(userId, cursor, limit);
       socket.emit(EVENTS.THREADS_DATA, rows);
     } catch (e: any) {
       socket.emit(EVENTS.ERROR, { message: e?.message ?? "Threads error" });

@@ -5,7 +5,7 @@ import {
   AnnouncementStatus,
   Status,
 } from "@prisma/client";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import {
   AnnouncementWithDetails,
   AnnouncementFilters,
@@ -23,7 +23,7 @@ import { Order } from "../../utils/enums/order.enum";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class AnnouncementRepository extends ReferenceBaseRepository<Announcement> {
+export class AnnouncementRepository extends BaseRepository<Announcement> {
   constructor() {
     super(prisma, "announcement");
   }
@@ -356,7 +356,7 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
   }
 
   async incrementViews(id: number): Promise<void> {
-    await this.prisma.announcement.update({
+    await prisma.announcement.update({
       where: { id },
       data: {
         views: {
@@ -436,19 +436,18 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
   }
 
   async ListPendingAnnouncements(params: {
-    skip?: number;
+    cursor?: number;
     take?: number;
     where?: any;
     order?: Order;
   }) {
-    const { skip, take, where, order } = params;
+    const { cursor, take, where, order } = params;
     return await prisma.announcement.findMany({
-      skip,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
       take,
       where,
-      orderBy: {
-        createdAt: order ?? Order.DESC,
-      },
+      orderBy: { id: order ?? Order.DESC },
     });
   }
 
@@ -499,9 +498,8 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
   }
 
   async myLikedAnnouncement(userId: number, pagination: PaginationParams) {
-    const page = pagination.page || 1;
     const limit = pagination.limit || 20;
-    const skip = (page - 1) * limit;
+    const cursor = pagination.cursor;
     const favorites = await prisma.favorite.findMany({
       where: {
         userId,
@@ -510,18 +508,17 @@ export class AnnouncementRepository extends ReferenceBaseRepository<Announcement
           status: AnnouncementStatus.PUBLISHED,
         },
       },
-      skip,
-      take: limit,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : undefined,
+      take: limit + 1,
       select: {
+        id: true,
         announcement: {
           select: { id: true, title: true, location: true, status: true },
         },
         createdAt: true,
       },
-      orderBy: [
-        { announcement: { isHighlighted: Order.DESC } },
-        { createdAt: Order.DESC },
-      ],
+      orderBy: { id: Order.DESC },
     });
 
     const announcements = favorites.map((f) => {

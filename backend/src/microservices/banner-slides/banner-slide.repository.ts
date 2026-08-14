@@ -1,32 +1,19 @@
-import { Order } from "../../utils/enums/order.enum";
 import DatabaseService from "../../utils/services/database.service";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, BannerSlide } from "@prisma/client";
 import { injectable } from "tsyringe";
+import { BaseRepository } from "@/utils/classes/base.repository";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class BannerSlideRepository {
-  async findAll(params: { skip?: number; take?: number; where?: any }) {
-    const { skip, take, where } = params;
-    return await prisma.bannerSlide.findMany({
-      take,
-      skip,
-      where,
-      orderBy: { order: Order.ASC },
-    });
+export class BannerSlideRepository extends BaseRepository<BannerSlide> {
+  constructor() {
+    super(prisma, "bannerSlide");
   }
-
   async count(where?: any) {
     return await prisma.bannerSlide.count({ where });
   }
 
-  async findActive() {
-    return await prisma.bannerSlide.findMany({
-      where: { isActive: true },
-      orderBy: { order: Order.ASC },
-    });
-  }
 
   async create(data: any) {
     const maxOrder = await prisma.bannerSlide.aggregate({

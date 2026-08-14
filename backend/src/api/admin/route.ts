@@ -24,6 +24,7 @@ import {
 } from "../../microservices/categories/category.dto";
 import uploads from "../../multer-config";
 import { cache } from "../../middlewares/cache.middleware";
+import { AuthenticatedRequest } from "@/utils/interfaces/authenticated-request";
 
 const router: Router = Router();
 const adminController = container.resolve(AdminController);
@@ -31,53 +32,53 @@ const adminController = container.resolve(AdminController);
 router.use(adminMiddleware);
 
 // Users
-router.post("/users/assign-badge", async (req: Request, res: Response) =>
+router.post("/users/assign-badge", async (req: AuthenticatedRequest, res: Response) =>
   adminController.assignBadge(req, res)
 );
 
 router.get(
   "/users",
   cache({ ttl: 86400, prefix: "users" }),
-  async (req: Request, res: Response) => adminController.getAllUsers(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.getAllUsers(req, res)
 );
 
 router.get(
   "/users/:id",
   cache({ ttl: 86400, prefix: "users" }),
-  async (req: Request, res: Response) => adminController.findUserById(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.findUserById(req, res)
 );
 
-router.put("/users/close-account/:id", async (req: Request, res: Response) =>
+router.put("/users/close-account/:id", async (req: AuthenticatedRequest, res: Response) =>
   adminController.closeUserAccount(req, res)
 );
 
-router.put("/users/activate-account/:id", async (req: Request, res: Response) =>
+router.put("/users/activate-account/:id", async (req: AuthenticatedRequest, res: Response) =>
   adminController.activateUserAccount(req, res)
 );
 
 router.put(
   "/users/:id/update-profile",
   ValidateDtoMiddleware(UpdateUserDTO),
-  async (req: Request, res: Response) => adminController.updateUser(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.updateUser(req, res)
 );
 
 router.post(
   "/configurations",
   ValidateDtoMiddleware(CreateConfigDTO),
-  async (req: Request, res: Response) => adminController.createConfig(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.createConfig(req, res)
 );
 router.get(
   "/configurations",
   cache({ ttl: 86400, prefix: "configurations" }),
-  async (req: Request, res: Response) => adminController.findConfigs(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.findConfigs(req, res)
 );
 router.get(
   "/configurations/:id",
   cache({ ttl: 86400, prefix: "configurations" }),
-  async (req: Request, res: Response) => adminController.findConfig(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.findConfig(req, res)
 );
 
-router.delete("/configurations/:id", async (req: Request, res: Response) =>
+router.delete("/configurations/:id", async (req: AuthenticatedRequest, res: Response) =>
   adminController.removeConfig(req, res)
 );
 
@@ -86,63 +87,49 @@ router.delete("/configurations/:id", async (req: Request, res: Response) =>
 router.post(
   "/catalog/categories",
   ValidateDtoMiddleware(CreateCategoryDto),
-  async (req: Request, res: Response) =>
+  async (req: AuthenticatedRequest, res: Response) =>
     adminController.createCategory(req, res)
+);
+
+router.get(
+  "/catalog/categories",
+  cache({ ttl: 86400, prefix: "catalog" }),
+  async (req: AuthenticatedRequest, res: Response) => adminController.listCategories(req, res)
 );
 
 router.get(
   "/catalog/categories/:id",
   cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) => adminController.findCategory(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.findCategory(req, res)
 );
 
 router.put(
   "/catalog/categories/reorder/:id",
-  async (req: Request, res: Response) =>
+  async (req: AuthenticatedRequest, res: Response) =>
     adminController.reorderCategoryFields(req, res)
 );
 
 router.put(
   "/catalog/categories/:id",
   ValidateDtoMiddleware(UpdateCategoryDto),
-  async (req: Request, res: Response) =>
+  async (req: AuthenticatedRequest, res: Response) =>
     adminController.updateCategory(req, res)
 );
 
-router.delete("/catalog/categories/:id", async (req: Request, res: Response) =>
+router.delete("/catalog/categories/:id", async (req: AuthenticatedRequest, res: Response) =>
   adminController.removeCategory(req, res)
 );
 
 router.put(
   "/catalog/categories/desable/:id",
-  async (req: Request, res: Response) =>
+  async (req: AuthenticatedRequest, res: Response) =>
     adminController.desableCategory(req, res)
-);
-
-router.post(
-  "/catalog/service-types",
-  ValidateDtoMiddleware(CreateServiceTypeDTO),
-  async (req: Request, res: Response) =>
-    adminController.createServiceType(req, res)
-);
-
-router.get(
-  "/catalog/service-types/:id",
-
-  async (req: Request, res: Response) =>
-    adminController.findServiceType(req, res)
-);
-
-router.delete(
-  "/catalog/service-types/:id",
-  async (req: Request, res: Response) =>
-    adminController.removeServiceType(req, res)
 );
 
 router.post(
   "/catalog/fields",
   ValidateDtoMiddleware(CreateFieldDto),
-  async (req: Request, res: Response) => adminController.createField(req, res)
+  async (req: AuthenticatedRequest, res: Response) => adminController.createField(req, res)
 );
 
 router.get(
@@ -249,8 +236,8 @@ router.post(
 
 router.get(
   "/banner-slides",
-  cache({ ttl: 86400, prefix: "announcements" }),
-  async (req: Request, res: Response) => adminController.findSlides(req, res)
+  cache({ ttl: 86400, prefix: "banner-slides" }),
+  async (req: AuthenticatedRequest, res: Response) => adminController.findSlides(req, res)
 );
 
 router.put("/banner-slides/reorder/:id", async (req: Request, res: Response) =>

@@ -22,6 +22,7 @@ import { S3Service } from "../../utils/services/s3.service";
 import { syncPaymentStatusByReference } from "../../utils/functions/sync-paiment-status";
 import { Jeko } from "../../core/payments/Jeko/jeko";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
+import { cursorPage } from "../../utils/helpers/cursor-pagination";
 
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 const minioService: S3Service = S3Service.getInstance();
@@ -115,27 +116,20 @@ export class PaymentService {
   async findUserPayments(
     userId: number,
     params: {
-      page: number;
+      cursor?: number;
       limit: number;
       sortBy: string;
       status: string;
       sortOrder: Order;
     }
   ) {
-    const { page, limit, sortBy, status, sortOrder } = params;
-    const { data, total } = await this.paymentRepository.getUserPayments(
+    const { cursor, limit, sortBy, status, sortOrder } = params;
+    const rows = await this.paymentRepository.getUserPayments(
       userId,
       { status },
-      { page, limit, sortBy, sortOrder }
+      { cursor, limit, sortBy, sortOrder }
     );
-    return {
-      data,
-      metadata: {
-        total,
-        page,
-        totalPage: Math.max(Math.ceil(total / limit), 1),
-      },
-    };
+    return cursorPage(rows, limit);
   }
 
   private async ensureSubscriptionActivated(

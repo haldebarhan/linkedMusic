@@ -1,5 +1,5 @@
 import { FieldOption, PrismaClient } from "@prisma/client";
-import { ReferenceBaseRepository } from "../references/reference-base.repository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { injectable } from "tsyringe";
 import DatabaseService from "../../utils/services/database.service";
 import { Order } from "../../utils/enums/order.enum";
@@ -7,7 +7,7 @@ import { Order } from "../../utils/enums/order.enum";
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
 @injectable()
-export class FieldOptionRepository extends ReferenceBaseRepository<FieldOption> {
+export class FieldOptionRepository extends BaseRepository<FieldOption> {
   constructor() {
     super(prisma, "fieldOption");
   }

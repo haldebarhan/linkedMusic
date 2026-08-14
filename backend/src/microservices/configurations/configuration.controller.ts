@@ -6,6 +6,7 @@ import { CreateConfigDTO, UpdateConfigDTO } from "./configuration.dto";
 import { formatResponse } from "../../utils/helpers/response-formatter";
 import { Order } from "../../utils/enums/order.enum";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class ConfigurationController {
@@ -28,23 +29,21 @@ export class ConfigurationController {
   async findAll(req: Request, res: Response) {
     try {
       const {
-        page: pageQuery,
+        cursor: cursorQuery,
         limit: limitQuery,
         order: orderQuery,
       } = req.query;
       const where: any = {};
 
-      const page = parseInt(pageQuery as string) || 1;
       const limit = parseInt(limitQuery as string) || 10;
-
-      const page_number = Math.max(page, 1);
+      const cursor = parseCursor(cursorQuery);
       const limit_query = Math.max(limit, 10);
       const order = [Order.ASC, Order.DESC].includes(orderQuery as Order)
         ? (orderQuery as Order)
         : Order.DESC;
       const configs = await this.configurationService.findAll({
         limit: limit_query,
-        page: page_number,
+        cursor,
         order,
         where,
       });

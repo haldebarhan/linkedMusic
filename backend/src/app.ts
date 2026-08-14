@@ -54,8 +54,8 @@ const globalLimiter = rateLimit({
   skip: (req: Request) =>
     req.method === "OPTIONS" ||
     req.path.startsWith("/socket.io") ||
-    req.path.startsWith("/api/auth") || // déjà géré par authLimiter
-    req.path.startsWith("/api/admin"), // déjà géré par adminLimiter
+    req.path.startsWith("/api/auth") ||
+    req.path.startsWith("/api/admin"),
 });
 
 // Rate limiting spécifique pour l'authentification
@@ -283,14 +283,14 @@ class Server {
         const payload =
           ENV.NODE_ENV === "production"
             ? {
-                error: "Erreur interne du serveur",
-                timestamp: new Date().toISOString(),
-              }
+              error: "Erreur interne du serveur",
+              timestamp: new Date().toISOString(),
+            }
             : {
-                error: err?.message,
-                stack: err?.stack,
-                timestamp: new Date().toISOString(),
-              };
+              error: err?.message,
+              stack: err?.stack,
+              timestamp: new Date().toISOString(),
+            };
         res.status(500).json(payload);
       },
     );

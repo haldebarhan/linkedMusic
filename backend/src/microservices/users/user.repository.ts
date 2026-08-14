@@ -1,4 +1,4 @@
-import { BaseRepository } from "../../utils/classes/base.repoository";
+import { BaseRepository } from "../../utils/classes/base.repository";
 import { injectable } from "tsyringe";
 import { CreateUserDTO, UpdateUserDTO } from "./user.dto";
 import {

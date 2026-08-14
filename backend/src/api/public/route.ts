@@ -62,18 +62,6 @@ router.get(
     authController.listCategories(req, res),
 );
 
-router.get(
-  "/catalog/categories/:id",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) => authController.findCategory(req, res),
-);
-
-router.get(
-  "/catalog/service-types",
-  cache({ ttl: 86400, prefix: "catalog" }),
-  async (req: Request, res: Response) =>
-    authController.listServiceTypes(req, res),
-);
 
 // Categories
 router.get(

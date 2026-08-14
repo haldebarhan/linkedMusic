@@ -7,6 +7,7 @@ import { PaymentService } from "./payment.service";
 import { formatResponse } from "../../utils/helpers/response-formatter";
 import { Order } from "../../utils/enums/order.enum";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
+import { parseCursor } from "../../utils/helpers/cursor-pagination";
 
 @injectable()
 export class PaymentController {
@@ -50,21 +51,21 @@ export class PaymentController {
     try {
       const { user } = req;
       const {
-        page: pageQuery,
+        cursor: cursorQuery,
         limit: limitQuery,
         sortBy: sortQuery,
         status: statusQuery,
         sortOrder: orderQuery,
       } = req.query;
-      const page = parseInt(pageQuery as string) || 1;
       const limit = parseInt(limitQuery as string) || 10;
+      const cursor = parseCursor(cursorQuery);
       const sortOrder = (orderQuery as Order) || Order.DESC;
       let sortBy = sortQuery as string;
       const status = statusQuery as string;
       if (sortBy === "date") sortBy = "createdAt";
 
       const result = await this.paymentService.findUserPayments(user.id, {
-        page,
+        cursor,
         limit,
         sortBy,
         sortOrder,
