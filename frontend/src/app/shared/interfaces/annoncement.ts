@@ -24,7 +24,7 @@ export interface AnnouncementSearchParams {
   minPrice?: number;
   maxPrice?: number;
   fieldFilters?: string;
-  page?: number;
+  cursor?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';

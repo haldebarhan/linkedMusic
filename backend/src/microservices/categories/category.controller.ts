@@ -80,6 +80,7 @@ export class CategoryController {
   async findCategoryById(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
+      console.log("id: ", id)
       const category = await this.categoryService.findCategoryById(id);
       const response = formatResponse(200, category);
       res.status(200).json(response);

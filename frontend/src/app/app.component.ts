@@ -1,12 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { SearchbarComponent } from './components/searchbar/searchbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { AuthService } from './auth/auth.service';
-import { RefreshTokenService } from './auth/refresh-token.service';
-import { Subscription } from 'rxjs';
 import { NotificationComponent } from './shared/components/notification/notification.component';
 
 @Component({
@@ -22,22 +19,9 @@ import { NotificationComponent } from './shared/components/notification/notifica
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent {
   title = 'ZikMuzik';
-  private subscriptions = new Subscription();
-  constructor(
-    private router: Router,
-    private auth: AuthService,
-    private refresh: RefreshTokenService
-  ) {}
-
-  ngOnInit(): void {
-    this.auth.init();
-    this.refresh.startAutoRefresh();
-  }
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
+  constructor(private router: Router) {}
 
   showSearchBar(): boolean {
     const currentRoute = this.router.url;

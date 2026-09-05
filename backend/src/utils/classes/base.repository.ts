@@ -1,9 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Order } from "../enums/order.enum";
-import {
-  PaginationParams,
-  PaginatedResponse,
-} from "../interfaces/pagination";
+import { PaginationParams, PaginatedResponse } from "../interfaces/pagination";
 
 /** Shared CRUD and keyset-pagination foundation for every Prisma repository. */
 export abstract class BaseRepository<T, TCreateDTO = any, TUpdateDTO = any> {
@@ -28,14 +25,16 @@ export abstract class BaseRepository<T, TCreateDTO = any, TUpdateDTO = any> {
     return this.model.findFirst({ where, include });
   }
 
-  async findAll(options: {
-    where?: any;
-    include?: any;
-    orderBy?: any;
-    order?: Order;
-    take?: number;
-    cursor?: number;
-  } = {}): Promise<T[]> {
+  async findAll(
+    options: {
+      where?: any;
+      include?: any;
+      orderBy?: any;
+      order?: Order;
+      take?: number;
+      cursor?: number;
+    } = {},
+  ): Promise<T[]> {
     const { cursor, order, orderBy, ...optionsWithoutCursor } = options;
     return this.model.findMany({
       ...optionsWithoutCursor,
@@ -67,7 +66,7 @@ export abstract class BaseRepository<T, TCreateDTO = any, TUpdateDTO = any> {
       pagination: {
         limit,
         hasNext,
-        nextCursor: hasNext ? (data.at(-1) as any)?.id ?? null : null,
+        nextCursor: hasNext ? ((data.at(-1) as any)?.id ?? null) : null,
       },
     };
   }
@@ -104,13 +103,22 @@ export abstract class BaseRepository<T, TCreateDTO = any, TUpdateDTO = any> {
     return this.model.findMany({ where });
   }
 
-  async upsert(where: any, create: any, update: any, include?: any): Promise<T> {
+  async upsert(
+    where: any,
+    create: any,
+    update: any,
+    include?: any,
+  ): Promise<T> {
     return this.model.upsert({ where, create, update, include });
   }
 
-  async transaction<R>(callback: (prisma: PrismaClient) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (prisma: PrismaClient) => Promise<R>,
+  ): Promise<R> {
     if (!this.prisma) {
-      throw new Error("Transactions require a repository constructed with PrismaClient.");
+      throw new Error(
+        "Transactions require a repository constructed with PrismaClient.",
+      );
     }
     return this.prisma.$transaction<R>(callback as any);
   }

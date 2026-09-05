@@ -3,6 +3,7 @@ import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 import fs from "fs";
 import path from "path";
 import archiver from "archiver";
+import logger from "@/config/logger";
 
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
@@ -12,7 +13,7 @@ export const trimVideo = async (
   endTime: number
 ) => {
   fs.mkdir("temp/outputs", { recursive: true }, (err) => {
-    if (err) console.error(err);
+    if (err) logger.error("  ❌ Erreur création répertoire:", err);
   });
   const outputPath = path.join("temp/outputs", `extrait-${Date.now()}.mp4`);
 
@@ -30,14 +31,14 @@ export const trimVideo = async (
       .on("start", (cmd: any) => {})
       .on("progress", (progress: any) => {
         if (progress.percent) {
-          console.log(`  Progression: ${progress.percent.toFixed(1)}%`);
+          logger.info(`  Progression: ${progress.percent.toFixed(1)}%`);
         }
       })
       .on("end", () => {
         resolve(outputPath);
       })
       .on("error", (err: any) => {
-        console.error("  ❌ Erreur FFmpeg:", err);
+        logger.error("  ❌ Erreur FFmpeg:", err);
         reject(err);
       })
       .run();
@@ -50,12 +51,12 @@ export const createZip = (filesPaths: string[], zipPath: string) => {
     const archive = archiver("zip", { zlib: { level: 0 } });
 
     output.on("close", () => {
-      console.log(`  ✅ ZIP créé: ${archive.pointer()} bytes`);
+      logger.info(`  ✅ ZIP créé: ${archive.pointer()} bytes`);
       resolve();
     });
 
     archive.on("error", (err) => {
-      console.error("  ❌ Erreur ZIP:", err);
+      logger.error("  ❌ Erreur ZIP:", err);
       reject(err);
     });
 
@@ -74,8 +75,8 @@ export const cleanup = async (filesPaths: string[]) => {
     try {
       fs.unlink(filePath, (err) => {
         if (err)
-          console.error(`  ❌ Erreur suppression fichier ${filePath}:`, err);
-        else console.log(`  🗑️ Fichier supprimé: ${filePath}`);
+          logger.error(`  ❌ Erreur suppression fichier ${filePath}:`, err);
+        else logger.info(`  🗑️ Fichier supprimé: ${filePath}`);
       });
     } catch (err) {
       // Ignorer si fichier n'existe pas

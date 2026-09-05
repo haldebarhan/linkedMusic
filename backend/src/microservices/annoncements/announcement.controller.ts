@@ -16,7 +16,7 @@ import { ENV } from "../../config/env";
 import { AnnouncementStatus } from "@prisma/client";
 import { paginatedResponse } from "../../utils/helpers/paginated-response";
 import { S3Service } from "../../utils/services/s3.service";
-import { parseCursor } from "../../utils/helpers/cursor-pagination";
+import { cursorPage, parseCursor } from "../../utils/helpers/cursor-pagination";
 const minioService: S3Service = S3Service.getInstance();
 
 @injectable()
@@ -27,7 +27,7 @@ export class AnnouncementController {
     try {
       const dto: AnnouncementQueryDto = Object.assign(
         new AnnouncementQueryDto(),
-        req.query
+        req.query,
       );
 
       const result = await this.announcementService.searchAnnouncements(dto);
@@ -45,7 +45,7 @@ export class AnnouncementController {
       const announcements =
         await this.announcementService.getHighlightedAnnouncements(
           categorySlug,
-          limit
+          limit,
         );
       const response = formatResponse(200, announcements);
       res.status(200).json(response);
@@ -57,23 +57,22 @@ export class AnnouncementController {
   async getById(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const announcement = await this.announcementService.getAnnouncementById(
-        id
-      );
+      const announcement =
+        await this.announcementService.getAnnouncementById(id);
       const ownerImage = announcement.owner.profileImage;
       announcement.owner.profileImage = ownerImage
         ? await minioService.generatePresignedUrl(
             ENV.AWS_S3_DEFAULT_BUCKET,
-            ownerImage
+            ownerImage,
           )
         : undefined;
       const fichiers = announcement.audios.concat(
         announcement.images,
-        announcement.videos
+        announcement.videos,
       );
       const ownerTotalAnnouncements =
         await this.announcementService.countUserTotalAnnoucements(
-          announcement.owner.id
+          announcement.owner.id,
         );
       const pressignedUrl = await Promise.all(
         fichiers.map(async (f) => {
@@ -81,11 +80,11 @@ export class AnnouncementController {
           else {
             const url = await minioService.generatePresignedUrl(
               ENV.AWS_S3_DEFAULT_BUCKET,
-              f
+              f,
             );
             return url;
           }
-        })
+        }),
       );
       announcement.owner.totalAnnouncement = ownerTotalAnnouncements;
       const response = formatResponse(200, {
@@ -126,7 +125,7 @@ export class AnnouncementController {
     try {
       const dto: CreateAnnouncementDto = Object.assign(
         new CreateAnnouncementDto(),
-        req.body
+        req.body,
       );
       const files = req.files as Express.Multer.File[];
       const { images, audios, videos } = await saveAnnouncementFiles(files);
@@ -136,7 +135,7 @@ export class AnnouncementController {
       const userId = req.user.id;
       const announcement = await this.announcementService.createAnnouncement(
         userId,
-        dto
+        dto,
       );
       const response = formatResponse(200, announcement);
       res.status(200).json(response);
@@ -150,7 +149,7 @@ export class AnnouncementController {
       const id = parseInt(req.params.id);
       const dto: UpdateAnnouncementDto = Object.assign(
         new UpdateAnnouncementDto(),
-        req.body
+        req.body,
       );
       const files = req.files as Express.Multer.File[];
       const { images, audios, videos } = await saveAnnouncementFiles(files);
@@ -161,7 +160,7 @@ export class AnnouncementController {
       const announcement = await this.announcementService.updateAnnouncement(
         id,
         dto,
-        userId
+        userId,
       );
       const response = formatResponse(200, announcement);
       res.status(200).json(response);
@@ -225,7 +224,7 @@ export class AnnouncementController {
       };
       const result = await this.announcementService.getUserAnnouncements(
         userId,
-        pagination
+        pagination,
       );
       const response = formatResponse(200, result);
       res.status(200).json(response);
@@ -241,10 +240,10 @@ export class AnnouncementController {
 
       const result = await this.announcementService.getUserAnnouncementById(
         id,
-        userId
+        userId,
       );
       const fichiers = result.audios.concat(
-        result.images.concat(result.videos)
+        result.images.concat(result.videos),
       );
       const pressignedUrl = await Promise.all(
         fichiers.map(async (f) => {
@@ -252,11 +251,11 @@ export class AnnouncementController {
           else {
             const url = await minioService.generatePresignedUrl(
               ENV.AWS_S3_DEFAULT_BUCKET,
-              f
+              f,
             );
             return url;
           }
-        })
+        }),
       );
       const response = formatResponse(200, {
         ...result,
@@ -284,7 +283,7 @@ export class AnnouncementController {
       };
       const recentViews = await this.announcementService.recentViews(
         userId,
-        pagination
+        pagination,
       );
       const response = formatResponse(200, recentViews);
       res.status(200).json(response);
@@ -298,11 +297,11 @@ export class AnnouncementController {
       const userId = req.user.id as number;
       const dto: likeAnnouncementDTO = Object.assign(
         new likeAnnouncementDTO(),
-        req.body
+        req.body,
       );
       const result = await this.announcementService.addToRecentViews(
         userId,
-        dto.announcementId
+        dto.announcementId,
       );
       const response = formatResponse(200, result);
       res.status(200).json(response);
@@ -337,11 +336,11 @@ export class AnnouncementController {
       const userId = req.user.id as number;
       const dto: likeAnnouncementDTO = Object.assign(
         new likeAnnouncementDTO(),
-        req.body
+        req.body,
       );
       const result = await this.announcementService.likeAnnouncement(
         userId,
-        dto.announcementId
+        dto.announcementId,
       );
       const response = formatResponse(200, result);
       res.status(200).json(response);
@@ -355,11 +354,11 @@ export class AnnouncementController {
       const userId = req.user.id as number;
       const dto: likeAnnouncementDTO = Object.assign(
         new likeAnnouncementDTO(),
-        req.body
+        req.body,
       );
       const result = await this.announcementService.unlikeAnnouncement(
         userId,
-        dto.announcementId
+        dto.announcementId,
       );
       const response = formatResponse(200, result);
       res.status(200).json(response);
@@ -384,7 +383,7 @@ export class AnnouncementController {
       };
       const result = await this.announcementService.myLikedAnnouncement(
         userId,
-        pagination
+        pagination,
       );
       const response = paginatedResponse(200, result);
       res.status(200).json(response);
@@ -394,7 +393,11 @@ export class AnnouncementController {
   }
 
   async listPendingAnnouncements(req: Request, res: Response) {
-    const { cursor: cursorQuery, limit: limitQuery, order: orderQuery } = req.query;
+    const {
+      cursor: cursorQuery,
+      limit: limitQuery,
+      order: orderQuery,
+    } = req.query;
     const limit = parseInt(limitQuery as string) || 10;
     const cursor = parseCursor(cursorQuery);
     const limit_query = Math.max(limit, 10);
@@ -438,7 +441,7 @@ export class AnnouncementController {
       const reason = req.body;
       const status = await this.announcementService.rejectAnnouncement(
         +id,
-        reason.reason
+        reason.reason,
       );
       const response = formatResponse(200, status);
       res.status(200).json(response);

@@ -350,11 +350,8 @@
     <!-- Info et tri -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="text-muted">
-        <strong>{{ metadata.total }}</strong> annonce{{
-          metadata.total > 1 ? "s" : ""
-        }}
-        trouvée{{ metadata.total > 1 ? "s" : "" }} — page
-        <strong>{{ metadata.page }}</strong> / {{ metadata.totalPage }}
+        <strong>{{ rows.length }}</strong> annonce{{ rows.length > 1 ? "s" : "" }}
+        affichée{{ rows.length > 1 ? "s" : "" }} — page <strong>{{ page }}</strong>
       </div>
       <div class="d-flex align-items-center">
         <span class="me-2">Tri :</span>
@@ -448,39 +445,31 @@
 
     <!-- Pagination -->
     <nav
-      *ngIf="metadata.totalPage > 1"
+      *ngIf="page > 1 || pagination.hasNext"
       aria-label="Navigation"
       class="mt-4 d-flex justify-content-center"
     >
       <ul class="pagination">
-        <li class="page-item" [class.disabled]="metadata.page === 1">
+        <li class="page-item" [class.disabled]="page === 1">
           <button
             class="page-link"
-            (click)="changePage(metadata.page - 1)"
-            [disabled]="metadata.page === 1"
+            (click)="goToPreviousPage()"
+            [disabled]="page === 1"
           >
             <i class="fas fa-chevron-left"></i>
           </button>
         </li>
 
-        <li
-          class="page-item"
-          *ngFor="let p of pages"
-          [class.active]="p === metadata.page"
-        >
-          <button class="page-link" (click)="changePage(p)">
-            {{ p }}
-          </button>
-        </li>
+        <li class="page-item active"><span class="page-link">{{ page }}</span></li>
 
         <li
           class="page-item"
-          [class.disabled]="metadata.page === metadata.totalPage"
+          [class.disabled]="!pagination.hasNext"
         >
           <button
             class="page-link"
-            (click)="changePage(metadata.page + 1)"
-            [disabled]="metadata.page === metadata.totalPage"
+            (click)="goToNextPage()"
+            [disabled]="!pagination.hasNext"
           >
             <i class="fas fa-chevron-right"></i>
           </button>
@@ -493,9 +482,7 @@
   <div *ngIf="!loading" class="d-block d-md-none">
     <!-- Info -->
     <div class="text-center text-muted mb-3">
-      <strong>{{ metadata.total }}</strong> annonce{{
-        metadata.total > 1 ? "s" : ""
-      }}
+      <strong>{{ rows.length }}</strong> annonce{{ rows.length > 1 ? "s" : "" }}
     </div>
 
     <!-- Liste -->

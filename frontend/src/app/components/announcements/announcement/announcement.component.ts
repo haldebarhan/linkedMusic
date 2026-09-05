@@ -1,3 +1,5 @@
+// announcement.component.ts
+
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import {
@@ -34,14 +36,14 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
   // Résultats
   rows: any[] = [];
-  metadata: { total: number; page: number; totalPage: number } = {
-    total: 0,
-    page: 1,
-    totalPage: 1,
+  pagination = {
+    limit: 20,
+    hasNext: false,
+    nextCursor: null as number | null,
   };
-  pages: number[] = [];
   page = 1;
   limit = 20;
+  cursor: number | null = null;
   loading = false;
   loadingSchema = false;
   infiniteLoading = false;
@@ -55,6 +57,8 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   isMobile: boolean = window.innerWidth < 768;
 
   private sub?: Subscription;
+  private previousCursors: Array<number | null> = [];
+  private appendNextLoad = false;
 
   constructor(
     private fb: FormBuilder,
@@ -79,7 +83,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       !this.isMobile ||
       this.loading ||
       this.infiniteLoading ||
-      this.page >= this.metadata.totalPage
+      !this.pagination.hasNext
     ) {
       return;
     }
@@ -96,15 +100,15 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
     if (scrollTop + windowHeight >= documentHeight - 300) {
       this.infiniteLoading = true;
-      this.page++;
-      this.loadResults(true);
+      this.goToNextPage(true);
     }
   }
 
   buildQueryParams() {
     this.route.queryParams.subscribe((qp) => {
-      this.page = +(qp['page'] ?? 1);
       this.limit = +(qp['limit'] ?? this.limit);
+      const cursor = Number(qp['cursor']);
+      this.cursor = Number.isSafeInteger(cursor) && cursor > 0 ? cursor : null;
       this.query = qp['q'] ?? null;
 
       this.sortBy = (qp['sortBy'] as any) ?? 'createdAt';
@@ -112,7 +116,9 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
 
       this.patchSearchFormFromQuery(qp);
 
-      this.loadResults();
+      const append = this.appendNextLoad;
+      this.appendNextLoad = false;
+      this.loadResults(append);
     });
   }
 
@@ -243,6 +249,22 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       patch.location = qp['country'] ?? '';
     }
 
+    // Always clear dynamic fields first. Without this, navigating to a URL
+    // without `fieldFilters` leaves the previous checkbox values in the form.
+    this.searchFields.forEach((categoryField) => {
+      const { key, inputType } = categoryField.field;
+      patch[key] =
+        inputType === 'CHECKBOX' || inputType === 'MULTISELECT'
+          ? []
+          : inputType === 'TOGGLE'
+            ? null
+            : '';
+      if (inputType === 'RANGE') {
+        patch[`${key}_min`] = '';
+        patch[`${key}_max`] = '';
+      }
+    });
+
     // Lire fieldFilters et extraire les valeurs des champs
     if ('fieldFilters' in qp && qp['fieldFilters']) {
       try {
@@ -272,9 +294,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (Object.keys(patch).length) {
-      this.searchForm.patchValue(patch, { emitEvent: false });
-    }
+    this.searchForm.patchValue(patch, { emitEvent: false });
   }
 
   /**
@@ -361,30 +381,30 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
   applyFilters(resetPage = true) {
     if (resetPage) {
       this.page = 1;
+      this.cursor = null;
+      this.previousCursors = [];
       this.rows = [];
     }
 
     const filters = this.buildFilters();
     const qp: Record<string, any> = {
-      page: this.page,
+      // Remove the legacy offset-page parameter while keeping the cursor URL shareable.
+      page: null,
       limit: this.limit,
+      cursor: this.cursor,
 
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
     };
 
     // Ajouter les filtres aux query params
-    if (filters['country']) {
-      qp['country'] = filters['country'];
-    }
-    if (filters['fieldFilters']) {
-      qp['fieldFilters'] = filters['fieldFilters'];
-    }
+    // `null` explicitly removes stale query params when the last selection is
+    // cleared (queryParamsHandling: 'merge' otherwise keeps the old value).
+    qp['country'] = filters['country'] ?? null;
+    qp['fieldFilters'] = filters['fieldFilters'] ?? null;
 
     // Conserver le query de recherche s'il existe
-    if (this.query) {
-      qp['q'] = this.query;
-    }
+    qp['q'] = this.query ?? null;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -394,10 +414,21 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     });
   }
 
-  changePage(p: number) {
-    if (p < 1 || p > this.metadata.totalPage || p === this.metadata.page)
-      return;
-    this.page = p;
+  goToNextPage(append = false): void {
+    if (!this.pagination.hasNext || !this.pagination.nextCursor) return;
+    this.previousCursors.push(this.cursor);
+    this.cursor = this.pagination.nextCursor;
+    this.page++;
+    this.appendNextLoad = append;
+    if (!append) this.rows = [];
+    this.applyFilters(false);
+  }
+
+  goToPreviousPage(): void {
+    const previousCursor = this.previousCursors.pop();
+    if (previousCursor === undefined) return;
+    this.cursor = previousCursor;
+    this.page = Math.max(1, this.page - 1);
     this.rows = [];
     this.applyFilters(false);
   }
@@ -409,6 +440,8 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.searchForm.reset({ location: '' }, { emitEvent: false });
     this.showAdvancedSearch = false;
     this.page = 1;
+    this.cursor = null;
+    this.previousCursors = [];
     this.rows = [];
     this.query = null;
 
@@ -421,8 +454,8 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       .navigate([], {
         relativeTo: this.route,
         queryParams: {
-          page: 1,
           limit: this.limit,
+          cursor: null,
           sortBy: 'createdAt',
           sortOrder: 'desc',
         },
@@ -461,16 +494,6 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     this.applyFilters(); // reset page à 1
   }
 
-  private buildPages(current: number, last: number) {
-    const max = 7;
-    let start = Math.max(1, current - Math.floor(max / 2));
-    let end = Math.min(last, start + max - 1);
-    start = Math.max(1, end - max + 1);
-    const arr: number[] = [];
-    for (let i = start; i <= end; i++) arr.push(i);
-    return arr;
-  }
-
   private loadResults(append: boolean = false) {
     this.loading = !append;
     this.infiniteLoading = append;
@@ -479,7 +502,7 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
     // Construire les query params selon AnnouncementQueryDto
     const queryParams: Record<string, any> = {
       categorySlug: this.slug,
-      page: this.page,
+      cursor: this.cursor,
       limit: this.limit,
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
@@ -502,24 +525,15 @@ export class AnnouncementComponent implements OnInit, OnDestroy {
       next: (r: any) => {
         const items = r.data?.data ?? r.data ?? [];
         const pagination = r.data?.pagination;
-        const meta = {
-          total: pagination.total || 0,
-          page: pagination.page || 1,
-          totalPage: pagination.totalPages || 1,
-        };
 
         if (append) this.rows = [...this.rows, ...items];
         else this.rows = items;
 
-        this.metadata = {
-          total: +meta.total || items.length,
-          page: +meta.page || 1,
-          totalPage: +meta.totalPage || 1,
+        this.pagination = {
+          limit: pagination?.limit ?? this.limit,
+          hasNext: Boolean(pagination?.hasNext),
+          nextCursor: pagination?.nextCursor ?? null,
         };
-        this.pages = this.buildPages(
-          this.metadata.page,
-          this.metadata.totalPage
-        );
         this.loading = false;
         this.infiniteLoading = false; // Ajout ici : Réinitialise après succès
       },

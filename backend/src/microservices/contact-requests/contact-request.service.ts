@@ -53,6 +53,23 @@ export class ContactRequestService {
       );
     }
 
+    // This rule must be enforced server-side: hiding the form in the frontend
+    // does not prevent a caller from posting directly to this endpoint.
+    const eligibility = await this.matchingService.getEligibility(
+      userId,
+      announcementId
+    );
+    if (
+      eligibility.paidMatching &&
+      !eligibility.hasActivePass &&
+      !eligibility.alreadyPaid
+    ) {
+      throw createError(
+        402,
+        "Un abonnement actif ou un accès de matching est requis pour contacter cet annonceur"
+      );
+    }
+
     const existingRequest = await this.contactRepository.existingContactRequest(
       announcementId,
       userId

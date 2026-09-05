@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ApiAuthService } from '../../../auth/api-auth.service';
+import { ApiService } from '../../../shared/services/api.service';
 import { Router } from '@angular/router';
 import {
   passwordComplexityValidator,
@@ -25,7 +25,7 @@ export class ChangePasswordComponent implements OnInit {
   form: FormGroup;
   saving: boolean = false;
   constructor(
-    private authService: ApiAuthService,
+    private authService: ApiService,
     private router: Router,
     private fb: FormBuilder,
   ) {

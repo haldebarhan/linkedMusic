@@ -73,7 +73,7 @@ export class AnnouncementDetailComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private api: ApiService<any>,
-    private auth: AuthService
+    private auth: AuthService,
   ) {
     this.contactRequestForm = this.fb.group({
       message: [
@@ -109,7 +109,7 @@ export class AnnouncementDetailComponent implements OnInit {
     this.loading = true;
     const announcement$ = this.api.getOne(
       'announcements/details',
-      this.announcementId!
+      this.announcementId!,
     );
 
     forkJoin({
@@ -128,14 +128,14 @@ export class AnnouncementDetailComponent implements OnInit {
           const userRequest$ = isLoggedIn
             ? this.api.getOne(
                 'users/contact-requests/my-request',
-                this.announcementId!
+                this.announcementId!,
               )
             : of(null);
 
           const likeStatus$ = isLoggedIn
             ? this.api.getOne(
                 'users/announcements/like-status',
-                this.announcementId!
+                this.announcementId!,
               )
             : of(null);
 
@@ -146,7 +146,7 @@ export class AnnouncementDetailComponent implements OnInit {
             likeStatus: likeStatus$,
           });
         }),
-        finalize(() => (this.loading = false))
+        finalize(() => (this.loading = false)),
       )
       .subscribe({
         next: ({
@@ -261,6 +261,7 @@ export class AnnouncementDetailComponent implements OnInit {
   canRequestContact(): boolean {
     if (!this.eligibility) return false;
     if (this.isOwner()) return false;
+    if (this.isContactLocked()) return false;
 
     // Permettre une nouvelle demande si la précédente est CANCELED ou REJECTED
     if (!this.currentUserRequest) return true;
@@ -270,6 +271,14 @@ export class AnnouncementDetailComponent implements OnInit {
       'REJECTED',
     ];
     return inactiveStatuses.includes(this.currentUserRequest.status);
+  }
+
+  isContactLocked(): boolean {
+    return Boolean(
+      this.eligibility?.paidMatching &&
+      !this.eligibility.hasActivePass &&
+      !this.eligibility.alreadyPaid,
+    );
   }
 
   hasRequestPending(): boolean {
@@ -289,11 +298,28 @@ export class AnnouncementDetailComponent implements OnInit {
   }
 
   onClickContactRequest(): void {
+    if (this.isContactLocked()) {
+      Toast.fire({
+        icon: 'info',
+        title: 'Accès requis',
+        text: 'Un abonnement actif est requis pour prendre contact.',
+      });
+      return;
+    }
     this.showContactRequestForm = true;
   }
 
+  goToPricingPlan() {
+    this.router.navigate(['pack/pricing']);
+  }
+
   submitContactRequest(): void {
-    if (this.contactRequestForm.invalid || this.sending) return;
+    if (
+      this.contactRequestForm.invalid ||
+      this.sending ||
+      this.isContactLocked()
+    )
+      return;
 
     this.sending = true;
     const payload = {

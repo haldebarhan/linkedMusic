@@ -10,7 +10,7 @@ import {
 import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import { RefreshTokenService } from './refresh-token.service';
-import { from, of, Observable } from 'rxjs';
+import { firstValueFrom, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 type GuestPolicy = 'allow' | 'redirectIfAuth' | 'logoutThenAllow';
@@ -28,8 +28,8 @@ export const authCanActivate: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // Sinon, on tente de récupérer l'utilisateur (cela va déclencher le refresh via l'interceptor si nécessaire)
-  return from(auth.getMe()).pipe(
+  // A restored session has no in-memory access token; refresh it before /auth/me.
+  return from(firstValueFrom(refreshSvc.refreshToken()).then(() => auth.getMe())).pipe(
     map(() => true),
     catchError((err) => {
       console.warn('[AuthGuard] Accès refusé, redirection vers login');
@@ -48,6 +48,7 @@ export const authCanActivate: CanActivateFn = (route, state) => {
 export const authCanMatch: CanMatchFn = (route, segments) => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const refreshSvc = inject(RefreshTokenService);
 
   if (auth.snapshot.isAuthenticated) {
     return true;
@@ -58,7 +59,7 @@ export const authCanMatch: CanMatchFn = (route, segments) => {
     ? '/' + segments.map((s) => s.path).join('/')
     : '/';
 
-  return from(auth.getMe()).pipe(
+  return from(firstValueFrom(refreshSvc.refreshToken()).then(() => auth.getMe())).pipe(
     map(() => true),
     catchError(() => {
       return of(

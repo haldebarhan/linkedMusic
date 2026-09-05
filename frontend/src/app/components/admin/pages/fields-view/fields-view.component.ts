@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminApi } from '../../data/admin-api.service';
+import { ApiService } from '../../../../shared/services/api.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SweetAlert } from '../../../../helpers/sweet-alert';
 
@@ -34,9 +34,9 @@ export class FieldsViewComponent implements OnInit {
   attached: { id: number; name: string }[] = [];
 
   constructor(
-    private api: AdminApi,
+    private api: ApiService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit() {
@@ -55,7 +55,7 @@ export class FieldsViewComponent implements OnInit {
   loadField() {
     this.api.findAdminResource('fields', this.fieldId).subscribe({
       next: (res) => {
-        const response = res.data;
+        const response = res.data as any;
         this.field = res.data;
         const attached = Array.isArray(response.categoryFields)
           ? response.categoryFields
@@ -132,7 +132,7 @@ export class FieldsViewComponent implements OnInit {
   toggleSelectPage(ev: any) {
     const check = !!ev?.target?.checked;
     this.rows.forEach((s) =>
-      check ? this.selectedIds.add(s.id) : this.selectedIds.delete(s.id)
+      check ? this.selectedIds.add(s.id) : this.selectedIds.delete(s.id),
     );
   }
 
@@ -191,7 +191,7 @@ export class FieldsViewComponent implements OnInit {
                 icon: 'success',
                 didClose: () => {
                   this.attached = this.attached.filter(
-                    (a) => a.id !== serviceTypeId
+                    (a) => a.id !== serviceTypeId,
                   );
                   this.selectedIds.delete(serviceTypeId);
                 },
