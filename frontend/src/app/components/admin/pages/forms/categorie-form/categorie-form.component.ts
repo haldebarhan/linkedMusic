@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminApi } from '../../../data/admin-api.service';
+import { ApiService } from '../../../../../shared/services/api.service';
 import { setupKeyGeneration } from '../../../../../helpers/setup-key-generation';
 import { toCamelCase } from '../../../../../helpers/toCamelCase';
 
@@ -26,7 +26,7 @@ export class CategorieFormComponent implements OnInit {
   headerText = 'Nouvelle';
   subHeaderText = 'créer une nouvelle catégorie';
   constructor(
-    private readonly api: AdminApi,
+    private readonly api: ApiService,
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly router: Router
@@ -44,10 +44,10 @@ export class CategorieFormComponent implements OnInit {
       this.categoryId = parseInt(params.get('id') as string);
       if (this.categoryId) {
         this.api.findResource('categories', this.categoryId).subscribe({
-          next: (res) => {
+          next: (res:any) => {
             this.buttonLabel = 'Modifier';
             this.headerText = 'Modifier la';
-            this.subHeaderText = `mofidier la category N°${this.categoryId}`;
+            this.subHeaderText = `modifier la categorie N°${this.categoryId}`;
             this.CategoryForm.patchValue({
               name: res.data.name,
               slug: res.data.slug,

@@ -16,7 +16,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApiAuthService } from '../../../auth/api-auth.service';
 import { PersonalInfoData } from '../../../shared/interfaces/user-personnal-data';
 import { CommonModule } from '@angular/common';
 import { fr } from 'intl-tel-input/i18n';
@@ -56,7 +55,7 @@ export class UserEditComponent implements OnInit, AfterViewInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private auth: ApiAuthService,
+    private auth: ApiService,
     private zone: NgZone,
     private api: ApiService<any>,
     private userUpdateService: UserUpdateService

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminApi } from '../../data/admin-api.service';
+import { ApiService } from '../../../../shared/services/api.service';
 import { SweetAlert } from '../../../../helpers/sweet-alert';
 
 interface CategoryField {
@@ -46,7 +46,7 @@ export class CategorieDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: AdminApi
+    private api: ApiService<Category>,
   ) {}
 
   ngOnInit(): void {
@@ -64,7 +64,7 @@ export class CategorieDetailsComponent implements OnInit {
       next: (res) => {
         this.category = res.data;
         this.fields = (res.data.categoryFields || []).sort(
-          (a: CategoryField, b: CategoryField) => a.order - b.order
+          (a: CategoryField, b: CategoryField) => a.order - b.order,
         );
         this.loading = false;
         this.hasChanges = false;

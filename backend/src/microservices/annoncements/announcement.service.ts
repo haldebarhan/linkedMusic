@@ -41,7 +41,7 @@ import { S3Service } from "../../utils/services/s3.service";
 import { SubscriptionRepository } from "../subscriptions/subscription.repository";
 import { generateUrl } from "../../utils/functions/utilities";
 import { invalideCache } from "../../utils/functions/invalidate-cache";
-import { cursorPage } from "../../utils/helpers/cursor-pagination";
+import { cursorPage, parseCursor } from "../../utils/helpers/cursor-pagination";
 const minioService: S3Service = S3Service.getInstance();
 const prisma: PrismaClient = DatabaseService.getPrismaClient();
 
@@ -270,7 +270,7 @@ export class AnnouncementService {
     query: AnnouncementQueryDto
   ): Promise<PaginatedResponse<AnnouncementResponseDto>> {
     const pagination: PaginationParams = {
-      cursor: query.cursor,
+      cursor: parseCursor(query.cursor),
       limit: query.limit ? +query.limit : 20,
       sortBy: query.sortBy ?? "createdAt",
       sortOrder: (query.sortOrder as Order) ?? Order.DESC,

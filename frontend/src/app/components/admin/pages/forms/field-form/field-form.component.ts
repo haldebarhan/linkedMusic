@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { AdminApi } from '../../../data/admin-api.service';
+import { ApiService } from '../../../../../shared/services/api.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FieldInputType } from '../../../../../shared/types/field-input-type';
@@ -45,7 +45,7 @@ export class FieldFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private api: AdminApi,
+    private api: ApiService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -243,7 +243,7 @@ export class FieldFormComponent implements OnInit {
   findField(id: number) {
     this.api.findAdminResource('fields', id).subscribe({
       next: (res) => {
-        const field = res.data;
+        const field = res.data as any;
         this.form.patchValue({
           key: field.key,
           label: field.label,

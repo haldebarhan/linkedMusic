@@ -8,9 +8,9 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { fbAuth } from '../core/firebase';
-import { ApiAuthService } from './api-auth.service';
+import { ApiService } from '../shared/services/api.service';
 import { UserUpdateService } from './user-update.service';
-import { JsonPipe } from '@angular/common';
+import { QueryClient } from '@tanstack/angular-query-experimental';
 
 const STORAGE_KEY = 'app_auth_state_v1';
 
@@ -26,8 +26,9 @@ export class AuthService {
   });
 
   constructor(
-    private api: ApiAuthService,
+    private api: ApiService,
     private userUpdateService: UserUpdateService,
+    private queryClient: QueryClient,
   ) {
     this.init();
     // Gérer le flow redirect (iOS/Safari)
@@ -45,7 +46,7 @@ export class AuthService {
   readonly isLoggedIn$ = this.auth$.pipe(map((s) => s.isAuthenticated));
 
   get token(): string | null {
-    return null;
+    return this.snapshot.accessToken;
   }
 
   get snapshot() {
@@ -68,12 +69,14 @@ export class AuthService {
   // ====================== LOGIN ======================
 
   async loginWithPassword(email: string, password: string): Promise<void> {
-    await firstValueFrom(this.api.loginWithPassword({ email, password }));
+    const response = await firstValueFrom(this.api.loginWithPassword({ email, password }));
+    this.setAccessToken(response.data.accessToken);
     await this.loadCurrentUser('password');
   }
 
   async activateAccount(email: string, token: string): Promise<void> {
-    await firstValueFrom(this.api.activateAccount({ email, token }));
+    const response = await firstValueFrom(this.api.activateAccount({ email, token }));
+    this.setAccessToken(response.data.accessToken);
     await this.loadCurrentUser('password');
   }
 
@@ -169,7 +172,7 @@ export class AuthService {
       const state: AuthState = {
         isAuthenticated: true,
         user: res.data as AuthUser,
-        accessToken: null,
+        accessToken: this.token,
         source,
       };
 
@@ -182,11 +185,14 @@ export class AuthService {
 
   private async handleGoogleAuthSuccess(source: 'google') {
     const idToken = await fbAuth.currentUser!.getIdToken();
-    await firstValueFrom(this.api.socialVerify(idToken)); // ou registerWithGoogle selon le cas
+    const response = await firstValueFrom(this.api.socialVerify(idToken)); // ou registerWithGoogle selon le cas
+    if (response.data.accessToken) this.setAccessToken(response.data.accessToken);
     await this.loadCurrentUser(source);
   }
 
-  private clearAuthState(): void {
+  clearAuthState(): void {
+    // Cached private resources must never survive an account switch.
+    this.queryClient.clear();
     this._auth$.next({
       isAuthenticated: false,
       user: null,

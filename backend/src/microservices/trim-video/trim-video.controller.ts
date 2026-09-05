@@ -10,6 +10,7 @@ import {
 } from "../../utils/functions/trim-video";
 import path from "path";
 import os from "os";
+import logger from "@/config/logger";
 
 @injectable()
 export class TrimVideoController {
@@ -28,9 +29,6 @@ export class TrimVideoController {
         await fs.mkdir(tempDir, { recursive: true });
         inputPath = path.join(tempDir, `video-${Date.now()}.mp4`);
         await fs.writeFile(inputPath, file.buffer);
-        console.log(
-          `⚠️ Buffer écrit temporairement sur disque à : ${inputPath}`
-        );
       }
       if (!inputPath) {
         res.status(400).json({
@@ -48,7 +46,7 @@ export class TrimVideoController {
       if (sizeMB <= maxSizeMB) {
         res.type("video/mp4");
         res.download(outputPath, "video.mp4", async (err) => {
-          if (err) console.error("Erreur envoi:", err);
+          if (err) logger.error("Erreur envoi:", err);
           await cleanup([inputPath!, outputPath]);
         });
         return;
@@ -62,11 +60,11 @@ export class TrimVideoController {
 
       res.type("application/zip");
       res.download(zipPath, "segments.zip", async (err) => {
-        if (err) console.error("Erreur envoi:", err);
+        if (err) logger.error("Erreur envoi:", err);
         await cleanup([inputPath!, outputPath, part1, part2, zipPath]);
       });
     } catch (error) {
-      console.error("Erreur globale trim:", error);
+      logger.error("Erreur globale trim:", error);
       handleError(res, error);
     }
   }

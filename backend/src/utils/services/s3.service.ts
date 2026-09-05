@@ -215,7 +215,6 @@ export class S3Service {
       logger.info(`URL pré-signée générée avec succès pour ${objectName} (S3)`);
       return url;
     } catch (error: any) {
-      console.log(error);
       logger.error(
         `Erreur lors de la génération de l'URL pour ${objectName} (S3)`,
         {

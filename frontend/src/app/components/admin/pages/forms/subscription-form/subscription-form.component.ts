@@ -9,7 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { CommonModule, Location } from '@angular/common';
-import { AdminApi } from '../../../data/admin-api.service';
+import { ApiService } from '../../../../../shared/services/api.service';
 import { Toast } from '../../../../../helpers/sweet-alert';
 
 enum Period {
@@ -52,7 +52,7 @@ export class SubscriptionFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
-    private api: AdminApi,
+    private api: ApiService<Plan>,
     private location: Location
   ) {}
   ngOnInit(): void {

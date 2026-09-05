@@ -41,10 +41,9 @@ const wsAllowed = [...allowed, "ws:", "wss:"];
 const skipForRateLImiter = (req: Request) =>
   req.method === "OPTIONS" || req.path.startsWith("/socket.io");
 
-// Rate limiting global
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requêtes par IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: {
     error: "Trop de requêtes. veuillez réessayer plus tard",
     retryAfter: 15 * 60,
@@ -58,7 +57,6 @@ const globalLimiter = rateLimit({
     req.path.startsWith("/api/admin"),
 });
 
-// Rate limiting spécifique pour l'authentification
 const authLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 5,
@@ -70,7 +68,6 @@ const authLimiter = rateLimit({
   skip: skipForRateLImiter,
 });
 
-// Rate limiting pour les routes admin
 const adminLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
@@ -97,11 +94,11 @@ class Server {
     this.config();
     this.routes();
     this.setupErrorHandling();
-    // startSubscriptionDailyCron();
-    // startCheckSubscriptionStatus();
-    // startAnnouncementHighlightedCron();
-    // startUpgradeUsersBadge();
-    // startAlertAdminJob();
+    startSubscriptionDailyCron();
+    startCheckSubscriptionStatus();
+    startAnnouncementHighlightedCron();
+    startUpgradeUsersBadge();
+    startAlertAdminJob();
   }
 
   config() {
@@ -232,7 +229,7 @@ class Server {
       "browser",
     );
 
-    // this.app.use(express.static(distPath));
+    this.app.use(express.static(distPath));
     this.app.use((req: Request, res: Response) => {
       if (
         req.path.startsWith("/api") ||

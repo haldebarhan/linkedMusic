@@ -17,6 +17,7 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@tanstack/angular-query-experimental": "5.95.2",
     "@types/jquery": "^3.5.33",
     "bootstrap": "^5.3.7",
     "firebase": "^12.3.0",

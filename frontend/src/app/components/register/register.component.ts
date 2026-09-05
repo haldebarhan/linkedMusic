@@ -8,7 +8,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiAuthService } from '../../auth/api-auth.service';
+import { ApiService } from '../../shared/services/api.service';
 import { AuthService } from '../../auth/auth.service';
 import { SweetAlert, Toast } from '../../helpers/sweet-alert';
 
@@ -27,7 +27,7 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: ApiAuthService,
+    private authService: ApiService,
     private auth: AuthService
   ) {
     this.signupForm = this.fb.group({

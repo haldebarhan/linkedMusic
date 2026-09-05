@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../utils/interfaces/authenticated-request";
 import redisClient from "../config/redis-client";
 import crypto from "crypto";
+import logger from "@/config/logger";
 
 interface CacheOptions {
   ttl?: number;
@@ -25,12 +26,12 @@ export const cache = (options: CacheOptions = {}) => {
     try {
       const cached = await redisClient.get(key);
       if (cached) {
-        console.log("[CACHE HIT]", key);
+        logger.info("[CACHE HIT]", key);
         res.setHeader("Content-Type", "application/json");
         return res.send(JSON.parse(cached));
       }
 
-      console.log("[CACHE MISS]", key);
+      logger.info("[CACHE MISS]", key);
 
       // Override res.json plutôt que res.send
       const originalJson = res.json.bind(res);

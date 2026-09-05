@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiAuthService } from '../../../auth/api-auth.service';
+import { ApiService } from '../../../shared/services/api.service';
 import { Router } from '@angular/router';
 
 export type userProfile = {
@@ -35,7 +35,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   completed: boolean = false;
   showButton = false;
   constructor(
-    private authService: ApiAuthService,
+    private authService: ApiService,
     private router: Router,
   ) {}
 

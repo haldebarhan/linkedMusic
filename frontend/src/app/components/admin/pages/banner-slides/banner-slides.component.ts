@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { AdminApi } from '../../data/admin-api.service';
+import { ApiService } from '../../../../shared/services/api.service';
 import { SweetAlert } from '../../../../helpers/sweet-alert';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -68,7 +68,10 @@ export class BannerSlidesComponent implements OnInit, OnDestroy {
     link: '',
   };
 
-  constructor(private api: AdminApi, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private api: ApiService,
+    private cdr: ChangeDetectorRef,
+  ) {}
   ngOnInit(): void {
     this.loadSlides(this.page);
   }
@@ -82,9 +85,9 @@ export class BannerSlidesComponent implements OnInit, OnDestroy {
   loadSlides(page: number, limit = 10) {
     this.api.listData({ endpoint: 'banner-slides', page, limit }).subscribe({
       next: (res) => {
-        const slides: BannerSlide[] = res.items.data;
+        const slides: BannerSlide[] = res.items.data as BannerSlide[];
         this.allSlides = slides.sort(
-          (a: BannerSlide, b: BannerSlide) => a.order - b.order
+          (a: BannerSlide, b: BannerSlide) => a.order - b.order,
         );
 
         this.activeSlides = this.allSlides.filter((s) => s.isActive);
@@ -459,7 +462,7 @@ export class BannerSlidesComponent implements OnInit, OnDestroy {
 
         // Afficher les dimensions détectées
         this.fileDimensions = `${width} x ${height}px (${duration.toFixed(
-          1
+          1,
         )}s)`;
 
         // Vérifier la durée
@@ -469,7 +472,7 @@ export class BannerSlidesComponent implements OnInit, OnDestroy {
             title: 'Vidéo trop longue',
             html: `
               <p><strong>Durée détectée:</strong> ${duration.toFixed(
-                1
+                1,
               )} secondes</p>
               <p><strong>Durée maximale:</strong> ${
                 requirements.maxDuration

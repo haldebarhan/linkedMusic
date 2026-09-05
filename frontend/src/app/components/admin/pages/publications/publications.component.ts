@@ -1,77 +1,61 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from '../../../../shared/services/api.service';
 import { CommonModule } from '@angular/common';
-import { AdminApi } from '../../data/admin-api.service';
+import { ApiService } from '../../../../shared/services/api.service';
 import { Router } from '@angular/router';
+import { PaginationService } from '../../../../shared/services/pagination.service';
 
 @Component({
   selector: 'app-publications',
   imports: [CommonModule],
   templateUrl: './publications.component.html',
   styleUrl: './publications.component.css',
+  providers: [PaginationService],
 })
 export class PublicationsComponent implements OnInit {
   rows: any[] = [];
-  page = 1;
-  limit = 10;
-  total = 0;
-  totalPage = 1;
   pages: number[] = [];
 
-  constructor(private api: AdminApi, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    public paginationService: PaginationService,
+  ) {}
 
   ngOnInit(): void {
-    this.loadPendingPublication(this.page);
+    this.paginationService.init((page, limit, cursor) =>
+      this.loadPendingPublication(page, limit, cursor),
+    );
   }
 
-  loadPendingPublication(page: number, limit = 10) {
+  loadPendingPublication(
+    page: number,
+    limit = 10,
+    cursor?: number | string | null,
+  ) {
     this.api
       .listData({
         endpoint: 'announcements',
         page,
         limit,
+        cursor: cursor == null ? undefined : Number(cursor),
       })
       .subscribe({
         next: (res) => {
           this.rows = res.items.data;
-          const meta = res.items.metadata ?? {
-            total: 0,
-            page: 1,
-            totalPage: 1,
+          this.paginationService.pagination = {
+            limit: res.items.metadata.limit,
+            hasNext: res.items.metadata.hasNext,
+            nextCursor:
+              res.items.metadata.nextCursor == null
+                ? null
+                : String(res.items.metadata.nextCursor),
           };
-          this.total = meta.total;
-          this.totalPage = meta.totalPage;
-          this.page = meta.page;
-          this.pages = this.buildPages(this.page, this.totalPage);
         },
         error: (err) => console.error(err),
       });
   }
 
-  go(p: number) {
-    if (p < 1 || p > this.totalPage || p === this.page) return;
-    this.page = p;
-    this.loadPendingPublication(p);
-  }
-
-  buildPages(current: number, last: number) {
-    const max = 5;
-    let start = Math.max(1, current - Math.floor(max / 2));
-    let end = Math.min(last, start + max - 1);
-    start = Math.max(1, end - max + 1);
-    const arr: number[] = [];
-    for (let i = start; i <= end; i++) arr.push(i);
-    return arr;
-  }
-
   goTodetail(id: number) {
     this.router.navigate(['/admin/publications', id]);
-  }
-
-  get start() {
-    return this.total ? (this.page - 1) * this.limit + 1 : 0;
-  }
-  get end() {
-    return (this.page - 1) * this.limit + this.rows.length;
   }
 }

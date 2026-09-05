@@ -22,18 +22,18 @@ export class AuthInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler,
   ): Observable<HttpEvent<any>> {
-    const isAuthEndpoint = req.url.includes('/auth/');
     const isRefreshRequest = req.url.includes('/auth/refresh');
-    let authReq = req;
-
-    if (!req.withCredentials) {
-      authReq = req.clone({ withCredentials: true });
-    }
+    const isPublicAuthRequest = /\/auth\/(login|register|activate|forgot-password|reset-password|social\/verify)/.test(req.url);
+    const token = this.authSvc.token;
+    const authReq = req.clone({
+      withCredentials: true,
+      setHeaders: !isPublicAuthRequest && !isRefreshRequest && token ? { Authorization: `Bearer ${token}` } : {},
+    });
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
         // Si on reçoit 401 et que ce n'est pas déjà une tentative de refresh
-        if (error.status === 401 && !isRefreshRequest) {
+        if (error.status === 401 && !isRefreshRequest && !isPublicAuthRequest) {
           return this.handle401Error(authReq, next);
         }
 
@@ -47,9 +47,12 @@ export class AuthInterceptor implements HttpInterceptor {
     next: HttpHandler,
   ): Observable<HttpEvent<any>> {
     return this.refreshSvc.refreshToken().pipe(
-      switchMap(() => {
+      switchMap((accessToken) => {
         // On réessaie la requête originale après refresh
-        return next.handle(req.clone({ withCredentials: true }));
+        return next.handle(req.clone({
+          withCredentials: true,
+          setHeaders: { Authorization: `Bearer ${accessToken}` },
+        }));
       }),
       catchError((refreshError) => {
         // Si le refresh échoue → déconnexion

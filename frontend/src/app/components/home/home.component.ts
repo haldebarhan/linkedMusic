@@ -41,7 +41,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadBannerSlides() {
     this.api.getAll({ endpoint: 'banner-slides' }).subscribe({
       next: (res: any) => {
-        this.bannerSlides = res.data;
+        this.bannerSlides = res.items.data;
         if (this.bannerSlides.length > 0) {
           this.startAutoSlide();
         }
@@ -129,7 +129,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   onSlideChange(): void {
     // Récupérer toutes les vidéos dans le carousel (pas les images !)
     const videos = document.querySelectorAll<HTMLVideoElement>(
-      '.carousel-container video'
+      '.carousel-container video',
     );
 
     videos.forEach((video) => {

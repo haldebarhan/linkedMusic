@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminApi } from '../../data/admin-api.service';
+import { ApiService } from '../../../../shared/services/api.service';
 import { Badge } from '../../../../shared/enums/badge.enum';
 import { SweetAlert, Toast } from '../../../../helpers/sweet-alert';
 
@@ -20,7 +20,7 @@ export class UsersDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: AdminApi
+    private api: ApiService
   ) {}
 
   ngOnInit(): void {
